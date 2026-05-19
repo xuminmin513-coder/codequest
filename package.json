@@ -1,0 +1,8 @@
+{
+  "name": "codedex-app",
+  "version": "1.0.0",
+  "description": "CodeQuest - 编程教学游戏 (Web Edition)",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
