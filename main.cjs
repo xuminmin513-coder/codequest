@@ -5,6 +5,9 @@ const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 
+// 确保使用一致的 userData 目录，防止存档分裂到不同位置
+app.name = 'codedex-app';
+
 // ============================================================
 // Python Execution IPC
 // ============================================================
@@ -75,7 +78,11 @@ function createWindow() {
     show: false
   });
 
-  win.loadFile('index.html');
+  // Try dist/index.html first (production build), fall back to dev server
+  const indexPath = fs.existsSync(path.join(__dirname, 'dist', 'index.html'))
+    ? path.join(__dirname, 'dist', 'index.html')
+    : path.join(__dirname, 'index.html');
+  win.loadFile(indexPath);
 
   win.once('ready-to-show', () => {
     win.show();

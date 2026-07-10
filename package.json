@@ -1,8 +1,30 @@
 {
   "name": "codedex-app",
   "version": "1.0.0",
-  "description": "CodeQuest - 编程教学游戏 (Web Edition)",
+  "description": "xmmcode - 编程教学游戏",
+  "main": "main.cjs",
+  "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server.cjs",
+    "electron": "electron main.cjs"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.10.3",
+    "@codemirror/lang-python": "^6.1.6",
+    "@codemirror/state": "^6.4.1",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.35.3",
+    "codemirror": "^6.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^42.3.1",
+    "playwright": "^1.60.0",
+    "vite": "^6.3.5"
   }
 }

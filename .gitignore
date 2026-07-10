@@ -1,2 +1,12 @@
 node_modules/
 .DS_Store
+.vite/
+dist/
+test-results/
+work/
+*.bak
+*.backup*
+*.backup2
+.~*
+.!*
+*_backup.*

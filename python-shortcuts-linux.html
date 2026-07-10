@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 快捷键 · Linux 版说明书</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Ubuntu", "Noto Sans CJK SC", -apple-system, sans-serif;
+    background: #1e1e2e; color: #cdd6f4;
+    max-width: 900px; margin: 0 auto; padding: 32px 24px;
+    line-height: 1.8;
+  }
+  h1 { color: #a6e3a1; border-bottom: 3px solid #a6e3a1; padding-bottom: 12px; font-size: 24px; margin-bottom: 8px; }
+  .subtitle { color: #a6adc8; font-size: 14px; margin-bottom: 24px; }
+  h2 { color: #89b4fa; margin: 32px 0 16px; font-size: 20px; border-left: 4px solid #89b4fa; padding-left: 12px; }
+  h3 { color: #f5c2e7; margin: 24px 0 12px; font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 14px; }
+  th { background: #313244; color: #a6e3a1; padding: 10px 14px; text-align: left; border: 1px solid #45475a; font-weight: 600; }
+  td { padding: 8px 14px; border: 1px solid #45475a; }
+  tr:nth-child(even) { background: #181825; }
+  tr:hover { background: #313244; }
+  kbd {
+    display: inline-block; padding: 2px 8px; font-family: "Ubuntu Mono", "JetBrains Mono", monospace;
+    font-size: 13px; color: #fab387; background: #1e1e2e;
+    border: 1px solid #585b70; border-radius: 4px; white-space: nowrap;
+    border-bottom-width: 2px;
+  }
+  .note { background: #313244; border-left: 4px solid #f9e2af; padding: 14px 18px; margin: 16px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  .note strong { color: #f9e2af; }
+  .tip { background: #1e3a5f; border-left: 4px solid #89b4fa; padding: 14px 18px; margin: 16px 0; border-radius: 0 8px 8px 0; font-size: 14px; }
+  .tip strong { color: #89b4fa; }
+  a { color: #89b4fa; }
+  @media print { body { background: #fff; color: #333; } kbd { background: #f0f0f0; color: #333; } }
+  @media (max-width: 600px) {
+    table { font-size: 13px; }
+    td, th { padding: 6px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<h1> Linux — Python 快捷键说明书</h1>
+<p class="subtitle">适用系统：Ubuntu / Debian / Fedora / Arch 等主流 Linux 发行版 &nbsp;|&nbsp; 适用环境：VS Code + Python 3</p>
+
+<div class="tip">
+  <strong>📌 按键说明：</strong><kbd>Ctrl</kbd> = Control 键 &nbsp; <kbd>Alt</kbd> = Alt 键 &nbsp; <kbd>Super</kbd> = 系统键（部分 Gnome/KDE 环境）<br>
+  <strong>📌 安装提示：</strong>大部分 Linux 系统已预装 Python 3，终端输入 <kbd>python3 --version</kbd> 验证。<br>
+  VS Code 下载：<a href="https://code.visualstudio.com/download" target="_blank">code.visualstudio.com</a>（选择 .deb/.rpm 包）
+</div>
+
+<h2>一、VS Code 编辑快捷键</h2>
+
+<h3>✏️ 基础编辑</h3>
+<table>
+  <tr><th>功能</th><th>快捷键</th></tr>
+  <tr><td>打开命令面板</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd></td></tr>
+  <tr><td>快速打开文件</td><td><kbd>Ctrl</kbd> + <kbd>P</kbd></td></tr>
+  <tr><td>保存文件</td><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td></tr>
+  <tr><td>撤销</td><td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td></tr>
+  <tr><td>重做</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td></tr>
+</table>
+
+<h3>🔍 搜索与导航</h3>
+<table>
+  <tr><th>功能</th><th>快捷键</th></tr>
+  <tr><td>当前文件搜索</td><td><kbd>Ctrl</kbd> + <kbd>F</kbd></td></tr>
+  <tr><td>全局搜索</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td></tr>
+  <tr><td>跳转到行</td><td><kbd>Ctrl</kbd> + <kbd>G</kbd></td></tr>
+  <tr><td>返回上一次光标位置</td><td><kbd>Ctrl</kbd> + <kbd>-</kbd></td></tr>
+</table>
+
+<h3>✂️ 代码编辑</h3>
+<table>
+  <tr><th>功能</th><th>快捷键</th></tr>
+  <tr><td>注释 / 取消注释</td><td><kbd>Ctrl</kbd> + <kbd>/</kbd></td></tr>
+  <tr><td>块注释</td><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>A</kbd></td></tr>
+  <tr><td>增加缩进</td><td><kbd>Ctrl</kbd> + <kbd>]</kbd></td></tr>
+  <tr><td>减少缩进</td><td><kbd>Ctrl</kbd> + <kbd>[</kbd></td></tr>
+  <tr><td>上移一行</td><td><kbd>Alt</kbd> + <kbd>↑</kbd></td></tr>
+  <tr><td>下移一行</td><td><kbd>Alt</kbd> + <kbd>↓</kbd></td></tr>
+  <tr><td>复制当前行</td><td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>↓</kbd></td></tr>
+  <tr><td>删除当前行</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd></td></tr>
+  <tr><td>多光标添加</td><td><kbd>Alt</kbd> + 点击</td></tr>
+  <tr><td>选中所有匹配</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd></td></tr>
+  <tr><td>格式化文档</td><td><kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>F</kbd></td></tr>
+</table>
+
+<h2>二、Python 开发专用快捷键</h2>
+<table>
+  <tr><th>功能</th><th>快捷键</th></tr>
+  <tr><td>运行 Python 文件</td><td><kbd>Ctrl</kbd> + <kbd>F5</kbd></td></tr>
+  <tr><td>启动调试</td><td><kbd>F5</kbd></td></tr>
+  <tr><td>跳转到定义</td><td><kbd>F12</kbd></td></tr>
+  <tr><td>预览定义</td><td><kbd>Alt</kbd> + <kbd>F12</kbd></td></tr>
+  <tr><td>重命名变量/函数</td><td><kbd>F2</kbd></td></tr>
+  <tr><td>快速修复</td><td><kbd>Ctrl</kbd> + <kbd>.</kbd></td></tr>
+  <tr><td>参数提示</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd></td></tr>
+  <tr><td>自动补全</td><td><kbd>Ctrl</kbd> + <kbd>Space</kbd></td></tr>
+  <tr><td>切换侧边栏</td><td><kbd>Ctrl</kbd> + <kbd>B</kbd></td></tr>
+</table>
+
+<h2>三、终端快捷键</h2>
+<table>
+  <tr><th>功能</th><th>快捷键</th></tr>
+  <tr><td>开/关 VS Code 终端</td><td><kbd>Ctrl</kbd> + <kbd>`</kbd></td></tr>
+  <tr><td>新建终端</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>`</kbd></td></tr>
+  <tr><td>打开系统终端</td><td><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>（Gnome/KDE）</td></tr>
+  <tr><td>中断当前命令</td><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td></tr>
+  <tr><td>清屏</td><td>输入 <kbd>clear</kbd> 或 <kbd>Ctrl</kbd> + <kbd>L</kbd></td></tr>
+  <tr><td>搜索历史命令</td><td><kbd>Ctrl</kbd> + <kbd>R</kbd></td></tr>
+  <tr><td>上一条 / 下一条命令</td><td><kbd>↑</kbd> / <kbd>↓</kbd></td></tr>
+  <tr><td>跳转到行首</td><td><kbd>Ctrl</kbd> + <kbd>A</kbd></td></tr>
+  <tr><td>跳转到行尾</td><td><kbd>Ctrl</kbd> + <kbd>E</kbd></td></tr>
+  <tr><td>删除到行首</td><td><kbd>Ctrl</kbd> + <kbd>U</kbd></td></tr>
+  <tr><td>删除前一个单词</td><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td></tr>
+</table>
+
+<h2>四、Python 交互式环境 (REPL)</h2>
+<table>
+  <tr><th>功能</th><th>操作</th></tr>
+  <tr><td>启动 Python 3</td><td>终端输入 <kbd>python3</kbd></td></tr>
+  <tr><td>退出 Python</td><td><kbd>exit()</kbd> 或 <kbd>Ctrl</kbd> + <kbd>D</kbd></td></tr>
+  <tr><td>历史命令</td><td><kbd>↑</kbd> / <kbd>↓</kbd></td></tr>
+  <tr><td>自动补全</td><td><kbd>Tab</kbd></td></tr>
+  <tr><td>查看帮助</td><td><kbd>help()</kbd></td></tr>
+  <tr><td>清屏</td><td><kbd>import os; os.system('clear')</kbd> 或 <kbd>Ctrl</kbd> + <kbd>L</kbd></td></tr>
+</table>
+
+<h2>五、窗口与分屏管理</h2>
+<table>
+  <tr><th>功能</th><th>快捷键</th></tr>
+  <tr><td>分屏编辑</td><td><kbd>Ctrl</kbd> + <kbd>\</kbd></td></tr>
+  <tr><td>关闭标签页</td><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td></tr>
+  <tr><td>恢复关闭的标签</td><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd></td></tr>
+  <tr><td>打开设置</td><td><kbd>Ctrl</kbd> + <kbd>,</kbd></td></tr>
+  <tr><td>全屏（VS Code）</td><td><kbd>F11</kbd></td></tr>
+</table>
+
+<div class="note">
+  <strong>💡 Linux 用户特别提示：</strong><br>
+  • 终端输入 <kbd>python3</kbd> 启动 Python 3（注意不是 <kbd>python</kbd>）<br>
+  • 安装 pip：<kbd>sudo apt install python3-pip</kbd>（Debian/Ubuntu）<br>
+  • pip 换源（国内加速）：<kbd>pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple</kbd><br>
+  • VS Code 安装后可按 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>X</kbd> 搜索安装 Python 扩展
+</div>
+
+<div class="note">
+  <strong>🐧 不同发行版终端快捷键差异：</strong><br>
+  • Ubuntu/Gnome：<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> 打开终端<br>
+  • KDE Plasma：<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> 打开 KRunner<br>
+  • 大部分终端模拟器支持 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> 复制，<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd> 粘贴
+</div>
+
+<p style="text-align:center;color:#6c7086;font-size:13px;margin-top:32px;">
+  Ubuntu / Debian / Fedora / Arch · Python 3 · VS Code &nbsp;|&nbsp; 制表日期：2026-05-26
+</p>
+
+</body>
+</html>
