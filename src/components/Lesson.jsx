@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { simulatePython } from '../utils/transpiler';
+import { judgeLesson } from '../utils/lessonJudge';
 import { CHAPTERS } from '../data/courses';
 import CodeEditor from './CodeEditor';
 import BadgeModal from './BadgeModal';
@@ -93,7 +94,7 @@ export default function Lesson() {
     navigateTo('lesson', { chapterId, lessonId });
   }, [navigateTo]);
 
-  const handleRun = useCallback(() => {
+  const handleRun = useCallback(async () => {
     if (!lessonData || !editorRef.current) return;
     const { les, ch } = lessonData;
     const code = editorRef.current.getCode();
@@ -103,49 +104,36 @@ export default function Lesson() {
     }
 
     const testCases = les.testCases || [{ input: '', expected: '' }];
-    const result = simulatePython(code, testCases[0].input);
+    const report = await judgeLesson({
+      code,
+      testCases,
+      execute: async (source, input) => simulatePython(source, input),
+    });
 
     const outputEl = document.getElementById('lesson-output');
     if (!outputEl) return;
 
-    if (result.error) {
-      outputEl.textContent = '❌ ' + result.error;
+    if (report.error) {
+      outputEl.textContent = `❌ ${report.error}`;
       outputEl.className = 'terminal-content error';
       setIsFirstTry(false);
       return;
     }
 
-    const normalize = (s) => (s || '').replace(/^﻿|\s+$/g, '').trim();
-    const actual = normalize(result.output);
-    const expected = normalize(testCases[0].expected);
-
-    if (actual === expected) {
-      const outText = result.output ? result.output.trim() + '\n\n' : '';
+    if (report.passed) {
+      const outText = report.output ? `${report.output}\n\n` : '';
       outputEl.textContent = outText + '🎉 ' + (lang === 'zh' ? '恭喜通关！' : 'Level Complete!');
       outputEl.className = 'terminal-content success';
-      if (pageData?.reviewMode) {
-        onReviewComplete(les, ch);
-      } else {
-        onLessonComplete(les, ch);
-      }
-    } else {
-      if (pageData?.reviewMode) {
-        onReviewFailed(les);
-      }
-      let msg = lang === 'zh' ? '❌ 输出不正确，请重试。' : '❌ Output incorrect. Try again!';
-      if (result.output && result.output.trim()) {
-        msg += '\n--- ' + (lang === 'zh' ? '你的输出' : 'Your output') + ' ---\n' + result.output.trim();
-      } else {
-        msg += '\n--- ' + (lang === 'zh' ? '你的输出' : 'Your output') + ' ---\n(' + (lang === 'zh' ? '无输出' : 'no output') + ')';
-      }
-      msg += '\n--- ' + (lang === 'zh' ? '期望输出' : 'Expected') + ' ---\n' + expected;
-      if (actual.replace(/\s/g, '') === expected.replace(/\s/g, '')) {
-        msg += '\n💡 ' + (lang === 'zh' ? '提示：输出看起来很匹配，请检查是否有不可见字符或多余空格' : 'Hint: Outputs look identical - check for invisible characters or extra whitespace');
-      }
-      outputEl.textContent = msg;
-      outputEl.className = 'terminal-content error';
-      setIsFirstTry(false);
+      if (pageData?.reviewMode) onReviewComplete(les, ch);
+      else onLessonComplete(les, ch);
+      return;
     }
+
+    outputEl.textContent = lang === 'zh'
+      ? `❌ 第 ${report.failedCase} 组测试未通过。\n--- 你的输出 ---\n${report.output || '(无输出)'}\n--- 期望输出 ---\n${report.expected}`
+      : `❌ Test ${report.failedCase} failed.\n--- Your output ---\n${report.output || '(no output)'}\n--- Expected ---\n${report.expected}`;
+    outputEl.className = 'terminal-content error';
+    setIsFirstTry(false);
   }, [lessonData, lang]);
 
   const onLessonComplete = (les, ch) => {
