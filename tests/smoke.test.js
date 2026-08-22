@@ -10,3 +10,14 @@ test('memory storage follows the localStorage contract used by the app', () => {
   storage.removeItem('codedex_lang');
   assert.equal(storage.getItem('codedex_lang'), null);
 });
+
+test('memory storage string-coerces keys like localStorage', () => {
+  const storage = createMemoryStorage();
+
+  storage.setItem(1, 2);
+
+  assert.equal(storage.key(0), '1');
+  assert.equal(storage.getItem('1'), '2');
+  storage.removeItem('1');
+  assert.equal(storage.getItem(1), null);
+});
