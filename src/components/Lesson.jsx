@@ -83,6 +83,10 @@ export default function Lesson() {
     }
   }, [pageData]);
 
+  useEffect(() => () => {
+    runGuardRef.current.invalidate();
+  }, []);
+
   useEffect(() => {
     if (!pageData) {
       const last = STORAGE.loadLastLesson();

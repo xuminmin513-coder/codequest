@@ -24,3 +24,10 @@ test('Lesson reports runtime and output review failures', () => {
 
   assert.equal(failureCalls.length, 2);
 });
+
+test('Lesson invalidates pending runs when it unmounts', () => {
+  assert.match(
+    lessonSource,
+    /useEffect\(\(\) => \(\) => \{\s*runGuardRef\.current\.invalidate\(\);\s*\}, \[\]\);/,
+  );
+});
