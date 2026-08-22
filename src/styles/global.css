@@ -1992,7 +1992,7 @@ body {
   border-color: var(--accent-cyan);
 }
 
-.graduation-page {
+.page.active.graduation-page {
   min-height: 100%;
   display: flex;
   flex-direction: column;

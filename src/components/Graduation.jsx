@@ -2,17 +2,23 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { CHAPTERS } from '../data/courses';
+import { getGraduationProgress } from '../utils/curriculumNavigation';
 
 export default function Graduation() {
   const { lang, navigateTo } = useApp();
-  const totalLessons = CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
-  const completed = STORAGE.getCompletedCount();
-  const finished = completed >= totalLessons;
+  const { totalLessons, completed, finished } = getGraduationProgress(
+    CHAPTERS,
+    STORAGE.getProgress(),
+  );
+  const icon = finished ? '🏆' : '📚';
+  const title = finished
+    ? (lang === 'zh' ? 'Python 冒险毕业！' : 'Python Adventure Complete!')
+    : (lang === 'zh' ? '继续你的 Python 冒险' : 'Keep Learning Your Python Adventure');
 
   return (
     <div className="page active graduation-page">
-      <div className="graduation-icon">🏆</div>
-      <h2>{lang === 'zh' ? 'Python 冒险毕业！' : 'Python Adventure Complete!'}</h2>
+      <div className="graduation-icon" aria-hidden="true">{icon}</div>
+      <h2>{title}</h2>
       <p>
         {finished
           ? (lang === 'zh'
