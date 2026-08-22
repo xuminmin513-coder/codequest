@@ -11,6 +11,7 @@ import Achievements from './components/Achievements';
 import Settings from './components/Settings';
 import ReviewList from './components/ReviewList';
 import Shortcuts from './components/Shortcuts';
+import Graduation from './components/Graduation';
 import Toast from './components/Toast';
 import './styles/global.css';
 
@@ -32,6 +33,8 @@ function PageRouter() {
       return <ReviewList />;
     case 'shortcuts':
       return <Shortcuts />;
+    case 'graduation':
+      return <Graduation />;
     default:
       return <Dashboard />;
   }

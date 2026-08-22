@@ -5,6 +5,7 @@ import { GAMIFICATION } from '../utils/gamification';
 import { simulatePython } from '../utils/transpiler';
 import { judgeLesson } from '../utils/lessonJudge';
 import { createLessonRunGuard } from '../utils/lessonRunGuard';
+import { getNextDestination } from '../utils/curriculumNavigation';
 import { CHAPTERS } from '../data/courses';
 import CodeEditor from './CodeEditor';
 import BadgeModal from './BadgeModal';
@@ -293,16 +294,11 @@ export default function Lesson() {
 
   const goToNext = () => {
     if (!lessonData) return;
-    const { les, ch } = lessonData;
-    const idx = ch.lessons.findIndex(l => l.id === les.id);
-    if (idx < ch.lessons.length - 1) {
-      loadLesson(ch.id, ch.lessons[idx + 1].id);
+    const destination = getNextDestination(CHAPTERS, lessonData.ch.id, lessonData.les.id);
+    if (destination.page === 'lesson') {
+      loadLesson(destination.data.chapterId, destination.data.lessonId);
     } else {
-      const chIdx = CHAPTERS.findIndex(c => c.id === ch.id);
-      if (chIdx < CHAPTERS.length - 1) {
-        const nextCh = CHAPTERS[chIdx + 1];
-        loadLesson(nextCh.id, nextCh.lessons[0].id);
-      }
+      navigateTo(destination.page, destination.data);
     }
   };
 
