@@ -30,8 +30,8 @@ export default function Settings() {
   const resetProgress = () => {
     if (window.confirm(
       lang === 'zh'
-        ? '确定要重置当前学习进度吗？重置前会自动创建可恢复存档。'
-        : 'Reset current progress? A restorable archive will be created first.'
+        ? '确定要重置当前学习进度吗？系统会自动创建可恢复存档，语言和历史存档会保留。'
+        : 'Reset current learning progress? A restorable archive is created automatically; language and history archives remain.'
     )) {
       STORAGE.restartForV2();
       addToast('info', '🗑️', lang === 'zh' ? '当前进度已归档并重置' : 'Current progress archived and reset');
@@ -160,11 +160,15 @@ export default function Settings() {
           </div>
           <div className="setting-item">
             <div>
-              <div className="setting-label">{lang === 'zh' ? '重置所有进度' : 'Reset All Progress'}</div>
-              <div className="setting-desc">{lang === 'zh' ? '⚠️ 此操作不可撤销！' : '⚠️ This action cannot be undone!'}</div>
+              <div className="setting-label">{lang === 'zh' ? '重置当前学习进度' : 'Reset Current Progress'}</div>
+              <div className="setting-desc">
+                {lang === 'zh'
+                  ? '当前进度会自动存档并可恢复；语言和历史存档会保留。'
+                  : 'Current progress is archived automatically and remains recoverable; language and history archives remain.'}
+              </div>
             </div>
             <button className="danger-btn" onClick={resetProgress}>
-              {lang === 'zh' ? '重置' : 'Reset'}
+              {lang === 'zh' ? '重置当前进度' : 'Reset Current'}
             </button>
           </div>
           {curriculumArchives.length > 0 && (
