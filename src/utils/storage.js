@@ -1,3 +1,12 @@
+import {
+  VERSION_KEY,
+  ARCHIVES_KEY,
+  needsCurriculumChoice,
+  keepExistingProgress,
+  restartForV2,
+  restoreArchive,
+} from './curriculumMigration';
+
 export const STORAGE = {
   KEYS: {
     PROGRESS: 'codedex_progress',
@@ -363,6 +372,26 @@ export const STORAGE = {
 
   // ── Export / Import Progress ──
 
+  needsCurriculumChoice() {
+    return needsCurriculumChoice(localStorage);
+  },
+
+  keepExistingProgress() {
+    keepExistingProgress(localStorage);
+  },
+
+  restartForV2() {
+    return restartForV2(localStorage);
+  },
+
+  getCurriculumArchives() {
+    return JSON.parse(localStorage.getItem(ARCHIVES_KEY) || '[]');
+  },
+
+  restoreCurriculumArchive(archiveId) {
+    restoreArchive(localStorage, archiveId);
+  },
+
   exportAllData() {
     const keys = [
       this.KEYS.PROGRESS,
@@ -377,6 +406,8 @@ export const STORAGE = {
       this.KEYS.SKILL_UNLOCKS,
       this.KEYS.LANG,
       this.KEYS.SAVED_CODE,
+      VERSION_KEY,
+      ARCHIVES_KEY,
     ];
     const data = {};
     keys.forEach(key => {

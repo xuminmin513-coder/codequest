@@ -25,15 +25,16 @@ export default function Settings() {
   const completedCount = STORAGE.getCompletedCount();
   const totalLessons = CHAPTERS.reduce((sum, ch) => sum + ch.lessons.length, 0);
   const streak = STORAGE.getStreak();
+  const curriculumArchives = STORAGE.getCurriculumArchives();
 
   const resetProgress = () => {
     if (window.confirm(
       lang === 'zh'
-        ? '确定要重置所有学习进度吗？这将清除所有XP、徽章和完成记录。'
-        : 'Reset all progress? This will clear all XP, badges and records.'
+        ? '确定要重置当前学习进度吗？重置前会自动创建可恢复存档。'
+        : 'Reset current progress? A restorable archive will be created first.'
     )) {
-      localStorage.clear();
-      addToast('info', '🗑️', lang === 'zh' ? '已重置所有进度' : 'All progress reset');
+      STORAGE.restartForV2();
+      addToast('info', '🗑️', lang === 'zh' ? '当前进度已归档并重置' : 'Current progress archived and reset');
       refresh();
     }
   };
@@ -166,6 +167,36 @@ export default function Settings() {
               {lang === 'zh' ? '重置' : 'Reset'}
             </button>
           </div>
+          {curriculumArchives.length > 0 && (
+            <div className="curriculum-archives">
+              <div className="setting-label">
+                {lang === 'zh' ? '历史课程存档' : 'Curriculum Archives'}
+              </div>
+              {curriculumArchives.map(archive => (
+                <div className="setting-item" key={archive.id}>
+                  <div>
+                    <div className="setting-label">
+                      {lang === 'zh' ? '旧版学习记录' : 'Legacy learning record'}
+                    </div>
+                    <div className="setting-desc">
+                      {new Date(archive.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                  <button
+                    className="toggle-btn"
+                    onClick={() => {
+                      if (!window.confirm(lang === 'zh' ? '恢复此历史存档？当前新版进度也会自动归档。' : 'Restore this archive? Your current V2 progress will also be archived.')) return;
+                      STORAGE.restoreCurriculumArchive(archive.id);
+                      refresh();
+                      window.location.reload();
+                    }}
+                  >
+                    {lang === 'zh' ? '恢复' : 'Restore'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="settings-card">
           <h3>📖 {lang === 'zh' ? '关于' : 'About'}</h3>

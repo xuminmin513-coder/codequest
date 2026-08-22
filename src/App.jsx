@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { STORAGE } from './utils/storage';
 import { GAMIFICATION } from './utils/gamification';
@@ -12,6 +12,7 @@ import Settings from './components/Settings';
 import ReviewList from './components/ReviewList';
 import Shortcuts from './components/Shortcuts';
 import Graduation from './components/Graduation';
+import CurriculumMigrationModal from './components/CurriculumMigrationModal';
 import Toast from './components/Toast';
 import './styles/global.css';
 
@@ -41,7 +42,22 @@ function PageRouter() {
 }
 
 function AppContent() {
-  const { addToast, refresh } = useApp();
+  const { lang, addToast, refresh, navigateTo } = useApp();
+  const [showMigration, setShowMigration] = useState(() => STORAGE.needsCurriculumChoice());
+
+  const keepExistingProgress = () => {
+    STORAGE.keepExistingProgress();
+    setShowMigration(false);
+    refresh();
+    navigateTo('dashboard');
+  };
+
+  const restartForV2 = () => {
+    STORAGE.restartForV2();
+    setShowMigration(false);
+    refresh();
+    navigateTo('dashboard');
+  };
 
   useEffect(() => {
     // Check daily streak on mount
@@ -74,6 +90,13 @@ function AppContent() {
       <main className="main-content">
         <PageRouter />
       </main>
+      {showMigration && (
+        <CurriculumMigrationModal
+          lang={lang}
+          onKeep={keepExistingProgress}
+          onRestart={restartForV2}
+        />
+      )}
       <Toast />
     </div>
   );

@@ -1248,6 +1248,10 @@ body {
   margin: 0 auto;
 }
 
+.curriculum-migration-modal { max-width: 560px; }
+.curriculum-migration-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.curriculum-archives { margin-top: 18px; display: grid; gap: 10px; }
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
   .sidebar { width: 56px; min-width: 56px; }
