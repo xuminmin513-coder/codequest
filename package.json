@@ -9,7 +9,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.cjs",
-    "electron": "electron main.cjs"
+    "electron": "electron main.cjs",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "node --test tests/phase-a.e2e.mjs",
+    "validate:curriculum": "node scripts/validate-curriculum.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.3",
