@@ -65,17 +65,10 @@ export default function Lesson() {
     STORAGE.saveLastLesson(ch.id, les.id);
 
     setTimeout(() => {
-      if (pageData?.reviewMode) {
-        if (editorRef.current) {
-          editorRef.current.setCode(les.starterCode || '');
-          editorRef.current.focus();
-        }
-      } else {
-        const saved = STORAGE.loadCode(les.id) || les.starterCode || '';
-        if (editorRef.current) {
-          editorRef.current.setCode(saved);
-          editorRef.current.focus();
-        }
+      const playerDraft = pageData?.reviewMode ? '' : STORAGE.loadCode(les.id);
+      if (editorRef.current) {
+        editorRef.current.setCode(playerDraft || '');
+        editorRef.current.focus();
       }
     }, 100);
     if (pageData?.reviewMode) {
