@@ -5,14 +5,14 @@ export function getNextDestination(chapters, chapterId, lessonId) {
     return coursesDestination;
   }
 
-  const hasValidInventory = chapters.every(chapter => (
+  const hasValidInventory = Array.from(chapters).every(chapter => (
     chapter !== null
     && typeof chapter === 'object'
     && !Array.isArray(chapter)
     && hasId(chapter.id)
     && Array.isArray(chapter.lessons)
     && chapter.lessons.length > 0
-    && chapter.lessons.every(lesson => (
+    && Array.from(chapter.lessons).every(lesson => (
       lesson !== null
       && typeof lesson === 'object'
       && !Array.isArray(lesson)

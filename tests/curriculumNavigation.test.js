@@ -132,6 +132,28 @@ test('malformed lesson entries anywhere make navigation fail closed', () => {
   });
 });
 
+test('a sparse chapter inventory returns to courses', () => {
+  const sparseChapters = new Array(2);
+  sparseChapters[1] = { id: 'a', lessons: [{ id: 'a1' }] };
+
+  assert.deepEqual(getNextDestination(sparseChapters, 'a', 'a1'), {
+    page: 'courses',
+    data: null,
+  });
+});
+
+test('a sparse lesson inventory returns to courses', () => {
+  const sparseLessons = new Array(2);
+  sparseLessons[1] = { id: 'a1' };
+
+  assert.deepEqual(getNextDestination([
+    { id: 'a', lessons: sparseLessons },
+  ], 'a', 'a1'), {
+    page: 'courses',
+    data: null,
+  });
+});
+
 test('graduation progress ignores stale chapter and lesson IDs', () => {
   assert.deepEqual(getGraduationProgress(chapters, {
     a: { a1: { done: true }, a2: false, staleLesson: { done: true } },
