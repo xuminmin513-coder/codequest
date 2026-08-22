@@ -70,6 +70,14 @@ test('missing or malformed current lessons return to courses without throwing', 
 test('empty or malformed immediate next chapters return to courses without throwing', () => {
   const current = { id: 'a', lessons: [{ id: 'a1' }] };
 
+  assert.deepEqual(getNextDestination([current, null], 'a', 'a1'), {
+    page: 'courses',
+    data: null,
+  });
+  assert.deepEqual(getNextDestination([current, false], 'a', 'a1'), {
+    page: 'courses',
+    data: null,
+  });
   assert.deepEqual(getNextDestination([current, { id: 'b', lessons: [] }], 'a', 'a1'), {
     page: 'courses',
     data: null,

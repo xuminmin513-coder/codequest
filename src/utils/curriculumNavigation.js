@@ -20,8 +20,9 @@ export function getNextDestination(chapters, chapterId, lessonId) {
     };
   }
 
-  const nextChapter = chapters[chapterIndex + 1];
-  if (nextChapter) {
+  if (chapterIndex < chapters.length - 1) {
+    const nextChapter = chapters[chapterIndex + 1];
+    if (!nextChapter || typeof nextChapter !== 'object') return coursesDestination;
     const firstLesson = Array.isArray(nextChapter.lessons) && nextChapter.lessons[0];
     if (!nextChapter.id || !firstLesson?.id) return coursesDestination;
     return {
