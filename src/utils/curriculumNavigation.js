@@ -1,14 +1,31 @@
 export function getNextDestination(chapters, chapterId, lessonId) {
   const coursesDestination = { page: 'courses', data: null };
-  if (!Array.isArray(chapters)) return coursesDestination;
-
-  const chapterIndex = chapters.findIndex(chapter => chapter?.id === chapterId);
-  const chapter = chapters[chapterIndex];
-  if (!chapter || !Array.isArray(chapter.lessons) || chapter.lessons.length === 0) {
+  const hasId = value => typeof value === 'string' && value.trim().length > 0;
+  if (!Array.isArray(chapters) || !hasId(chapterId) || !hasId(lessonId)) {
     return coursesDestination;
   }
 
-  const lessonIndex = chapter.lessons.findIndex(lesson => lesson?.id === lessonId);
+  const hasValidInventory = chapters.every(chapter => (
+    chapter !== null
+    && typeof chapter === 'object'
+    && !Array.isArray(chapter)
+    && hasId(chapter.id)
+    && Array.isArray(chapter.lessons)
+    && chapter.lessons.length > 0
+    && chapter.lessons.every(lesson => (
+      lesson !== null
+      && typeof lesson === 'object'
+      && !Array.isArray(lesson)
+      && hasId(lesson.id)
+    ))
+  ));
+  if (!hasValidInventory) return coursesDestination;
+
+  const chapterIndex = chapters.findIndex(chapter => chapter.id === chapterId);
+  const chapter = chapters[chapterIndex];
+  if (!chapter) return coursesDestination;
+
+  const lessonIndex = chapter.lessons.findIndex(lesson => lesson.id === lessonId);
   if (lessonIndex < 0) return coursesDestination;
 
   if (lessonIndex < chapter.lessons.length - 1) {

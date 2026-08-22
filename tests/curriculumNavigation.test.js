@@ -54,7 +54,11 @@ test('missing or malformed current lessons return to courses without throwing', 
     data: null,
   });
   assert.deepEqual(getNextDestination([null, { id: 'a', lessons: [{ id: 'a1' }] }], 'a', 'a1'), {
-    page: 'graduation',
+    page: 'courses',
+    data: null,
+  });
+  assert.deepEqual(getNextDestination([false, { id: 'a', lessons: [{ id: 'a1' }] }], 'a', 'a1'), {
+    page: 'courses',
     data: null,
   });
   assert.deepEqual(getNextDestination([{ id: 'a' }], 'a', 'a1'), {
@@ -87,6 +91,42 @@ test('empty or malformed immediate next chapters return to courses without throw
     data: null,
   });
   assert.deepEqual(getNextDestination([current, { lessons: [{ id: 'b1' }] }], 'a', 'a1'), {
+    page: 'courses',
+    data: null,
+  });
+});
+
+test('missing or empty navigation IDs always return to courses', () => {
+  assert.deepEqual(getNextDestination([{ lessons: [{ id: 'a1' }] }], undefined, 'a1'), {
+    page: 'courses',
+    data: null,
+  });
+  assert.deepEqual(getNextDestination([{ id: '', lessons: [{ id: 'a1' }] }], '', 'a1'), {
+    page: 'courses',
+    data: null,
+  });
+  assert.deepEqual(getNextDestination([{ id: 'a', lessons: [{}] }], 'a', undefined), {
+    page: 'courses',
+    data: null,
+  });
+  assert.deepEqual(getNextDestination([{ id: 'a', lessons: [{ id: '' }] }], 'a', ''), {
+    page: 'courses',
+    data: null,
+  });
+});
+
+test('malformed lesson entries anywhere make navigation fail closed', () => {
+  assert.deepEqual(getNextDestination([
+    { id: 'a', lessons: [null, { id: 'a1' }] },
+  ], 'a', 'a1'), {
+    page: 'courses',
+    data: null,
+  });
+  assert.deepEqual(getNextDestination([
+    { id: 'a', lessons: [{ id: 'a1' }, { id: 'a2' }] },
+    { id: 'b', lessons: [{ id: 'b1' }] },
+    null,
+  ], 'a', 'a1'), {
     page: 'courses',
     data: null,
   });
