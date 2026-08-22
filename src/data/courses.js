@@ -1,4 +1,6 @@
-export const CHAPTERS = [
+import { prepareCurriculum } from './curriculum.js';
+
+const RAW_CHAPTERS = [
   {
     id: 'ch1',
     title: 'Chapter 1: 冒险开始',
@@ -5976,3 +5978,5 @@ Requirements:
     ]
   }
 ];
+
+export const CHAPTERS = prepareCurriculum(RAW_CHAPTERS);
