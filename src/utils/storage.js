@@ -1,11 +1,114 @@
 import {
+  CURRICULUM_STORAGE_VERSION,
   VERSION_KEY,
   ARCHIVES_KEY,
+  LEARNING_KEYS,
+  hasMeaningfulProgress,
+  isPlainRecord,
+  parseArchives,
+  readArchives,
   needsCurriculumChoice,
   keepExistingProgress,
   restartForV2,
   restoreArchive,
-} from './curriculumMigration';
+} from './curriculumMigration.js';
+
+const LANG_KEY = 'codedex_lang';
+const MANAGED_KEYS = Object.freeze([
+  ...LEARNING_KEYS,
+  LANG_KEY,
+  VERSION_KEY,
+  ARCHIVES_KEY,
+]);
+const MANAGED_KEY_SET = new Set(MANAGED_KEYS);
+
+function validateBackup(data) {
+  if (!isPlainRecord(data)) throw new Error('Invalid backup: root must be a plain record');
+  for (const [key, value] of Object.entries(data)) {
+    if (!MANAGED_KEY_SET.has(key)) throw new Error(`Invalid backup: unsupported key ${key}`);
+    if (typeof value !== 'string') throw new Error(`Invalid backup: ${key} must be a string`);
+  }
+  if (Object.hasOwn(data, VERSION_KEY) && data[VERSION_KEY].length === 0) {
+    throw new Error('Invalid backup: curriculum version must not be empty');
+  }
+  const importedArchives = Object.hasOwn(data, ARCHIVES_KEY)
+    ? parseArchives(data[ARCHIVES_KEY])
+    : [];
+  return { ...data, importedArchives };
+}
+
+function uniqueId(preferred, usedIds) {
+  if (!usedIds.has(preferred)) return preferred;
+  let suffix = 1;
+  while (usedIds.has(`${preferred}-imported-${suffix}`)) suffix += 1;
+  return `${preferred}-imported-${suffix}`;
+}
+
+function activeArchive(storage, archives, now = Date.now()) {
+  const usedIds = new Set(archives.map(item => item.id));
+  const data = Object.fromEntries(
+    LEARNING_KEYS
+      .map(key => [key, storage.getItem(key)])
+      .filter(([, value]) => value !== null),
+  );
+  const id = uniqueId(`legacy-${now}`, usedIds);
+  return { id, createdAt: now, data };
+}
+
+function mergeImportArchives(storage, importedArchives) {
+  const merged = readArchives(storage).map(archive => ({ ...archive, data: { ...archive.data } }));
+  const usedIds = new Set(merged.map(item => item.id));
+  for (const archive of importedArchives) {
+    const id = uniqueId(archive.id, usedIds);
+    usedIds.add(id);
+    merged.push({ ...archive, id, data: { ...archive.data } });
+  }
+  merged.push(activeArchive(storage, merged));
+  const raw = JSON.stringify(merged);
+  parseArchives(raw);
+  return raw;
+}
+
+function captureManaged(storage) {
+  return Object.fromEntries(MANAGED_KEYS.map(key => [key, storage.getItem(key)]));
+}
+
+function restoreManaged(storage, before) {
+  for (const key of MANAGED_KEYS) {
+    const value = before[key];
+    if (value === null) storage.removeItem(key);
+    else storage.setItem(key, value);
+  }
+}
+
+function replaceFromBackup(storage, data) {
+  const { importedArchives, ...rawData } = validateBackup(data);
+  const mergedArchives = mergeImportArchives(storage, importedArchives);
+  const version = Object.hasOwn(rawData, VERSION_KEY)
+    ? rawData[VERSION_KEY]
+    : (hasMeaningfulProgress(rawData.codedex_progress ?? null)
+      ? null
+      : CURRICULUM_STORAGE_VERSION);
+  const before = captureManaged(storage);
+
+  try {
+    storage.setItem(ARCHIVES_KEY, mergedArchives);
+    for (const key of MANAGED_KEYS) {
+      if (key !== ARCHIVES_KEY) storage.removeItem(key);
+    }
+    for (const [key, value] of Object.entries(rawData)) {
+      if (key !== ARCHIVES_KEY && key !== VERSION_KEY) storage.setItem(key, value);
+    }
+    if (version !== null) storage.setItem(VERSION_KEY, version);
+  } catch (error) {
+    try {
+      restoreManaged(storage, before);
+    } catch {
+      // Best-effort rollback; callers still receive the original write error.
+    }
+    throw error;
+  }
+}
 
 export const STORAGE = {
   KEYS: {
@@ -385,7 +488,7 @@ export const STORAGE = {
   },
 
   getCurriculumArchives() {
-    return JSON.parse(localStorage.getItem(ARCHIVES_KEY) || '[]');
+    return readArchives(localStorage);
   },
 
   restoreCurriculumArchive(archiveId) {
@@ -414,12 +517,16 @@ export const STORAGE = {
       const val = localStorage.getItem(key);
       if (val !== null) data[key] = val;
     });
+    if (!Object.hasOwn(data, VERSION_KEY)) {
+      data[VERSION_KEY] = hasMeaningfulProgress(data[this.KEYS.PROGRESS] ?? null)
+        ? 'legacy'
+        : CURRICULUM_STORAGE_VERSION;
+    }
+    if (!Object.hasOwn(data, ARCHIVES_KEY)) data[ARCHIVES_KEY] = '[]';
     return data;
   },
 
   importAllData(data) {
-    Object.entries(data).forEach(([key, val]) => {
-      localStorage.setItem(key, val);
-    });
+    replaceFromBackup(localStorage, data);
   },
 };

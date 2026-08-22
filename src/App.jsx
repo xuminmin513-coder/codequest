@@ -43,20 +43,51 @@ function PageRouter() {
 
 function AppContent() {
   const { lang, addToast, refresh, navigateTo } = useApp();
-  const [showMigration, setShowMigration] = useState(() => STORAGE.needsCurriculumChoice());
+  const [initialMigration] = useState(() => {
+    try {
+      return { show: STORAGE.needsCurriculumChoice(), error: '' };
+    } catch {
+      return {
+        show: true,
+        error: lang === 'zh'
+          ? '无法读取或初始化课程存档，请重试。'
+          : 'Unable to read or initialize curriculum archives. Please try again.',
+      };
+    }
+  });
+  const [showMigration, setShowMigration] = useState(initialMigration.show);
+  const [migrationError, setMigrationError] = useState(initialMigration.error);
+
+  const reportMigrationError = () => {
+    const message = lang === 'zh'
+      ? '迁移失败，原进度未被清除，请重试。'
+      : 'Migration failed. Your original progress was not cleared. Please try again.';
+    setMigrationError(message);
+    addToast('error', '❌', message);
+  };
 
   const keepExistingProgress = () => {
-    STORAGE.keepExistingProgress();
-    setShowMigration(false);
-    refresh();
-    navigateTo('dashboard');
+    try {
+      STORAGE.keepExistingProgress();
+      setMigrationError('');
+      setShowMigration(false);
+      refresh();
+      navigateTo('dashboard');
+    } catch {
+      reportMigrationError();
+    }
   };
 
   const restartForV2 = () => {
-    STORAGE.restartForV2();
-    setShowMigration(false);
-    refresh();
-    navigateTo('dashboard');
+    try {
+      STORAGE.restartForV2();
+      setMigrationError('');
+      setShowMigration(false);
+      refresh();
+      navigateTo('dashboard');
+    } catch {
+      reportMigrationError();
+    }
   };
 
   useEffect(() => {
@@ -66,10 +97,6 @@ function AppContent() {
       const lang = STORAGE.getLang();
       addToast('info', '🔥', `${lang === 'zh' ? '连续学习' : 'Streak'} ${streak} ${lang === 'zh' ? '天！' : 'days!'}`);
     }
-
-    // Migrate old progress to review data
-    STORAGE.migrateReviewData();
-    refresh();
 
     // Global keyboard shortcuts
     const handleKeyDown = (e) => {
@@ -84,6 +111,18 @@ function AppContent() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (showMigration) return;
+    try {
+      STORAGE.migrateReviewData();
+      refresh();
+    } catch {
+      addToast('error', '❌', lang === 'zh'
+        ? '复习数据初始化失败，请检查存档后重试。'
+        : 'Review data initialization failed. Check the archive and try again.');
+    }
+  }, [showMigration, refresh, addToast, lang]);
+
   return (
     <div className="app-container">
       <Sidebar />
@@ -93,6 +132,7 @@ function AppContent() {
       {showMigration && (
         <CurriculumMigrationModal
           lang={lang}
+          error={migrationError}
           onKeep={keepExistingProgress}
           onRestart={restartForV2}
         />

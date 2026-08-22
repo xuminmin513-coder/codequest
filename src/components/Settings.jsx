@@ -25,7 +25,13 @@ export default function Settings() {
   const completedCount = STORAGE.getCompletedCount();
   const totalLessons = CHAPTERS.reduce((sum, ch) => sum + ch.lessons.length, 0);
   const streak = STORAGE.getStreak();
-  const curriculumArchives = STORAGE.getCurriculumArchives();
+  let curriculumArchives = [];
+  let curriculumArchiveError = false;
+  try {
+    curriculumArchives = STORAGE.getCurriculumArchives();
+  } catch {
+    curriculumArchiveError = true;
+  }
 
   const resetProgress = () => {
     if (window.confirm(
@@ -33,22 +39,34 @@ export default function Settings() {
         ? '确定要重置当前学习进度吗？系统会自动创建可恢复存档，语言和历史存档会保留。'
         : 'Reset current learning progress? A restorable archive is created automatically; language and history archives remain.'
     )) {
-      STORAGE.restartForV2();
-      addToast('info', '🗑️', lang === 'zh' ? '当前进度已归档并重置' : 'Current progress archived and reset');
-      refresh();
+      try {
+        STORAGE.restartForV2();
+        addToast('info', '🗑️', lang === 'zh' ? '当前进度已归档并重置' : 'Current progress archived and reset');
+        refresh();
+      } catch {
+        addToast('error', '❌', lang === 'zh'
+          ? '重置失败，当前进度未被清除。'
+          : 'Reset failed. Current progress was not cleared.');
+      }
     }
   };
 
   const exportProgress = () => {
-    const data = STORAGE.exportAllData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `codedex-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    addToast('success', '💾', lang === 'zh' ? '进度已导出' : 'Progress exported');
+    try {
+      const data = STORAGE.exportAllData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `codedex-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      addToast('success', '💾', lang === 'zh' ? '进度已导出' : 'Progress exported');
+    } catch {
+      addToast('error', '❌', lang === 'zh'
+        ? '导出失败，请检查存档或可用磁盘空间。'
+        : 'Export failed. Check the archive or available disk space.');
+    }
   };
 
   const importProgress = () => {
@@ -64,14 +82,29 @@ export default function Settings() {
           const data = JSON.parse(ev.target.result);
           STORAGE.importAllData(data);
           addToast('success', '📥', lang === 'zh' ? '进度已导入，刷新中...' : 'Progress imported, refreshing...');
-          setTimeout(() => refresh(), 500);
+          setTimeout(() => window.location.reload(), 500);
         } catch {
-          addToast('error', '❌', lang === 'zh' ? '文件格式错误，请选择有效的备份文件' : 'Invalid file format');
+          addToast('error', '❌', lang === 'zh'
+            ? '导入失败：备份无效或无法写入，当前数据未更改。'
+            : 'Import failed: the backup is invalid or could not be written. Current data was not changed.');
         }
       };
       reader.readAsText(file);
     };
     input.click();
+  };
+
+  const restoreCurriculumArchive = (archive) => {
+    if (!window.confirm(lang === 'zh' ? '恢复此历史存档？当前新版进度也会自动归档。' : 'Restore this archive? Your current V2 progress will also be archived.')) return;
+    try {
+      STORAGE.restoreCurriculumArchive(archive.id);
+      refresh();
+      window.location.reload();
+    } catch {
+      addToast('error', '❌', lang === 'zh'
+        ? '恢复失败，当前进度和历史存档未更改。'
+        : 'Restore failed. Current progress and curriculum archives were not changed.');
+    }
   };
 
   return (
@@ -171,6 +204,13 @@ export default function Settings() {
               {lang === 'zh' ? '重置当前进度' : 'Reset Current'}
             </button>
           </div>
+          {curriculumArchiveError && (
+            <div className="setting-desc" role="alert">
+              {lang === 'zh'
+                ? '历史存档暂时无法读取。你仍可导出备份，然后检查或修复存档。'
+                : 'Curriculum archives are temporarily unavailable. You can still export a backup for inspection or repair.'}
+            </div>
+          )}
           {curriculumArchives.length > 0 && (
             <div className="curriculum-archives">
               <div className="setting-label">
@@ -188,12 +228,7 @@ export default function Settings() {
                   </div>
                   <button
                     className="toggle-btn"
-                    onClick={() => {
-                      if (!window.confirm(lang === 'zh' ? '恢复此历史存档？当前新版进度也会自动归档。' : 'Restore this archive? Your current V2 progress will also be archived.')) return;
-                      STORAGE.restoreCurriculumArchive(archive.id);
-                      refresh();
-                      window.location.reload();
-                    }}
+                    onClick={() => restoreCurriculumArchive(archive)}
                   >
                     {lang === 'zh' ? '恢复' : 'Restore'}
                   </button>
