@@ -4,6 +4,7 @@ import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { simulatePython } from '../utils/transpiler';
 import { judgeLesson } from '../utils/lessonJudge';
+import { createLessonRunGuard } from '../utils/lessonRunGuard';
 import { CHAPTERS } from '../data/courses';
 import CodeEditor from './CodeEditor';
 import BadgeModal from './BadgeModal';
@@ -21,9 +22,13 @@ export default function Lesson() {
   const [currentBadge, setCurrentBadge] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
   const lastPageDataRef = useRef(null);
+  const runGuardRef = useRef(createLessonRunGuard());
 
   useEffect(() => {
+    runGuardRef.current.invalidate();
+    setIsRunning(false);
     if (!pageData) return;
 
     const { chapterId, lessonId } = pageData;
@@ -96,44 +101,56 @@ export default function Lesson() {
 
   const handleRun = useCallback(async () => {
     if (!lessonData || !editorRef.current) return;
-    const { les, ch } = lessonData;
-    const code = editorRef.current.getCode();
-    if (!code.trim()) {
-      addToast('error', '⚠️', lang === 'zh' ? '请先编写代码' : 'Please write some code first');
-      return;
-    }
+    const runToken = runGuardRef.current.begin();
+    if (!runToken) return;
+    setIsRunning(true);
 
-    const testCases = les.testCases || [{ input: '', expected: '' }];
-    const report = await judgeLesson({
-      code,
-      testCases,
-      execute: async (source, input) => simulatePython(source, input),
-    });
+    try {
+      const { les, ch } = lessonData;
+      const code = editorRef.current.getCode();
+      if (!code.trim()) {
+        addToast('error', '⚠️', lang === 'zh' ? '请先编写代码' : 'Please write some code first');
+        return;
+      }
 
-    const outputEl = document.getElementById('lesson-output');
-    if (!outputEl) return;
+      const testCases = les.testCases || [{ input: '', expected: '' }];
+      const report = await judgeLesson({
+        code,
+        testCases,
+        execute: async (source, input) => simulatePython(source, input),
+      });
 
-    if (report.error) {
-      outputEl.textContent = `❌ ${report.error}`;
+      if (!runGuardRef.current.isCurrent(runToken)) return;
+
+      const outputEl = document.getElementById('lesson-output');
+      if (!outputEl) return;
+
+      if (report.error) {
+        outputEl.textContent = `❌ ${report.error}`;
+        outputEl.className = 'terminal-content error';
+        if (pageData?.reviewMode) onReviewFailed(les);
+        setIsFirstTry(false);
+        return;
+      }
+
+      if (report.passed) {
+        const outText = report.output ? `${report.output}\n\n` : '';
+        outputEl.textContent = outText + '🎉 ' + (lang === 'zh' ? '恭喜通关！' : 'Level Complete!');
+        outputEl.className = 'terminal-content success';
+        if (pageData?.reviewMode) onReviewComplete(les, ch);
+        else onLessonComplete(les, ch);
+        return;
+      }
+
+      outputEl.textContent = lang === 'zh'
+        ? `❌ 第 ${report.failedCase} 组测试未通过。\n--- 你的输出 ---\n${report.output || '(无输出)'}\n--- 期望输出 ---\n${report.expected}`
+        : `❌ Test ${report.failedCase} failed.\n--- Your output ---\n${report.output || '(no output)'}\n--- Expected ---\n${report.expected}`;
       outputEl.className = 'terminal-content error';
+      if (pageData?.reviewMode) onReviewFailed(les);
       setIsFirstTry(false);
-      return;
+    } finally {
+      if (runGuardRef.current.finish(runToken)) setIsRunning(false);
     }
-
-    if (report.passed) {
-      const outText = report.output ? `${report.output}\n\n` : '';
-      outputEl.textContent = outText + '🎉 ' + (lang === 'zh' ? '恭喜通关！' : 'Level Complete!');
-      outputEl.className = 'terminal-content success';
-      if (pageData?.reviewMode) onReviewComplete(les, ch);
-      else onLessonComplete(les, ch);
-      return;
-    }
-
-    outputEl.textContent = lang === 'zh'
-      ? `❌ 第 ${report.failedCase} 组测试未通过。\n--- 你的输出 ---\n${report.output || '(无输出)'}\n--- 期望输出 ---\n${report.expected}`
-      : `❌ Test ${report.failedCase} failed.\n--- Your output ---\n${report.output || '(no output)'}\n--- Expected ---\n${report.expected}`;
-    outputEl.className = 'terminal-content error';
-    setIsFirstTry(false);
   }, [lessonData, lang]);
 
   const onLessonComplete = (les, ch) => {
@@ -448,7 +465,7 @@ export default function Lesson() {
                 )}
               </div>
               <div className="right-buttons">
-                <button className="btn btn-pixel btn-primary" onClick={handleRun}>
+                <button className="btn btn-pixel btn-primary" onClick={handleRun} disabled={isRunning}>
                   {'▶'} {lang === 'zh' ? '运行' : 'Run'}
                 </button>
                 {!isReviewMode && completed && (

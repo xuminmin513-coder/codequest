@@ -11,7 +11,12 @@ export async function judgeLesson({ code, testCases, execute }) {
 
   for (let index = 0; index < cases.length; index += 1) {
     const testCase = cases[index];
-    const execution = await execute(code, testCase.input || '');
+    let execution;
+    try {
+      execution = await execute(code, testCase.input || '');
+    } catch (error) {
+      execution = { output: '', error: error?.message || String(error) };
+    }
     const actual = normalizeOutput(execution.output);
     const expected = normalizeOutput(testCase.expected);
     const result = {

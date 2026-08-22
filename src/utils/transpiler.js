@@ -368,7 +368,7 @@ if (!jsCode.trim()) return { output: '', error: null };
       }
     );
 
-    return { output: output.trim(), error: null };
+    return { output, error: null };
   } catch (e) {
     return { output: '', error: formatPythonError(e, code) };
   }

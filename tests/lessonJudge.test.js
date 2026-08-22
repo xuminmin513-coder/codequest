@@ -34,3 +34,18 @@ test('judge preserves runtime errors', async () => {
   assert.equal(report.passed, false);
   assert.match(report.error, /SyntaxError/);
 });
+
+test('judge converts rejected execution into a failed report', async () => {
+  const report = await judgeLesson({
+    code: 'bad',
+    testCases: [{ input: '', expected: '' }],
+    execute: async () => {
+      throw new Error('boom');
+    },
+  });
+
+  assert.equal(report.passed, false);
+  assert.equal(report.failedCase, 1);
+  assert.match(report.error, /boom/);
+  assert.equal(report.results.length, 1);
+});
