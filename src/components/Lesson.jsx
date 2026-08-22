@@ -190,7 +190,7 @@ export default function Lesson() {
       const cpc = STORAGE.getCompletedPerChapter();
       let fcc = 0;
       CHAPTERS.forEach(ch2 => { if ((cpc[ch2.id] || 0) >= ch2.lessons.length) fcc++; });
-      return { xp: totalXp, completedLessons: c, completedChapters: fcc, badges: b.length, streak: s, perfectLessons: p, fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0 };
+      return { xp: totalXp, completedLessons: c, completedChapters: fcc, totalLessons: CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0), badges: b.length, streak: s, perfectLessons: p, fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0 };
     })();
 
     const oldBadges = STORAGE.getBadges();
@@ -242,6 +242,7 @@ export default function Lesson() {
       xp: STORAGE.getTotalXp(),
       completedLessons: STORAGE.getCompletedCount(),
       completedChapters: 0,
+      totalLessons: CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0),
       streak: STORAGE.getStreak(),
       perfectLessons: STORAGE.getPerfectCount(),
       fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0
