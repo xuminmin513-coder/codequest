@@ -134,3 +134,60 @@ test('Electron runtime isolates the renderer, network, and Python worker', { tim
     await rm(profileDir, { recursive: true, force: true });
   }
 });
+
+test('Electron migrates a legacy save and only adds a slot after an explicit click', { timeout: 60000 }, async () => {
+  const profileDir = await mkdtemp(path.join(tmpdir(), 'xmcode-saves-e2e-'));
+  let electronApp;
+
+  try {
+    electronApp = await electron.launch({
+      args: ['.', '--xmcode-e2e'],
+      env: { ...process.env, XMCODE_E2E_USER_DATA: profileDir },
+    });
+    const page = await electronApp.firstWindow();
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForFunction(() => (document.querySelector('#root')?.childElementCount ?? 0) > 0);
+
+    await page.evaluate(() => {
+      localStorage.clear();
+      localStorage.setItem('codedex_lang', 'zh');
+      localStorage.setItem('codedex_progress', '{"legacy":true}');
+    });
+    await page.reload();
+    await page.waitForFunction(() => (document.querySelector('#root')?.childElementCount ?? 0) > 0);
+
+    const migrated = await page.evaluate(() => {
+      const catalog = JSON.parse(localStorage.getItem('xm2_save_catalog_v1'));
+      const prefix = `xm2_save_data:${encodeURIComponent(catalog.activeSaveId)}:`;
+      return {
+        saveCount: catalog.saves.length,
+        rawLegacyValue: localStorage.getItem('codedex_progress'),
+        scopedLegacyValue: localStorage.getItem(`${prefix}${encodeURIComponent('codedex_progress')}`),
+      };
+    });
+    assert.deepEqual(migrated, {
+      saveCount: 1,
+      rawLegacyValue: null,
+      scopedLegacyValue: '{"legacy":true}',
+    });
+
+    await page.getByRole('button', { name: '保留当前进度' }).click();
+    await page.locator('.curriculum-migration-overlay').waitFor({ state: 'detached' });
+    await page.locator('.nav-item[data-page="settings"]').click();
+    await page.locator('.save-slots-card').waitFor();
+    assert.equal(await page.locator('.save-slot').count(), 1);
+    assert.equal(await page.locator('.save-slot.active').count(), 1);
+
+    await page.locator('.save-slot-add').click({ noWaitAfter: true, timeout: 5000 });
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+    await page.waitForFunction(() => (document.querySelector('#root')?.childElementCount ?? 0) > 0);
+    await page.locator('.nav-item[data-page="settings"]').click();
+    await page.locator('.save-slots-card').waitFor();
+
+    assert.equal(await page.locator('.save-slot').count(), 2);
+    assert.equal(await page.locator('.save-slot.active').count(), 1);
+  } finally {
+    await electronApp?.close();
+    await rm(profileDir, { recursive: true, force: true });
+  }
+});

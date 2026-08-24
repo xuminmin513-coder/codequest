@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { CHAPTERS } from '../data/courses';
+import SaveSlots from './SaveSlots';
 
 export default function Settings() {
   const { lang, toggleLanguage, refresh, addToast } = useApp();
@@ -110,6 +111,7 @@ export default function Settings() {
             </button>
           </div>
         </div>
+        <SaveSlots />
         <div className="settings-card">
           <h3>📊 {lang === 'zh' ? '学习统计' : 'Learning Stats'}</h3>
           <div className="setting-item">

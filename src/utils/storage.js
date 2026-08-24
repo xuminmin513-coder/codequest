@@ -12,6 +12,19 @@ import {
   restartForV2,
   restoreArchive,
 } from './curriculumMigration.js';
+import {
+  createActiveSaveRecovery,
+  getActivePlayerStorage,
+} from '../data/playerSaveRepository.js';
+
+const localStorage = {
+  get length() { return getActivePlayerStorage().length; },
+  key(index) { return getActivePlayerStorage().key(index); },
+  getItem(key) { return getActivePlayerStorage().getItem(key); },
+  setItem(key, value) { return getActivePlayerStorage().setItem(key, value); },
+  removeItem(key) { return getActivePlayerStorage().removeItem(key); },
+  clear() { return getActivePlayerStorage().clear(); },
+};
 
 const LANG_KEY = 'codedex_lang';
 const MANAGED_KEYS = Object.freeze([
@@ -472,6 +485,7 @@ export const STORAGE = {
   },
 
   restartForV2() {
+    createActiveSaveRecovery('before-reset');
     return restartForV2(localStorage);
   },
 
@@ -480,6 +494,7 @@ export const STORAGE = {
   },
 
   restoreCurriculumArchive(archiveId) {
+    createActiveSaveRecovery('before-curriculum-restore');
     restoreArchive(localStorage, archiveId);
   },
 
@@ -515,6 +530,7 @@ export const STORAGE = {
   },
 
   importAllData(data) {
+    createActiveSaveRecovery('before-import');
     replaceFromBackup(localStorage, data);
   },
 };
