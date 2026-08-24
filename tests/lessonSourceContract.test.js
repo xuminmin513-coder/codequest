@@ -7,14 +7,19 @@ const lessonSource = readFileSync(
   'utf8',
 );
 
-test('Lesson guards async runs and disables Run while one is pending', () => {
+test('Lesson guards async runs and exposes a real stop action while one is pending', () => {
+  assert.match(lessonSource, /createPythonRunner/);
   assert.match(lessonSource, /createLessonRunGuard/);
+  assert.match(lessonSource, /runnerRef\.current\?\.dispose\(\)/);
   assert.match(lessonSource, /runGuardRef\.current\.invalidate\(\)/);
   assert.match(lessonSource, /runGuardRef\.current\.begin\(\)/);
   assert.match(lessonSource, /runGuardRef\.current\.isCurrent\(runToken\)/);
+  assert.match(lessonSource, /runGuardRef\.current\.cancelCurrent\(\)/);
+  assert.match(lessonSource, /runnerRef\.current\?\.stop\(\)/);
   assert.match(lessonSource, /finally\s*{/);
   assert.match(lessonSource, /runGuardRef\.current\.finish\(runToken\)/);
-  assert.match(lessonSource, /disabled=\{isRunning\}/);
+  assert.doesNotMatch(lessonSource, /disabled=\{isRunning\}/);
+  assert.match(lessonSource, /isRunning\s*\?\s*\(lang === 'zh' \? '停止' : 'Stop'\)/);
 });
 
 test('Lesson reports runtime and output review failures', () => {
@@ -28,6 +33,6 @@ test('Lesson reports runtime and output review failures', () => {
 test('Lesson invalidates pending runs when it unmounts', () => {
   assert.match(
     lessonSource,
-    /useEffect\(\(\) => \(\) => \{\s*runGuardRef\.current\.invalidate\(\);\s*\}, \[\]\);/,
+    /useEffect\(\(\) => \(\) => \{\s*runnerRef\.current\?\.dispose\(\);\s*runnerRef\.current = null;\s*runGuardRef\.current\.invalidate\(\);\s*\}, \[\]\);/,
   );
 });

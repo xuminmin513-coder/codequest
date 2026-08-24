@@ -49,3 +49,14 @@ test('judge converts rejected execution into a failed report', async () => {
   assert.match(report.error, /boom/);
   assert.equal(report.results.length, 1);
 });
+
+test('judge preserves runner safety statuses for beginner feedback', async () => {
+  const report = await judgeLesson({
+    code: 'while True: pass',
+    testCases: [{ input: '', expected: '' }],
+    execute: async () => ({ status: 'timeout', output: '', error: 'Execution timed out' }),
+  });
+
+  assert.equal(report.passed, false);
+  assert.equal(report.status, 'timeout');
+});

@@ -22,6 +22,8 @@
 
 当前工作区含有未提交的课程、设置、存档迁移和测试改动。实施时只暂存本任务明确列出的文件，不使用 `git add .`，不覆盖这些文件中与本任务无关的修改。
 
+**实施偏差记录（已验证）：** Electron 42 在该自定义协议上拒绝模块化 CORS 子资源。最终生产构建将经典 IIFE 入口内联到 `index.html` 并写入构建时 SHA-256 CSP；Pyodide 模块、Wasm、标准库和锁文件随 Worker 打包。`xmcode://` 明确设置 `supportFetchAPI: false` 与 `corsEnabled: false`，只提供受限静态资源，不开放协议 Fetch API。此方案已由 Electron E2E 验证界面挂载、真实 Python、断网和主机文件隔离。
+
 ## 文件责任图
 
 - `main.cjs`：安全自定义协议、Electron 会话策略和窗口生命周期；绝不接收玩家代码。
@@ -47,7 +49,7 @@
 **Files:**
 - Create: `tests/securitySourceContract.test.js`
 
-- [ ] **Step 1: 写源码安全契约测试**
+- [x] **Step 1: 写源码安全契约测试**
 
 测试读取 `main.cjs`、`preload.js`、`index.html`、`Lesson.jsx`、`Settings.jsx`、`storage.js` 和 `transpiler.js`，断言：
 
@@ -93,13 +95,13 @@ test('document CSP forbids generic eval and external connections', () => {
 });
 ```
 
-- [ ] **Step 2: 运行并确认 RED**
+- [x] **Step 2: 运行并确认 RED**
 
 Run: `node --test tests/securitySourceContract.test.js`
 
 Expected: 至少因 `child_process`、`preload.js`、`AIChat.jsx`、`transpiler.js` 和缺少 CSP 而失败；失败原因必须与待删除风险一致。
 
-- [ ] **Step 3: 保留失败测试，不改生产代码**
+- [x] **Step 3: 保留失败测试，不改生产代码**
 
 Run: `git diff --check -- tests/securitySourceContract.test.js`
 
@@ -118,7 +120,7 @@ Expected: exit 0。
 - Modify: `src/utils/storage.js`
 - Create: `tests/deprecatedDataCleanup.test.js`
 
-- [ ] **Step 1: 先写旧密钥清理测试**
+- [x] **Step 1: 先写旧密钥清理测试**
 
 ```js
 import test from 'node:test';
@@ -141,7 +143,7 @@ Run: `node --test tests/deprecatedDataCleanup.test.js`
 
 Expected: FAIL，模块尚不存在。
 
-- [ ] **Step 2: 实现只删除不读取的清理函数**
+- [x] **Step 2: 实现只删除不读取的清理函数**
 
 ```js
 const DEPRECATED_SECRET_KEYS = Object.freeze(['codedex_deepseek_key']);
@@ -158,7 +160,7 @@ export function isDeprecatedSecretKey(key) {
 
 在应用初始化时调用一次 `purgeDeprecatedSecrets()`；删除 `STORAGE.getDeepSeekKey()` 和 `STORAGE.setDeepSeekKey()`。导出循环跳过 `isDeprecatedSecretKey(key)`，导入遇到该键时忽略。
 
-- [ ] **Step 3: 删除 AI UI 与宿主 Python IPC**
+- [x] **Step 3: 删除 AI UI 与宿主 Python IPC**
 
 删除 `AIChat.jsx` 和 `preload.js`。从 `Lesson.jsx` 删除 AI import 与按钮，从 `Settings.jsx` 删除 API Key state、effect、保存函数和整张 AI 设置卡。重写 `main.cjs`，只保留 Electron、路径、URL 和安全静态文件提供逻辑，不再导入 `ipcMain`、`child_process`、`os` 或 `crypto`。
 
@@ -204,7 +206,7 @@ win.webContents.on('will-navigate', (event, target) => {
 });
 ```
 
-- [ ] **Step 4: 加入 CSP**
+- [x] **Step 4: 加入 CSP**
 
 在 `index.html` `<head>` 中加入：
 
@@ -212,13 +214,13 @@ win.webContents.on('will-navigate', (event, target) => {
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-src 'none'; form-action 'none'">
 ```
 
-- [ ] **Step 5: 运行聚焦测试**
+- [x] **Step 5: 运行聚焦测试**
 
 Run: `node --test tests/deprecatedDataCleanup.test.js tests/securitySourceContract.test.js`
 
 Expected: 清理测试 PASS；安全契约中只有“旧模拟器仍存在”相关断言继续失败。
 
-- [ ] **Step 6: 运行已有测试防止覆盖用户改动**
+- [x] **Step 6: 运行已有测试防止覆盖用户改动**
 
 Run: `npm test`
 
@@ -230,7 +232,7 @@ Expected: 旧 `transpilerOutput.test.js` 和其他既有测试通过；新增安
 - Create: `src/runtime/pythonProtocol.js`
 - Create: `tests/pythonProtocol.test.js`
 
-- [ ] **Step 1: 写协议失败测试**
+- [x] **Step 1: 写协议失败测试**
 
 覆盖合法请求、未知字段、错误协议版本、空运行 ID、超长代码、超长输入、非法超时和伪造结果能力标记：
 
@@ -262,11 +264,11 @@ Run: `node --test tests/pythonProtocol.test.js`
 
 Expected: FAIL，模块尚不存在。
 
-- [ ] **Step 2: 实现最小协议**
+- [x] **Step 2: 实现最小协议**
 
 协议常量固定为：代码 50 KiB、输入 16 KiB、输出 64 KiB、默认超时 5 秒、允许超时 250–10,000 ms；状态仅允许 `passed`、`runtime_error`、`timeout`、`stopped`、`output_limit`、`worker_crash`、`invalid_request` 和 `unsupported_lesson`。验证器返回 `{ ok: true, value }` 或 `{ ok: false, error: 'invalid_request' }`，并拒绝未知字段。
 
-- [ ] **Step 3: 运行协议测试**
+- [x] **Step 3: 运行协议测试**
 
 Run: `node --test tests/pythonProtocol.test.js`
 
@@ -278,7 +280,7 @@ Expected: PASS。
 - Create: `src/runtime/PythonRunner.js`
 - Create: `tests/pythonRunner.test.js`
 
-- [ ] **Step 1: 用假 Worker 写生命周期测试**
+- [x] **Step 1: 用假 Worker 写生命周期测试**
 
 测试必须证明：合法结果才完成 Promise、错误 capability 被忽略、超时终止 Worker、`stop()` 返回 `stopped`、`dispose()` 拒绝后续调用、Worker error 返回 `worker_crash`。
 
@@ -288,7 +290,7 @@ Run: `node --test tests/pythonRunner.test.js`
 
 Expected: FAIL，`PythonRunner.js` 尚不存在。
 
-- [ ] **Step 2: 实现 Runner**
+- [x] **Step 2: 实现 Runner**
 
 公开 API：
 
@@ -308,7 +310,7 @@ export function createPythonRunner({
 
 Runner 一次只允许一个请求；能力标记与运行 ID 分别生成。超时、停止、Worker error 和 dispose 都必须清理定时器与监听器并调用 `terminate()`。每次判题完成后由页面销毁 Runner，因此下一次点击运行会得到全新 Worker 和 Python 状态。
 
-- [ ] **Step 3: 运行生命周期测试**
+- [x] **Step 3: 运行生命周期测试**
 
 Run: `node --test tests/pythonRunner.test.js`
 
@@ -323,7 +325,7 @@ Expected: PASS，测试进程无悬挂定时器。
 - Create: `src/runtime/python.worker.js`
 - Create: `tests/pyodideAssets.test.js`
 
-- [ ] **Step 1: 写构建资源契约测试**
+- [x] **Step 1: 写构建资源契约测试**
 
 测试断言 `package.json` 精确依赖 `pyodide: 314.0.5`、开发依赖 `vite-plugin-static-copy: 4.1.1`；`vite.config.js` 排除 Pyodide 预打包、复制核心文件到 `assets/pyodide`、排除 `.whl`、Markdown、HTML、类型声明和嵌套 `node_modules`；Worker 不包含 CDN、`loadPackagesFromImports` 或 `micropip`。
 
@@ -331,7 +333,7 @@ Run: `node --test tests/pyodideAssets.test.js`
 
 Expected: FAIL，依赖和 Worker 尚不存在。
 
-- [ ] **Step 2: 安装固定依赖**
+- [x] **Step 2: 安装固定依赖**
 
 Run: `npm install --save-exact pyodide@314.0.5`
 
@@ -339,11 +341,11 @@ Run: `npm install --save-dev --save-exact vite-plugin-static-copy@4.1.1`
 
 Expected: `package.json` 和 `package-lock.json` 记录精确版本；不使用 `latest` 或范围符号。
 
-- [ ] **Step 3: 按官方 Vite 方式复制本地运行时**
+- [x] **Step 3: 按官方 Vite 方式复制本地运行时**
 
 `vite.config.js` 使用 `viteStaticCopy` 和 `import.meta.resolve('pyodide')` 找到资源目录，复制核心文件到 `dist/assets/pyodide`，明确排除所有 wheel。设置 `optimizeDeps.exclude: ['pyodide']`。
 
-- [ ] **Step 4: 实现模块 Worker**
+- [x] **Step 4: 实现模块 Worker**
 
 Worker：
 
@@ -360,7 +362,7 @@ Worker：
 
 Worker 不把原始 `message`、capability 或包装器闭包注入 Python globals。
 
-- [ ] **Step 5: 运行资源契约与构建**
+- [x] **Step 5: 运行资源契约与构建**
 
 Run: `node --test tests/pyodideAssets.test.js tests/pythonProtocol.test.js tests/pythonRunner.test.js`
 
@@ -381,7 +383,7 @@ Expected: exit 0；`dist/assets/pyodide/pyodide.asm.wasm`、`python_stdlib.zip`�
 - Delete: `src/utils/transpiler.js`
 - Delete: `tests/transpilerOutput.test.js`
 
-- [ ] **Step 1: 写课程分流测试**
+- [x] **Step 1: 写课程分流测试**
 
 `runtimePolicy` 将包含 `pyecharts`、`threading`、`socket` 或 `pyspark` 的现有课程标记为 `visual-lab-pending`，其他课程标记为 `python`。测试至少覆盖普通输出、SQLite、pyecharts、线程、Socket 和 PySpark 六类。
 
@@ -389,11 +391,11 @@ Run: `node --test tests/runtimePolicy.test.js`
 
 Expected: FAIL，模块尚不存在。
 
-- [ ] **Step 2: 扩展运行守卫的停止语义**
+- [x] **Step 2: 扩展运行守卫的停止语义**
 
 在原有 token API 上增加 `cancelCurrent()`，返回当前 token 并清空活动状态。先增加失败测试，确认旧实现不满足，再实现并保持原测试通过。
 
-- [ ] **Step 3: 集成 PythonRunner**
+- [x] **Step 3: 集成 PythonRunner**
 
 `Lesson.jsx`：
 
@@ -406,11 +408,11 @@ Expected: FAIL，模块尚不存在。
 - `timeout`、`output_limit`、`stopped` 和 `worker_crash` 使用面向初学者的中文/英文提示；
 - `visual-lab-pending` 不执行代码，显示“这一关正在迁移为安全教学实验，暂时不能判题”，且不授予通关。
 
-- [ ] **Step 4: 删除旧模拟器和旧测试**
+- [x] **Step 4: 删除旧模拟器和旧测试**
 
 删除 `src/utils/transpiler.js` 与只验证模拟器输出的 `tests/transpilerOutput.test.js`。不得保留动态执行备用路径。
 
-- [ ] **Step 5: 运行聚焦和完整测试**
+- [x] **Step 5: 运行聚焦和完整测试**
 
 Run: `node --test tests/runtimePolicy.test.js tests/lessonRunGuard.test.js tests/lessonSourceContract.test.js tests/lessonUiContract.test.js tests/securitySourceContract.test.js`
 
@@ -426,7 +428,7 @@ Expected: 所有 Node 测试通过，0 failures。
 - Create: `tests/electronSecurity.e2e.mjs`
 - Modify: `package.json`
 
-- [ ] **Step 1: 写 Electron E2E 测试**
+- [x] **Step 1: 写 Electron E2E 测试**
 
 使用 Playwright `_electron.launch({ args: ['.'] })`，测试：
 
@@ -439,7 +441,7 @@ Expected: 所有 Node 测试通过，0 failures。
 
 测试必须在 `finally` 中关闭 Electron 应用。
 
-- [ ] **Step 2: 运行并确认测试能发现缺陷**
+- [x] **Step 2: 运行并确认测试能发现缺陷**
 
 先临时把测试中的期望 `sandbox === true` 改为 `false` 或临时在主进程关闭一个防护，运行：
 
@@ -447,7 +449,7 @@ Run: `node --test tests/electronSecurity.e2e.mjs`
 
 Expected: FAIL，证明测试能够发现防护变化。立即恢复正确期望或防护。
 
-- [ ] **Step 3: 运行正确 E2E**
+- [x] **Step 3: 运行正确 E2E**
 
 将 `package.json` 的 `test:e2e` 设置为：
 
@@ -466,7 +468,7 @@ Expected: PASS，Electron 进程正常退出，无残留窗口。
 **Files:**
 - Modify: `docs/superpowers/plans/2026-08-24-local-execution-security.md`（勾选实际完成步骤）
 
-- [ ] **Step 1: 依赖与敏感源码扫描**
+- [x] **Step 1: 依赖与敏感源码扫描**
 
 Run: `npm audit --omit=dev`
 
@@ -476,7 +478,7 @@ Run: `rg -n "child_process|run-python|execFile|new Function|DeepSeek|api.deepsee
 
 Expected: 只允许测试文件对禁止字符串的断言，以及 `deprecatedDataCleanup.js` 中用于删除旧键的常量；生产执行路径无命中。
 
-- [ ] **Step 2: 完整自动验证**
+- [x] **Step 2: 完整自动验证**
 
 Run: `npm test`
 
@@ -494,7 +496,7 @@ Run: `npm run test:e2e`
 
 Expected: 0 failures。
 
-- [ ] **Step 3: 工作区边界检查**
+- [x] **Step 3: 工作区边界检查**
 
 Run: `git diff --check`
 
@@ -504,7 +506,7 @@ Run: `git status --short`
 
 Expected: 清楚区分本任务文件和用户此前未提交文件；不声称整个工作区干净。
 
-- [ ] **Step 4: 只提交本任务文件**
+- [x] **Step 4: 只提交本任务文件**
 
 明确列出并 `git add` 本计划涉及的文件；禁止 `git add .`。提交信息：
 

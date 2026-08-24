@@ -22,6 +22,7 @@ export async function judgeLesson({ code, testCases, execute }) {
     const result = {
       caseNumber: index + 1,
       passed: !execution.error && actual === expected,
+      status: execution.status || (execution.error ? 'runtime_error' : 'passed'),
       actual,
       expected,
       error: execution.error || null,
@@ -31,6 +32,7 @@ export async function judgeLesson({ code, testCases, execute }) {
       return {
         passed: false,
         failedCase: result.caseNumber,
+        status: result.status,
         error: result.error,
         output: execution.output || '',
         expected,
@@ -41,6 +43,7 @@ export async function judgeLesson({ code, testCases, execute }) {
   return {
     passed: true,
     failedCase: null,
+    status: 'passed',
     error: null,
     output: results.at(-1)?.actual || '',
     expected: results.at(-1)?.expected || '',

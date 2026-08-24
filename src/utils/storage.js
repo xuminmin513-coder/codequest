@@ -412,18 +412,6 @@ export const STORAGE = {
     if (changed) this.saveReviewData(data);
   },
 
-  // ── DeepSeek AI ──
-
-  DEEPSEEK_API_KEY: 'codedex_deepseek_key',
-
-  getDeepSeekKey() {
-    return localStorage.getItem(this.DEEPSEEK_API_KEY) || '';
-  },
-
-  setDeepSeekKey(key) {
-    localStorage.setItem(this.DEEPSEEK_API_KEY, key);
-  },
-
   // ── Skill unlock system ──
 
   isAllCh1LessonsReviewed() {

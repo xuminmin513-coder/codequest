@@ -11,7 +11,7 @@
     "server": "node server.cjs",
     "electron": "electron main.cjs",
     "test": "node --test tests/*.test.js",
-    "test:e2e": "node --test tests/phase-a.e2e.mjs",
+    "test:e2e": "node --test tests/electronSecurity.e2e.mjs",
     "validate:curriculum": "node scripts/validate-curriculum.mjs"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
     "@codemirror/theme-one-dark": "^6.1.3",
     "@codemirror/view": "^6.35.3",
     "codemirror": "^6.0.1",
+    "pyodide": "314.0.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -28,6 +29,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^42.3.1",
     "playwright": "^1.60.0",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vite-plugin-static-copy": "4.1.1"
   }
 }

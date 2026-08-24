@@ -14,6 +14,7 @@ import Shortcuts from './components/Shortcuts';
 import Graduation from './components/Graduation';
 import CurriculumMigrationModal from './components/CurriculumMigrationModal';
 import Toast from './components/Toast';
+import { purgeDeprecatedSecrets } from './utils/deprecatedDataCleanup';
 import './styles/global.css';
 
 function PageRouter() {
@@ -43,6 +44,10 @@ function PageRouter() {
 
 function AppContent() {
   const { lang, addToast, refresh, navigateTo } = useApp();
+  useEffect(() => {
+    purgeDeprecatedSecrets();
+  }, []);
+
   const [initialMigration] = useState(() => {
     try {
       return { show: STORAGE.needsCurriculumChoice(), error: '' };

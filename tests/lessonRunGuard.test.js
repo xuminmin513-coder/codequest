@@ -33,3 +33,14 @@ test('invalidating makes a token stale and stale finish cannot clear a newer run
   assert.equal(guard.finish(current), true);
   assert.ok(guard.begin());
 });
+
+test('cancelCurrent returns and invalidates only the active token', () => {
+  const guard = createLessonRunGuard();
+  assert.equal(guard.cancelCurrent(), null);
+
+  const active = guard.begin();
+  assert.equal(guard.cancelCurrent(), active);
+  assert.equal(guard.isCurrent(active), false);
+  assert.equal(guard.cancelCurrent(), null);
+  assert.ok(guard.begin());
+});

@@ -2,14 +2,14 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
-import { simulatePython } from '../utils/transpiler';
 import { judgeLesson } from '../utils/lessonJudge';
 import { createLessonRunGuard } from '../utils/lessonRunGuard';
 import { getNextDestination } from '../utils/curriculumNavigation';
+import { createPythonRunner } from '../runtime/PythonRunner';
+import { getLessonRuntimeMode } from '../runtime/runtimePolicy';
 import { CHAPTERS } from '../data/courses';
 import CodeEditor from './CodeEditor';
 import BadgeModal from './BadgeModal';
-import AIChat from './AIChat';
 
 const isMac = typeof navigator !== 'undefined' && navigator.platform?.toLowerCase().includes('mac');
 const runShortcut = isMac ? 'Cmd+Enter 运行' : 'Ctrl+Enter 运行';
@@ -26,8 +26,11 @@ export default function Lesson() {
   const [isRunning, setIsRunning] = useState(false);
   const lastPageDataRef = useRef(null);
   const runGuardRef = useRef(createLessonRunGuard());
+  const runnerRef = useRef(null);
 
   useEffect(() => {
+    runnerRef.current?.dispose();
+    runnerRef.current = null;
     runGuardRef.current.invalidate();
     setIsRunning(false);
     if (!pageData) return;
@@ -78,6 +81,8 @@ export default function Lesson() {
   }, [pageData]);
 
   useEffect(() => () => {
+    runnerRef.current?.dispose();
+    runnerRef.current = null;
     runGuardRef.current.invalidate();
   }, []);
 
@@ -97,11 +102,25 @@ export default function Lesson() {
     navigateTo('lesson', { chapterId, lessonId });
   }, [navigateTo]);
 
+  const handleStop = useCallback(() => {
+    const cancelled = runGuardRef.current.cancelCurrent();
+    if (!cancelled) return;
+    runnerRef.current?.stop();
+    setIsRunning(false);
+
+    const outputEl = document.getElementById('lesson-output');
+    if (outputEl) {
+      outputEl.textContent = lang === 'zh' ? '⏹ 已停止运行。' : '⏹ Execution stopped.';
+      outputEl.className = 'terminal-content error';
+    }
+  }, [lang]);
+
   const handleRun = useCallback(async () => {
     if (!lessonData || !editorRef.current) return;
     const runToken = runGuardRef.current.begin();
     if (!runToken) return;
     setIsRunning(true);
+    let runner = null;
 
     try {
       const { les, ch } = lessonData;
@@ -111,20 +130,44 @@ export default function Lesson() {
         return;
       }
 
+      const outputEl = document.getElementById('lesson-output');
+      if (!outputEl) return;
+
+      if (getLessonRuntimeMode(les) === 'visual-lab-pending') {
+        outputEl.textContent = lang === 'zh'
+          ? '🧪 这一关正在迁移为安全教学实验，暂时不能判题。旧模拟器已经停用，以免让你学到不真实的 Python。'
+          : '🧪 This lesson is being migrated to a safe teaching lab and cannot be judged yet. The old simulator is disabled because it did not behave like real Python.';
+        outputEl.className = 'terminal-content error';
+        return;
+      }
+
       const testCases = les.testCases || [{ input: '', expected: '' }];
+      runner = createPythonRunner();
+      runnerRef.current = runner;
       const report = await judgeLesson({
         code,
         testCases,
-        execute: async (source, input) => simulatePython(source, input),
+        execute: async (source, input) => runner.run(source, input),
       });
 
       if (!runGuardRef.current.isCurrent(runToken)) return;
 
-      const outputEl = document.getElementById('lesson-output');
-      if (!outputEl) return;
-
       if (report.error) {
-        outputEl.textContent = `❌ ${report.error}`;
+        const safetyMessages = {
+          timeout: lang === 'zh'
+            ? '代码运行时间太长，已经安全停止。请检查是否存在不会结束的循环。'
+            : 'Your code ran for too long and was stopped safely. Check for a loop that never ends.',
+          output_limit: lang === 'zh'
+            ? '输出内容太多，已经安全停止。请检查循环中的 print。'
+            : 'Your program produced too much output and was stopped safely. Check print calls inside loops.',
+          worker_crash: lang === 'zh'
+            ? 'Python 运行环境意外停止。你的电脑文件没有受到影响，请重新运行。'
+            : 'The Python environment stopped unexpectedly. Your computer files were not affected; please run again.',
+          invalid_request: lang === 'zh'
+            ? '代码或输入超过了安全限制，请缩短后再运行。'
+            : 'The code or input exceeds the safe limit. Shorten it and try again.',
+        };
+        outputEl.textContent = `❌ ${safetyMessages[report.status] || report.error}`;
         outputEl.className = 'terminal-content error';
         if (pageData?.reviewMode) onReviewFailed(les);
         setIsFirstTry(false);
@@ -147,6 +190,8 @@ export default function Lesson() {
       if (pageData?.reviewMode) onReviewFailed(les);
       setIsFirstTry(false);
     } finally {
+      runner?.dispose();
+      if (runnerRef.current === runner) runnerRef.current = null;
       if (runGuardRef.current.finish(runToken)) setIsRunning(false);
     }
   }, [lessonData, lang]);
@@ -428,7 +473,7 @@ export default function Lesson() {
               </span>
             </div>
             <div className="editor-wrapper">
-              <CodeEditor ref={editorRef} onRun={handleRun} />
+              <CodeEditor ref={editorRef} onRun={isRunning ? handleStop : handleRun} />
             </div>
             <div className="output-terminal">
               <div className="terminal-header">
@@ -454,13 +499,12 @@ export default function Lesson() {
                         {'←'} {lang === 'zh' ? '上一关' : 'Prev'}
                       </button>
                     )}
-                    <AIChat lessonContent={content} language={lang} />
                   </>
                 )}
               </div>
               <div className="right-buttons">
-                <button className="btn btn-pixel btn-primary" onClick={handleRun} disabled={isRunning}>
-                  {'▶'} {lang === 'zh' ? '运行' : 'Run'}
+                <button className="btn btn-pixel btn-primary" onClick={isRunning ? handleStop : handleRun}>
+                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行' : 'Run')}
                 </button>
                 {!isReviewMode && completed && (
                   <button className="btn btn-pixel btn-ghost" onClick={goToNext}>

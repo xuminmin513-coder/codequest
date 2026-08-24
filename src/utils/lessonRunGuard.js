@@ -23,5 +23,11 @@ export function createLessonRunGuard() {
     invalidate() {
       activeToken = null;
     },
+
+    cancelCurrent() {
+      const current = activeToken;
+      activeToken = null;
+      return current;
+    },
   };
 }

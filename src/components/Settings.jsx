@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
@@ -6,21 +6,6 @@ import { CHAPTERS } from '../data/courses';
 
 export default function Settings() {
   const { lang, toggleLanguage, refresh, addToast } = useApp();
-  const [apiKey, setApiKey] = useState(STORAGE.getDeepSeekKey());
-  const [apiKeySaved, setApiKeySaved] = useState(false);
-
-  useEffect(() => {
-    if (apiKeySaved) {
-      const t = setTimeout(() => setApiKeySaved(false), 2000);
-      return () => clearTimeout(t);
-    }
-  }, [apiKeySaved]);
-
-  const saveApiKey = () => {
-    STORAGE.setDeepSeekKey(apiKey);
-    setApiKeySaved(true);
-    addToast('success', '✅', lang === 'zh' ? 'API Key 已保存' : 'API Key saved');
-  };
   const totalXp = STORAGE.getTotalXp();
   const completedCount = STORAGE.getCompletedCount();
   const totalLessons = CHAPTERS.reduce((sum, ch) => sum + ch.lessons.length, 0);
@@ -144,31 +129,6 @@ export default function Settings() {
               <div className="setting-label">{lang === 'zh' ? '连续学习' : 'Learning Streak'}</div>
               <div className="setting-desc">{streak} {lang === 'zh' ? '天' : 'days'}</div>
             </div>
-          </div>
-        </div>
-        <div className="settings-card">
-          <h3>🤖 {lang === 'zh' ? 'AI 助手 (DeepSeek V4-Pro)' : 'AI Assistant (DeepSeek V4-Pro)'}</h3>
-          <div className="setting-item">
-            <div>
-              <div className="setting-label">{lang === 'zh' ? 'API Key' : 'API Key'}</div>
-              <div className="setting-desc">
-                {lang === 'zh'
-                  ? '在关卡中向 AI 提问获取帮助。前往 platform.deepseek.com 获取'
-                  : 'Ask AI for help in lessons. Get your key at platform.deepseek.com'}
-              </div>
-            </div>
-          </div>
-          <div className="setting-item">
-            <input
-              type="password"
-              className="api-key-input"
-              placeholder={lang === 'zh' ? '输入你的 DeepSeek API Key...' : 'Enter your DeepSeek API Key...'}
-              value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
-            />
-            <button className="toggle-btn" onClick={saveApiKey}>
-              {apiKeySaved ? '✅' : (lang === 'zh' ? '保存' : 'Save')}
-            </button>
           </div>
         </div>
         <div className="settings-card">
