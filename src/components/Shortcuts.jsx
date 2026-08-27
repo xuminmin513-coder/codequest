@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import PageHeader from './ui/PageHeader';
 
 const PYTHON_SHORTCUTS = [
   {
@@ -90,20 +91,12 @@ export default function Shortcuts() {
   const { lang } = useApp();
 
   return (
-    <div className="page active">
-      <h2 className="section-title">
-        ⌨️ <span>{lang === 'zh' ? 'Python 快捷键教程' : 'Python Keyboard Shortcuts'}</span>
-      </h2>
-
-      <p style={{ color: 'var(--text-secondary)', marginBottom: 20, fontSize: 14, lineHeight: 1.8 }}>
-        {lang === 'zh'
-          ? '掌握快捷键让 Python 编程效率翻倍。以下为 macOS 系统快捷键（当前系统），'
-          : 'Master these shortcuts to double your Python coding efficiency. Below are for macOS, '}
-        <strong style={{ color: 'var(--accent-cyan)' }}>
-          {lang === 'zh' ? '⌘ = Command · ⌥ = Option · ⌃ = Control' : '⌘ = Command · ⌥ = Option · ⌃ = Control'}
-        </strong>
-        {lang === 'zh' ? '。' : '.'}
-      </p>
+    <div className="page active page-standard shortcuts-page">
+      <PageHeader
+        eyebrow={lang === 'zh' ? '效率工具' : 'Productivity'}
+        title={lang === 'zh' ? 'Python 快捷键' : 'Python keyboard shortcuts'}
+        description={lang === 'zh' ? '当前先展示 macOS 快捷键；其他系统说明可以在下方打开。' : 'macOS shortcuts are shown first, with other system guides below.'}
+      />
 
       {/* OS switch bar */}
       <div style={{
@@ -146,6 +139,7 @@ export default function Shortcuts() {
           <h3 className="shortcuts-section-title">
             {lang === 'zh' ? CATEGORY_LABELS[section.category].zh : CATEGORY_LABELS[section.category].en}
           </h3>
+          <div className="shortcuts-scroll">
           <div className="shortcuts-table">
             <div className="shortcuts-head" style={{ gridTemplateColumns: '1fr 200px' }}>
               <span>{lang === 'zh' ? '功能' : 'Action'}</span>
@@ -163,6 +157,7 @@ export default function Shortcuts() {
                 </span>
               </div>
             ))}
+          </div>
           </div>
         </div>
       ))}

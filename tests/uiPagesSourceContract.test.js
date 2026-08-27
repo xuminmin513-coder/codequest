@@ -20,3 +20,19 @@ test('dashboard retains saves, reviews, progress, and skill unlock behavior', ()
   assert.match(source, /importAllData/);
   assert.match(source, /SkillUnlockModal/);
 });
+
+for (const file of ['CourseMap.jsx', 'ReviewList.jsx', 'Achievements.jsx', 'Shortcuts.jsx', 'Graduation.jsx']) {
+  test(`${file} uses the shared page hierarchy`, () => {
+    const source = read(`src/components/${file}`);
+    assert.match(source, /import PageHeader/);
+    assert.match(source, /<PageHeader/);
+  });
+}
+
+test('course disclosure and locked lessons are accessible', () => {
+  const source = read('src/components/CourseMap.jsx');
+  assert.match(source, /aria-expanded=/);
+  assert.match(source, /aria-disabled=/);
+  assert.match(source, /chapter-toggle/);
+  assert.match(source, /lesson-path-item/);
+});
