@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { initializePlayerSaves } from './data/playerSaveRepository';
 import './styles/design-tokens.css';
+import './styles/app-shell.css';
 
 initializePlayerSaves();
 

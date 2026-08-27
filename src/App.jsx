@@ -3,7 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { STORAGE } from './utils/storage';
 import { GAMIFICATION } from './utils/gamification';
 import { CHAPTERS } from './data/courses';
-import Sidebar from './components/Sidebar';
+import Sidebar, { MobileNavigation } from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import CourseMap from './components/CourseMap';
 import Lesson from './components/Lesson';
@@ -43,7 +43,7 @@ function PageRouter() {
 }
 
 function AppContent() {
-  const { lang, addToast, refresh, navigateTo } = useApp();
+  const { lang, addToast, refresh, navigateTo, currentPage } = useApp();
   useEffect(() => {
     purgeDeprecatedSecrets();
   }, []);
@@ -129,9 +129,10 @@ function AppContent() {
   }, [showMigration, refresh, addToast, lang]);
 
   return (
-    <div className="app-container">
+    <div className="app-shell">
       <Sidebar />
-      <main className="main-content">
+      <MobileNavigation />
+      <main className={`app-main${currentPage === 'lesson' ? ' lesson-route' : ''}`}>
         <PageRouter />
       </main>
       {showMigration && (
