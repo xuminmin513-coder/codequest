@@ -25,7 +25,7 @@ export default function Confetti() {
   }, []);
 
   return (
-    <div className="confetti-container">
+    <div className="confetti-container" aria-hidden="true">
       {particles.map(p => (
         <div
           key={p.id}

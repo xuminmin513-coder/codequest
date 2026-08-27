@@ -315,6 +315,120 @@
   }
 }
 
+/* Dialogs, notifications, and motion preferences */
+.visually-hidden {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+.modal-overlay,
+.skill-unlock-overlay {
+  padding: 20px;
+  background: rgba(19, 31, 48, 0.32);
+  backdrop-filter: blur(12px);
+}
+
+.modal-content,
+.skill-unlock-modal {
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: var(--xm-radius-lg);
+  background: var(--xm-surface);
+  color: var(--xm-text);
+  box-shadow: 0 28px 80px rgba(20, 35, 56, 0.22);
+}
+
+.modal-content h2,
+.skill-unlock-title,
+.skill-unlock-name {
+  color: var(--xm-text);
+  font-family: var(--xm-font);
+  letter-spacing: -0.025em;
+}
+
+.modal-content p,
+.skill-unlock-desc {
+  color: var(--xm-text-secondary);
+}
+
+.modal-content .btn-pixel,
+.skill-unlock-btn {
+  min-height: 44px;
+  padding: 9px 17px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--xm-blue);
+  color: #fff;
+  font-family: var(--xm-font);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.curriculum-migration-actions .btn-ghost {
+  border: 1px solid var(--xm-border);
+  background: var(--xm-surface);
+  color: var(--xm-text);
+}
+
+.skill-unlock-divider {
+  background: var(--xm-border);
+  box-shadow: none;
+}
+
+.toast-container {
+  top: 18px;
+  right: 18px;
+  gap: 8px;
+}
+
+.toast {
+  min-width: min(330px, calc(100vw - 36px));
+  padding: 13px 15px;
+  border: 1px solid var(--xm-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--xm-text);
+  box-shadow: 0 16px 38px rgba(32, 49, 75, 0.14);
+  cursor: pointer;
+  text-align: left;
+  backdrop-filter: blur(16px);
+}
+
+.toast.success { border-left: 3px solid var(--xm-green); }
+.toast.error { border-left: 3px solid var(--xm-red); }
+.toast.info { border-left: 3px solid var(--xm-blue); }
+
+.toast-msg {
+  font-weight: 750;
+}
+
+.toast-sub {
+  margin-top: 3px;
+  color: var(--xm-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .confetti-particle {
+    display: none;
+  }
+}
+
 /* Settings and player saves */
 .settings-layout {
   display: grid;
