@@ -36,3 +36,11 @@ test('Lesson invalidates pending runs when it unmounts', () => {
     /useEffect\(\(\) => \(\) => \{\s*runnerRef\.current\?\.dispose\(\);\s*runnerRef\.current = null;\s*runGuardRef\.current\.invalidate\(\);\s*\}, \[\]\);/,
   );
 });
+
+test('Lesson renders reports through the unified result drawer', () => {
+  assert.match(lessonSource, /import LessonResultDrawer/);
+  assert.match(lessonSource, /buildLessonResultView/);
+  assert.match(lessonSource, /setResultView/);
+  assert.match(lessonSource, /<LessonResultDrawer/);
+  assert.doesNotMatch(lessonSource, /getElementById\('lesson-output'\)/);
+});

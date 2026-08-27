@@ -15,7 +15,8 @@ test('lesson result drawer uses one accessible light surface with centered tabs'
   assert.match(source, /role="tabpanel"/);
   assert.match(styles, /\.lesson-result-tabs[\s\S]*justify-content:\s*center/);
   assert.match(styles, /\.lesson-result-drawer[\s\S]*background:\s*var\(--xm-surface\)/);
-  assert.doesNotMatch(styles, /\.lesson-result-drawer[\s\S]*background:\s*(#0|#1|black)/i);
+  const drawerRule = styles.match(/\.lesson-result-drawer\s*\{[^}]*\}/s)?.[0] || '';
+  assert.doesNotMatch(drawerRule, /background:\s*(#0|#1|black)/i);
 });
 
 test('test feedback and program output live inside the same result drawer', () => {

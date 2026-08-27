@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { judgeLesson } from '../utils/lessonJudge';
+import { buildLessonResultView } from '../utils/lessonResultView';
 import { createLessonRunGuard } from '../utils/lessonRunGuard';
 import { getNextDestination } from '../utils/curriculumNavigation';
 import { createPythonRunner } from '../runtime/PythonRunner';
@@ -10,6 +11,8 @@ import { getLessonRuntimeMode } from '../runtime/runtimePolicy';
 import { CHAPTERS } from '../data/courses';
 import CodeEditor from './CodeEditor';
 import BadgeModal from './BadgeModal';
+import Confetti from './Confetti';
+import LessonResultDrawer from './LessonResultDrawer';
 
 const isMac = typeof navigator !== 'undefined' && navigator.platform?.toLowerCase().includes('mac');
 const runShortcut = isMac ? 'Cmd+Enter 运行' : 'Ctrl+Enter 运行';
@@ -24,6 +27,8 @@ export default function Lesson() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [resultView, setResultView] = useState(() => buildLessonResultView({ report: null, lang }));
+  const [activeResultTab, setActiveResultTab] = useState('tests');
   const lastPageDataRef = useRef(null);
   const runGuardRef = useRef(createLessonRunGuard());
   const runnerRef = useRef(null);
@@ -33,6 +38,8 @@ export default function Lesson() {
     runnerRef.current = null;
     runGuardRef.current.invalidate();
     setIsRunning(false);
+    setResultView(buildLessonResultView({ report: null, lang }));
+    setActiveResultTab('tests');
     if (!pageData) return;
 
     const { chapterId, lessonId } = pageData;
@@ -107,12 +114,17 @@ export default function Lesson() {
     if (!cancelled) return;
     runnerRef.current?.stop();
     setIsRunning(false);
-
-    const outputEl = document.getElementById('lesson-output');
-    if (outputEl) {
-      outputEl.textContent = lang === 'zh' ? '⏹ 已停止运行。' : '⏹ Execution stopped.';
-      outputEl.className = 'terminal-content error';
-    }
+    setResultView(buildLessonResultView({
+      report: {
+        passed: false,
+        status: 'stopped',
+        error: lang === 'zh' ? '运行已停止。' : 'Execution stopped.',
+        results: [],
+        output: '',
+      },
+      lang,
+    }));
+    setActiveResultTab('tests');
   }, [lang]);
 
   const handleRun = useCallback(async () => {
@@ -130,14 +142,16 @@ export default function Lesson() {
         return;
       }
 
-      const outputEl = document.getElementById('lesson-output');
-      if (!outputEl) return;
-
       if (getLessonRuntimeMode(les) === 'visual-lab-pending') {
-        outputEl.textContent = lang === 'zh'
+        const message = lang === 'zh'
           ? '🧪 这一关正在迁移为安全教学实验，暂时不能判题。旧模拟器已经停用，以免让你学到不真实的 Python。'
           : '🧪 This lesson is being migrated to a safe teaching lab and cannot be judged yet. The old simulator is disabled because it did not behave like real Python.';
-        outputEl.className = 'terminal-content error';
+        const pendingView = buildLessonResultView({
+          report: { passed: false, status: 'invalid_request', error: message, results: [], output: message },
+          lang,
+        });
+        setResultView({ ...pendingView, summary: lang === 'zh' ? '暂不可运行' : 'Temporarily unavailable', guidance: message });
+        setActiveResultTab('tests');
         return;
       }
 
@@ -152,41 +166,21 @@ export default function Lesson() {
 
       if (!runGuardRef.current.isCurrent(runToken)) return;
 
+      setResultView(buildLessonResultView({ report, lang }));
+      setActiveResultTab('tests');
+
       if (report.error) {
-        const safetyMessages = {
-          timeout: lang === 'zh'
-            ? '代码运行时间太长，已经安全停止。请检查是否存在不会结束的循环。'
-            : 'Your code ran for too long and was stopped safely. Check for a loop that never ends.',
-          output_limit: lang === 'zh'
-            ? '输出内容太多，已经安全停止。请检查循环中的 print。'
-            : 'Your program produced too much output and was stopped safely. Check print calls inside loops.',
-          worker_crash: lang === 'zh'
-            ? 'Python 运行环境意外停止。你的电脑文件没有受到影响，请重新运行。'
-            : 'The Python environment stopped unexpectedly. Your computer files were not affected; please run again.',
-          invalid_request: lang === 'zh'
-            ? '代码或输入超过了安全限制，请缩短后再运行。'
-            : 'The code or input exceeds the safe limit. Shorten it and try again.',
-        };
-        outputEl.textContent = `❌ ${safetyMessages[report.status] || report.error}`;
-        outputEl.className = 'terminal-content error';
         if (pageData?.reviewMode) onReviewFailed(les);
         setIsFirstTry(false);
         return;
       }
 
       if (report.passed) {
-        const outText = report.output ? `${report.output}\n\n` : '';
-        outputEl.textContent = outText + '🎉 ' + (lang === 'zh' ? '恭喜通关！' : 'Level Complete!');
-        outputEl.className = 'terminal-content success';
         if (pageData?.reviewMode) onReviewComplete(les, ch);
         else onLessonComplete(les, ch);
         return;
       }
 
-      outputEl.textContent = lang === 'zh'
-        ? `❌ 第 ${report.failedCase} 组测试未通过。\n--- 你的输出 ---\n${report.output || '(无输出)'}\n--- 期望输出 ---\n${report.expected}`
-        : `❌ Test ${report.failedCase} failed.\n--- Your output ---\n${report.output || '(no output)'}\n--- Expected ---\n${report.expected}`;
-      outputEl.className = 'terminal-content error';
       if (pageData?.reviewMode) onReviewFailed(les);
       setIsFirstTry(false);
     } finally {
@@ -404,11 +398,20 @@ export default function Lesson() {
   const chainTotal = pageData?.reviewTotal ?? 0;
 
   return (
-    <div className="page active" style={{ height: '100%', padding: 0, maxWidth: 'none' }}>
+    <div className="page active lesson-page">
       <div className="lesson-container">
-        <div className={`lesson-topbar${isReviewMode ? ' review-mode' : ''}`}>
-          <button className="back-btn" onClick={() => navigateTo(isReviewMode ? 'reviews' : 'courses')}>{'←'}</button>
-          <span className="lesson-title-bar">{ch.icon} {isReviewMode ? (lang === 'zh' ? `复习 ${title}` : `Review ${title}`) : title}</span>
+        <header className={`lesson-topbar${isReviewMode ? ' review-mode' : ''}`}>
+          <button
+            className="back-btn"
+            type="button"
+            aria-label={lang === 'zh' ? '返回' : 'Back'}
+            onClick={() => navigateTo(isReviewMode ? 'reviews' : 'courses')}
+          >
+            {'←'}
+          </button>
+          <span className="lesson-title-bar">
+            {isReviewMode ? (lang === 'zh' ? `复习 · ${title}` : `Review · ${title}`) : title}
+          </span>
           {isReviewMode && reviewStage ? (
             <span className="review-stage-badge">
               {chainTotal > 1
@@ -418,131 +421,101 @@ export default function Lesson() {
           ) : (
             <span className="lesson-xp-bar">+{les.xp} XP</span>
           )}
-        </div>
-        <div className="lesson-body">
-          <div className="lesson-instructions-panel">
-            <div dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
+        </header>
+
+        <div className="lesson-workspace">
+          <aside className="lesson-brief" aria-label={lang === 'zh' ? '学习说明' : 'Lesson brief'}>
+            <div className="lesson-brief-heading">
+              <span>{lang === 'zh' ? '先理解，再动手' : 'Understand, then build'}</span>
+              <strong>{ch.icon} {lang === 'zh' ? '学习说明' : 'Lesson brief'}</strong>
+            </div>
+            <div className="lesson-brief-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
             {les.hints?.length > 0 && (
               <div className="hints-inline">
-                <div className="hints-title">{lang === 'zh' ? '💡 提示' : '💡 Hints'}</div>
+                <div className="hints-title">{lang === 'zh' ? '分步提示' : 'Step-by-step hints'}</div>
                 {(() => {
                   const stepHints = [];
                   for (let i = 0; i < les.hints.length; i += 2) {
-                    const zhHint = les.hints[i];
-                    if (!zhHint) continue;
-                    stepHints.push(zhHint);
+                    const hint = les.hints[i];
+                    if (hint) stepHints.push(hint);
                   }
 
-                  const renderHintBody = (hintText) => {
+                  const renderHintBody = hintText => {
                     const segments = hintText.split(/(【解释】|【代码】)/g).filter(Boolean);
-                    const els = [];
+                    const elements = [];
                     for (let i = 0; i < segments.length; i++) {
                       if (segments[i] === '【解释】' && i + 1 < segments.length) {
                         i++;
                         const lines = segments[i].trim().split('\n');
-                        els.push(<p className="hint-explain">{lines.map((l, li) => <>{li > 0 && <br />}{l}</>)}</p>);
+                        elements.push(<p className="hint-explain" key={`explain-${i}`}>{lines.map((line, lineIndex) => <React.Fragment key={lineIndex}>{lineIndex > 0 && <br />}{line}</React.Fragment>)}</p>);
                       } else if (segments[i] === '【代码】' && i + 1 < segments.length) {
                         i++;
-                        els.push(<pre className="hint-code">{segments[i].trim()}</pre>);
+                        elements.push(<pre className="hint-code" key={`code-${i}`}>{segments[i].trim()}</pre>);
                       } else {
-                        // Fallback: text without markers → treat as explanation
-                        const t = segments[i].trim();
-                        if (t) els.push(<p className="hint-explain">{t}</p>);
+                        const plainText = segments[i].trim();
+                        if (plainText) elements.push(<p className="hint-explain" key={`plain-${i}`}>{plainText}</p>);
                       }
                     }
-                    return els;
+                    return elements;
                   };
 
-                  return stepHints.map((h, idx) => (
-                    <details key={idx} className="hint-step">
-                      <summary>{lang === 'zh' ? `第${idx + 1}步` : `Step ${idx + 1}`}</summary>
-                      <div className="hint-body">
-                        {renderHintBody(h)}
-                      </div>
+                  return stepHints.map((hint, index) => (
+                    <details key={index} className="hint-step">
+                      <summary>{lang === 'zh' ? `提示 ${index + 1}` : `Hint ${index + 1}`}</summary>
+                      <div className="hint-body">{renderHintBody(hint)}</div>
                     </details>
                   ));
                 })()}
               </div>
             )}
-          </div>
-          <div className="lesson-workspace-panel">
-            <div className="workspace-header">
-              <span className="lang-badge">Python</span>
-              <span className="shortcut-hint">
-                {lang === 'zh' ? runShortcut : runShortcutEn}
-              </span>
-            </div>
-            <div className="editor-wrapper">
-              <CodeEditor ref={editorRef} onRun={isRunning ? handleStop : handleRun} />
-            </div>
-            <div className="output-terminal">
-              <div className="terminal-header">
-                <span className="terminal-dot dot-red" />
-                <span className="terminal-dot dot-yellow" />
-                <span className="terminal-dot dot-green" />
-                <span className="terminal-label">{'▶'} Console / 控制台</span>
+          </aside>
+
+          <main className="lesson-coding-column">
+            <section className="lesson-editor-card" aria-label={lang === 'zh' ? '代码编辑器' : 'Code editor'}>
+              <div className="workspace-header">
+                <span className="lang-badge">Python</span>
+                <span className="shortcut-hint">{lang === 'zh' ? runShortcut : runShortcutEn}</span>
               </div>
-              <div className="terminal-content" id="lesson-output">
-                {'▶'} {lang === 'zh' ? '点击“运行”查看输出' : 'Click "Run" to see output'}
+              <div className="editor-wrapper">
+                <CodeEditor ref={editorRef} onRun={isRunning ? handleStop : handleRun} />
               </div>
-            </div>
+            </section>
+
+            <LessonResultDrawer
+              lang={lang}
+              view={resultView}
+              activeTab={activeResultTab}
+              onTabChange={setActiveResultTab}
+            />
+
             <div className="lesson-actions">
               <div className="left-buttons">
                 {isReviewMode ? (
-                  <button className="btn btn-pixel btn-ghost" onClick={() => navigateTo('reviews')}>
-                    {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to Reviews'}
+                  <button className="lesson-secondary-action" type="button" onClick={() => navigateTo('reviews')}>
+                    {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to reviews'}
                   </button>
-                ) : (
-                  <>
-                    {lesIdx > 0 && (
-                      <button className="btn btn-pixel btn-ghost" onClick={goToPrev}>
-                        {'←'} {lang === 'zh' ? '上一关' : 'Prev'}
-                      </button>
-                    )}
-                  </>
-                )}
+                ) : lesIdx > 0 ? (
+                  <button className="lesson-secondary-action" type="button" onClick={goToPrev}>
+                    {'←'} {lang === 'zh' ? '上一关' : 'Previous'}
+                  </button>
+                ) : <span />}
               </div>
               <div className="right-buttons">
-                <button className="btn btn-pixel btn-primary" onClick={isRunning ? handleStop : handleRun}>
-                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行' : 'Run')}
+                <button className={`lesson-primary-action${isRunning ? ' stop' : ''}`} type="button" onClick={isRunning ? handleStop : handleRun}>
+                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行代码' : 'Run code')}
                 </button>
                 {!isReviewMode && completed && (
-                  <button className="btn btn-pixel btn-ghost" onClick={goToNext}>
+                  <button className="lesson-secondary-action" type="button" onClick={goToNext}>
                     {lang === 'zh' ? '下一关' : 'Next'} {'→'}
                   </button>
                 )}
               </div>
             </div>
-          </div>
+          </main>
         </div>
       </div>
       {showConfetti && <Confetti />}
       <BadgeModal badge={currentBadge} lang={lang} onClose={() => setCurrentBadge(null)} />
     </div>
-  );
-}
-
-function Confetti() {
-  const colors = ['#ff2d78','#00d4ff','#ffd700','#00ff88','#7b2ff7','#ff8c00','#ff5e5e','#5ec8ff','#ff69b4','#ffd700','#00ffcc','#ff4444'];
-  const shapes = ['50%','2px','50%','2px','50%','2px'];
-  return (
-    <>
-      <div className="level-complete-overlay">
-        <div className="level-complete-text">{'🎉'} Level Complete!</div>
-      </div>
-      <div className="confetti-container">
-        {Array.from({ length: 100 }, (_, i) => (
-          <div key={i} className="confetti-particle" style={{
-            left: Math.random() * 100 + '%',
-            backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-            width: (Math.random() * 6 + 4) + 'px',
-            height: (Math.random() * 10 + 4) + 'px',
-            animationDuration: (Math.random() * 2 + 2.5) + 's',
-            animationDelay: Math.random() * 0.6 + 's',
-            borderRadius: shapes[Math.floor(Math.random() * shapes.length)],
-          }} />
-        ))}
-      </div>
-    </>
   );
 }
