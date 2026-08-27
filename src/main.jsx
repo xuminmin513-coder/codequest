@@ -4,6 +4,7 @@ import App from './App';
 import { initializePlayerSaves } from './data/playerSaveRepository';
 import './styles/design-tokens.css';
 import './styles/app-shell.css';
+import './styles/pages.css';
 
 initializePlayerSaves();
 
