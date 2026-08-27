@@ -5,6 +5,7 @@ import { initializePlayerSaves } from './data/playerSaveRepository';
 import './styles/design-tokens.css';
 import './styles/app-shell.css';
 import './styles/pages.css';
+import './styles/lesson-workspace.css';
 
 initializePlayerSaves();
 
