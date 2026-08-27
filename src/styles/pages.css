@@ -315,6 +315,310 @@
   }
 }
 
+/* Settings and player saves */
+.settings-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.settings-page .settings-card {
+  margin: 0;
+  padding: 22px;
+  border: 1px solid var(--xm-border);
+  border-radius: var(--xm-radius-md);
+  background: var(--xm-surface);
+}
+
+.settings-page .save-slots-card,
+.settings-page .settings-data-card,
+.settings-page .settings-about-card {
+  grid-column: 1 / -1;
+}
+
+.settings-card-heading {
+  min-height: 44px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-card-heading h2 {
+  margin: 4px 0 0;
+  color: var(--xm-text);
+  font-family: var(--xm-font);
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+
+.settings-card-kicker {
+  color: var(--xm-text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.settings-card-count {
+  min-width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--xm-surface-muted);
+  color: var(--xm-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.settings-page .setting-item {
+  min-height: 62px;
+  padding: 13px 0;
+  gap: 20px;
+  border-bottom: 1px solid var(--xm-border);
+}
+
+.settings-page .setting-item:last-child {
+  border-bottom: 0;
+}
+
+.settings-page .setting-label {
+  color: var(--xm-text);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.settings-page .setting-desc {
+  margin-top: 4px;
+  color: var(--xm-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.settings-action,
+.settings-danger-action,
+.save-profile-action {
+  min-height: 38px;
+  padding: 8px 13px;
+  flex: 0 0 auto;
+  border: 1px solid var(--xm-border);
+  border-radius: 10px;
+  background: var(--xm-surface);
+  color: var(--xm-blue);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.settings-action:hover,
+.save-profile-action:hover:not(:disabled) {
+  border-color: #a9d1fa;
+  background: var(--xm-blue-soft);
+}
+
+.settings-danger-action {
+  border-color: #edc8c6;
+  background: var(--xm-red-soft);
+  color: var(--xm-red);
+}
+
+.settings-danger-row {
+  margin-top: 8px;
+}
+
+.settings-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.settings-stat-grid > div {
+  min-width: 0;
+  padding: 14px;
+  display: grid;
+  gap: 4px;
+  border-radius: var(--xm-radius-sm);
+  background: var(--xm-surface-muted);
+}
+
+.settings-stat-grid strong {
+  overflow: hidden;
+  color: var(--xm-text);
+  font-size: 21px;
+  text-overflow: ellipsis;
+}
+
+.settings-stat-grid strong small {
+  color: var(--xm-text-secondary);
+  font-size: 11px;
+}
+
+.settings-stat-grid span {
+  color: var(--xm-text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.save-slots-note {
+  margin: 0 0 17px;
+  color: var(--xm-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.save-profiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.save-profile-card,
+.save-add-tile {
+  min-height: 172px;
+  padding: 17px;
+  border: 1px solid var(--xm-border);
+  border-radius: var(--xm-radius-md);
+  background: var(--xm-surface-muted);
+}
+
+.save-profile-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-content: start;
+  gap: 13px;
+}
+
+.save-profile-card.active {
+  border-color: #abd4ff;
+  background: linear-gradient(145deg, #fff, #f3f8ff);
+  box-shadow: 0 12px 28px rgba(32, 49, 75, 0.08);
+}
+
+.save-avatar {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: var(--xm-text);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.save-profile-copy {
+  min-width: 0;
+  padding-top: 3px;
+}
+
+.save-profile-copy strong,
+.save-profile-copy small {
+  display: block;
+}
+
+.save-profile-copy strong {
+  overflow: hidden;
+  color: var(--xm-text);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save-profile-copy small {
+  margin-top: 6px;
+  color: var(--xm-text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.save-profile-action {
+  position: absolute;
+  right: 17px;
+  bottom: 17px;
+}
+
+.save-profile-action:disabled {
+  border-color: #cfe2d8;
+  background: var(--xm-green-soft);
+  color: var(--xm-green);
+  cursor: default;
+}
+
+.save-add-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: var(--xm-text-secondary);
+  cursor: pointer;
+  border-style: dashed;
+  text-align: center;
+}
+
+.save-add-tile:hover {
+  border-color: #a9d1fa;
+  background: var(--xm-blue-soft);
+  color: var(--xm-blue);
+}
+
+.save-add-tile > span {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 10px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--xm-surface);
+  font-size: 24px;
+}
+
+.save-add-tile strong {
+  color: var(--xm-text);
+  font-size: 13px;
+}
+
+.save-add-tile small {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.curriculum-archives {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--xm-border);
+}
+
+@media (max-width: 760px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-page .save-slots-card,
+  .settings-page .settings-data-card,
+  .settings-page .settings-about-card {
+    grid-column: auto;
+  }
+
+  .settings-page .setting-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .settings-action,
+  .settings-danger-action {
+    width: 100%;
+  }
+}
+
+@media (max-width: 460px) {
+  .settings-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Course path */
 .course-path {
   display: grid;

@@ -38,43 +38,61 @@ export default function SaveSlots() {
   };
 
   return (
-    <div className="settings-card save-slots-card">
-      <h3>💾 {lang === 'zh' ? '存档' : 'Saves'}</h3>
+    <section className="settings-card save-slots-card" aria-labelledby="save-slots-title">
+      <div className="settings-card-heading">
+        <div>
+          <span className="settings-card-kicker">{lang === 'zh' ? '本地玩家资料' : 'Local player profiles'}</span>
+          <h2 id="save-slots-title">{lang === 'zh' ? '存档' : 'Saves'}</h2>
+        </div>
+        <span className="settings-card-count">{saves.length}</span>
+      </div>
       <p className="save-slots-note">
         {lang === 'zh'
           ? '未登录时保存在这台设备；主动登录后才会开启跨设备同步。'
           : 'Saved on this device while signed out. Cross-device sync starts only after you sign in.'}
       </p>
-      <div className="save-slots-list">
+      <div className="save-profiles-grid">
         {saves.map(save => {
           const isActive = save.id === activeSave.id;
+          const initial = save.name.trim().slice(0, 1).toUpperCase() || 'X';
           return (
-            <div className={`setting-item save-slot${isActive ? ' active' : ''}`} key={save.id}>
-              <div>
-                <div className="setting-label">{save.name}</div>
-                <div className="setting-desc">
+            <article className={`save-profile-card${isActive ? ' active' : ''}`} key={save.id}>
+              <div className="save-avatar" aria-hidden="true">{initial}</div>
+              <div className="save-profile-copy">
+                <strong>{save.name}</strong>
+                <small>
                   {isActive
-                    ? (lang === 'zh' ? '当前存档' : 'Current save')
-                    : new Date(save.updatedAt).toLocaleString()}
-                </div>
+                    ? (lang === 'zh' ? '当前正在使用' : 'Currently active')
+                    : (lang === 'zh' ? '上次使用 ' : 'Last used ') + new Date(save.updatedAt).toLocaleString()}
+                </small>
               </div>
               <button
-                className="toggle-btn"
+                className="save-profile-action"
                 type="button"
                 disabled={isActive}
+                aria-label={isActive
+                  ? (lang === 'zh' ? `${save.name}，当前存档` : `${save.name}, current save`)
+                  : (lang === 'zh' ? `切换到${save.name}` : `Switch to ${save.name}`)}
                 onClick={() => switchTo(save.id)}
               >
                 {isActive
                   ? (lang === 'zh' ? '使用中' : 'Active')
                   : (lang === 'zh' ? '切换' : 'Switch')}
               </button>
-            </div>
+            </article>
           );
         })}
+        <button
+          className="save-add-tile"
+          type="button"
+          aria-label={lang === 'zh' ? '添加存档槽' : 'Add save slot'}
+          onClick={addSlot}
+        >
+          <span aria-hidden="true">＋</span>
+          <strong>{lang === 'zh' ? '添加存档槽' : 'Add save slot'}</strong>
+          <small>{lang === 'zh' ? '需要时再创建' : 'Create only when needed'}</small>
+        </button>
       </div>
-      <button className="toggle-btn save-slot-add" type="button" onClick={addSlot}>
-        ＋ {lang === 'zh' ? '添加存档槽' : 'Add Save Slot'}
-      </button>
-    </div>
+    </section>
   );
 }

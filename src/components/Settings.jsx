@@ -4,6 +4,8 @@ import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { CHAPTERS } from '../data/courses';
 import SaveSlots from './SaveSlots';
+import PageHeader from './ui/PageHeader';
+import Surface from './ui/Surface';
 
 export default function Settings() {
   const { lang, toggleLanguage, refresh, addToast } = useApp();
@@ -94,53 +96,71 @@ export default function Settings() {
   };
 
   return (
-    <div className="page active">
-      <h2 className="section-title">
-        ⚙️ <span>{lang === 'zh' ? '设置' : 'Settings'}</span>
-      </h2>
-      <div id="settings-content">
-        <div className="settings-card">
-          <h3>🌐 {lang === 'zh' ? '语言 / Language' : 'Language'}</h3>
+    <div className="page active settings-page">
+      <PageHeader
+        eyebrow="XM²code"
+        title={lang === 'zh' ? '设置' : 'Settings'}
+        description={lang === 'zh'
+          ? '管理语言、本机存档和学习数据。只有主动登录后，才会开启跨设备同步。'
+          : 'Manage language, local saves, and learning data. Cross-device sync starts only after you sign in.'}
+      />
+      <div id="settings-content" className="settings-layout">
+        <Surface className="settings-card settings-language-card">
+          <div className="settings-card-heading">
+            <div>
+              <span className="settings-card-kicker">{lang === 'zh' ? '显示' : 'Display'}</span>
+              <h2>{lang === 'zh' ? '语言' : 'Language'}</h2>
+            </div>
+          </div>
           <div className="setting-item">
             <div>
               <div className="setting-label">{lang === 'zh' ? '界面语言' : 'Interface Language'}</div>
               <div className="setting-desc">{lang === 'zh' ? '当前：中文' : 'Current: English'}</div>
             </div>
-            <button className="toggle-btn" onClick={toggleLanguage}>
+            <button className="settings-action" type="button" onClick={toggleLanguage}>
               {lang === 'zh' ? '切换到 English' : '切换到 中文'}
             </button>
           </div>
-        </div>
+        </Surface>
+
         <SaveSlots />
-        <div className="settings-card">
-          <h3>📊 {lang === 'zh' ? '学习统计' : 'Learning Stats'}</h3>
-          <div className="setting-item">
+
+        <Surface className="settings-card settings-stats-card">
+          <div className="settings-card-heading">
             <div>
-              <div className="setting-label">{lang === 'zh' ? '总 XP' : 'Total XP'}</div>
-              <div className="setting-desc">{totalXp} XP</div>
+              <span className="settings-card-kicker">{lang === 'zh' ? '学习概览' : 'Learning overview'}</span>
+              <h2>{lang === 'zh' ? '统计' : 'Stats'}</h2>
             </div>
           </div>
-          <div className="setting-item">
+          <div className="settings-stat-grid">
             <div>
-              <div className="setting-label">{lang === 'zh' ? '已完成课程' : 'Completed Lessons'}</div>
-              <div className="setting-desc">{completedCount} / {totalLessons}</div>
+              <strong>{totalXp}</strong>
+              <span>XP</span>
+            </div>
+            <div>
+              <strong>{completedCount}<small> / {totalLessons}</small></strong>
+              <span>{lang === 'zh' ? '已完成课程' : 'Lessons completed'}</span>
+            </div>
+            <div>
+              <strong>{streak}</strong>
+              <span>{lang === 'zh' ? '连续学习天数' : 'Day streak'}</span>
             </div>
           </div>
-          <div className="setting-item">
+        </Surface>
+
+        <Surface className="settings-card settings-data-card">
+          <div className="settings-card-heading">
             <div>
-              <div className="setting-label">{lang === 'zh' ? '连续学习' : 'Learning Streak'}</div>
-              <div className="setting-desc">{streak} {lang === 'zh' ? '天' : 'days'}</div>
+              <span className="settings-card-kicker">{lang === 'zh' ? '备份与恢复' : 'Backup and restore'}</span>
+              <h2>{lang === 'zh' ? '数据管理' : 'Data management'}</h2>
             </div>
           </div>
-        </div>
-        <div className="settings-card">
-          <h3>⚠️ {lang === 'zh' ? '数据管理' : 'Data Management'}</h3>
           <div className="setting-item">
             <div>
               <div className="setting-label">{lang === 'zh' ? '导出学习进度' : 'Export Progress'}</div>
-              <div className="setting-desc">{lang === 'zh' ? '下载备份文件，可在其他设备或Electron中导入' : 'Download backup for other devices or Electron'}</div>
+              <div className="setting-desc">{lang === 'zh' ? '下载一份本地备份文件，方便自行保管。' : 'Download a local backup file for safekeeping.'}</div>
             </div>
-            <button className="toggle-btn" onClick={exportProgress}>
+            <button className="settings-action" type="button" onClick={exportProgress}>
               {lang === 'zh' ? '导出' : 'Export'}
             </button>
           </div>
@@ -149,11 +169,11 @@ export default function Settings() {
               <div className="setting-label">{lang === 'zh' ? '导入学习进度' : 'Import Progress'}</div>
               <div className="setting-desc">{lang === 'zh' ? '从备份文件恢复进度（将覆盖当前数据）' : 'Restore progress from backup (overwrites current data)'}</div>
             </div>
-            <button className="toggle-btn" onClick={importProgress}>
+            <button className="settings-action" type="button" onClick={importProgress}>
               {lang === 'zh' ? '导入' : 'Import'}
             </button>
           </div>
-          <div className="setting-item">
+          <div className="setting-item settings-danger-row">
             <div>
               <div className="setting-label">{lang === 'zh' ? '重置当前学习进度' : 'Reset Current Progress'}</div>
               <div className="setting-desc">
@@ -162,7 +182,7 @@ export default function Settings() {
                   : 'Current progress is archived automatically and remains recoverable; language and history archives remain.'}
               </div>
             </div>
-            <button className="danger-btn" onClick={resetProgress}>
+            <button className="settings-danger-action" type="button" onClick={resetProgress}>
               {lang === 'zh' ? '重置当前进度' : 'Reset Current'}
             </button>
           </div>
@@ -189,7 +209,8 @@ export default function Settings() {
                     </div>
                   </div>
                   <button
-                    className="toggle-btn"
+                    className="settings-action"
+                    type="button"
                     onClick={() => restoreCurriculumArchive(archive)}
                   >
                     {lang === 'zh' ? '恢复' : 'Restore'}
@@ -198,18 +219,24 @@ export default function Settings() {
               ))}
             </div>
           )}
-        </div>
-        <div className="settings-card">
-          <h3>📖 {lang === 'zh' ? '关于' : 'About'}</h3>
+        </Surface>
+
+        <Surface className="settings-card settings-about-card">
+          <div className="settings-card-heading">
+            <div>
+              <span className="settings-card-kicker">{lang === 'zh' ? '关于产品' : 'About the product'}</span>
+              <h2>{lang === 'zh' ? '关于' : 'About'}</h2>
+            </div>
+          </div>
           <div className="setting-item">
             <div>
-              <div className="setting-label">xmmcode v1.0</div>
+              <div className="setting-label">XM²code v1.0</div>
               <div className="setting-desc">
-                {lang === 'zh' ? '编程教学游戏' : 'Coding Education Game'}
+                {lang === 'zh' ? '面向零基础学习者的编程教学游戏' : 'A coding learning game designed for complete beginners'}
               </div>
             </div>
           </div>
-        </div>
+        </Surface>
       </div>
     </div>
   );

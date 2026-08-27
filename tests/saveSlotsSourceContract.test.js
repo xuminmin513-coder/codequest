@@ -8,6 +8,9 @@ test('settings exposes player saves through a dedicated component', () => {
   const settings = read('src/components/Settings.jsx');
   assert.match(settings, /import SaveSlots/);
   assert.match(settings, /<SaveSlots/);
+  assert.match(settings, /import PageHeader/);
+  assert.match(settings, /XM²code v1\.0/);
+  assert.doesNotMatch(settings, /xmmcode/);
 });
 
 test('save UI adds a slot only from an explicit button action', () => {
@@ -19,4 +22,13 @@ test('save UI adds a slot only from an explicit button action', () => {
   assert.match(source, /添加存档槽/);
   assert.match(source, /switchSave\(/);
   assert.doesNotMatch(source, /while\s*\([^)]*saves/);
+});
+
+test('save UI presents profiles as cards followed by one add tile', () => {
+  const source = read('src/components/SaveSlots.jsx');
+  assert.match(source, /save-profile-card/);
+  assert.match(source, /save-avatar/);
+  assert.match(source, /save-add-tile/);
+  assert.match(source, /aria-label=/);
+  assert.equal((source.match(/className="save-add-tile"/g) || []).length, 1);
 });
