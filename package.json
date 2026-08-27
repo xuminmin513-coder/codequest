@@ -1,7 +1,7 @@
 {
   "name": "codedex-app",
   "version": "1.0.0",
-  "description": "xmmcode - 编程教学游戏",
+  "description": "XM²code - beginner-friendly programming learning game",
   "main": "main.cjs",
   "type": "module",
   "scripts": {
