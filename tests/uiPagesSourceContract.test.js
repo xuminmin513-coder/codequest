@@ -36,3 +36,14 @@ test('course disclosure and locked lessons are accessible', () => {
   assert.match(source, /chapter-toggle/);
   assert.match(source, /lesson-path-item/);
 });
+
+test('course pages use the centralized required-path helpers', () => {
+  const courseMap = read('src/components/CourseMap.jsx');
+  const dashboard = read('src/components/Dashboard.jsx');
+  const settings = read('src/components/Settings.jsx');
+  assert.match(courseMap, /isChapterUnlocked/);
+  assert.match(courseMap, /chapter-lab-label/);
+  assert.match(dashboard, /getNextRequiredLesson/);
+  assert.match(dashboard, /getGraduationProgress/);
+  assert.match(settings, /getGraduationProgress/);
+});

@@ -5,7 +5,12 @@ import { GAMIFICATION } from '../utils/gamification';
 import { judgeLesson } from '../utils/lessonJudge';
 import { buildLessonResultView } from '../utils/lessonResultView';
 import { createLessonRunGuard } from '../utils/lessonRunGuard';
-import { getNextDestination } from '../utils/curriculumNavigation';
+import {
+  getGraduationProgress,
+  getNextDestination,
+  getRequiredChapters,
+  isChapterUnlocked,
+} from '../utils/curriculumNavigation';
 import { createPythonRunner } from '../runtime/PythonRunner';
 import { getLessonRuntimeMode } from '../runtime/runtimePolicy';
 import { CHAPTERS } from '../data/courses';
@@ -51,15 +56,11 @@ export default function Lesson() {
     const les = ch.lessons.find(l => l.id === lessonId);
     if (!les) { navigateTo('courses'); return; }
 
-    const chIdx = CHAPTERS.findIndex(c => c.id === chapterId);
     const lesIdx = ch.lessons.findIndex(l => l.id === lessonId);
-    if (chIdx > 0) {
-      const prevCh = CHAPTERS[chIdx - 1];
-      if (!STORAGE.isChapterCompleted(prevCh.id, prevCh.lessons.length)) {
-        addToast('error', '🔒', lang === 'zh' ? '请先完成上一章全部关卡！' : 'Complete all lessons in the previous chapter first!');
-        navigateTo('courses');
-        return;
-      }
+    if (!isChapterUnlocked(CHAPTERS, chapterId, STORAGE.getProgress())) {
+      addToast('error', '🔒', lang === 'zh' ? '请先完成上一章全部关卡！' : 'Complete all lessons in the previous chapter first!');
+      navigateTo('courses');
+      return;
     }
     if (lesIdx > 0) {
       const prevLes = ch.lessons[lesIdx - 1];
@@ -223,14 +224,16 @@ export default function Lesson() {
 
     const stats = (() => {
       const totalXp = STORAGE.getTotalXp();
-      const c = STORAGE.getCompletedCount();
+      const progress = STORAGE.getProgress();
+      const graduation = getGraduationProgress(CHAPTERS, progress);
+      const requiredChapters = getRequiredChapters(CHAPTERS);
       const b = STORAGE.getBadges();
       const s = STORAGE.getStreak();
       const p = STORAGE.getPerfectCount();
       const cpc = STORAGE.getCompletedPerChapter();
       let fcc = 0;
-      CHAPTERS.forEach(ch2 => { if ((cpc[ch2.id] || 0) >= ch2.lessons.length) fcc++; });
-      return { xp: totalXp, completedLessons: c, completedChapters: fcc, totalLessons: CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0), badges: b.length, streak: s, perfectLessons: p, fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0 };
+      requiredChapters.forEach(ch2 => { if ((cpc[ch2.id] || 0) >= ch2.lessons.length) fcc++; });
+      return { xp: totalXp, completedLessons: graduation.completed, completedChapters: fcc, totalLessons: graduation.totalLessons, badges: b.length, streak: s, perfectLessons: p, fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0 };
     })();
 
     const oldBadges = STORAGE.getBadges();
@@ -277,12 +280,13 @@ export default function Lesson() {
 
     const totalReviews = STORAGE.getTotalReviewsCompleted();
     const oldBadges = STORAGE.getBadges();
+    const graduation = getGraduationProgress(CHAPTERS, STORAGE.getProgress());
     const stats = {
       reviewsCompleted: totalReviews,
       xp: STORAGE.getTotalXp(),
-      completedLessons: STORAGE.getCompletedCount(),
+      completedLessons: graduation.completed,
       completedChapters: 0,
-      totalLessons: CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0),
+      totalLessons: graduation.totalLessons,
       streak: STORAGE.getStreak(),
       perfectLessons: STORAGE.getPerfectCount(),
       fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0

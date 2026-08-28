@@ -3,6 +3,10 @@ import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { CHAPTERS } from '../data/courses';
+import {
+  getGraduationProgress,
+  getNextRequiredLesson,
+} from '../utils/curriculumNavigation';
 import SkillUnlockModal from './SkillUnlockModal';
 import PageHeader from './ui/PageHeader';
 import StatusBadge from './ui/StatusBadge';
@@ -16,24 +20,19 @@ export default function Dashboard() {
   const totalXp = STORAGE.getTotalXp();
   const level = GAMIFICATION.getLevel(totalXp);
   const levelProgress = GAMIFICATION.levelProgress(totalXp);
-  const completedCount = STORAGE.getCompletedCount();
-  const totalLessons = CHAPTERS.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
+  const progress = STORAGE.getProgress();
+  const {
+    completed: completedCount,
+    totalLessons,
+  } = getGraduationProgress(CHAPTERS, progress);
   const streak = STORAGE.getStreak();
   const dailyCount = STORAGE.getDailyCount();
   const nextXp = GAMIFICATION.xpForNextLevel(level);
   const pendingReviews = STORAGE.getPendingReviewCount();
 
-  let nextLesson = null;
-  let nextChapter = null;
-  outer: for (const chapter of CHAPTERS) {
-    for (const lesson of chapter.lessons) {
-      if (!STORAGE.isLessonCompleted(chapter.id, lesson.id)) {
-        nextLesson = lesson;
-        nextChapter = chapter;
-        break outer;
-      }
-    }
-  }
+  const nextRequired = getNextRequiredLesson(CHAPTERS, progress);
+  const nextLesson = nextRequired?.lesson || null;
+  const nextChapter = nextRequired?.chapter || null;
 
   const skills = [
     {

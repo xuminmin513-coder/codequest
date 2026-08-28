@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { CHAPTERS } from '../data/courses';
+import { isChapterUnlocked } from '../utils/curriculumNavigation';
 import PageHeader from './ui/PageHeader';
 import StatusBadge from './ui/StatusBadge';
 
@@ -14,6 +15,7 @@ export default function CourseMap() {
     return initial;
   });
   const completedCounts = STORAGE.getCompletedPerChapter();
+  const progressData = STORAGE.getProgress();
 
   const toggleChapter = index => {
     setOpenChapters(previous => ({ ...previous, [index]: !previous[index] }));
@@ -32,8 +34,7 @@ export default function CourseMap() {
           const totalLessons = chapter.lessons.length;
           const completedLessons = completedCounts[chapter.id] || 0;
           const progress = totalLessons === 0 ? 0 : Math.round((completedLessons / totalLessons) * 100);
-          const previousChapter = CHAPTERS[chapterIndex - 1];
-          const chapterUnlocked = chapterIndex === 0 || STORAGE.isChapterCompleted(previousChapter.id, previousChapter.lessons.length);
+          const chapterUnlocked = isChapterUnlocked(CHAPTERS, chapter.id, progressData);
           const expanded = Boolean(openChapters[chapterIndex]);
           const panelId = `chapter-lessons-${chapter.id}`;
 
@@ -50,6 +51,11 @@ export default function CourseMap() {
                 <span className="chapter-info">
                   <strong>{lang === 'zh' ? chapter.title : chapter.titleEn}</strong>
                   <small>{lang === 'zh' ? chapter.description : chapter.descriptionEn}</small>
+                  {chapter.optional && (
+                    <span className="chapter-lab-label">
+                      {lang === 'zh' ? '选修实验 · 开发中' : 'Optional lab · In development'}
+                    </span>
+                  )}
                 </span>
                 <span className="chapter-progress-block">
                   <span>{completedLessons}/{totalLessons}</span>

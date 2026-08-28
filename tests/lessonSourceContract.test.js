@@ -44,3 +44,9 @@ test('Lesson renders reports through the unified result drawer', () => {
   assert.match(lessonSource, /<LessonResultDrawer/);
   assert.doesNotMatch(lessonSource, /getElementById\('lesson-output'\)/);
 });
+
+test('Lesson uses the centralized required path for access and badge progress', () => {
+  assert.match(lessonSource, /isChapterUnlocked/);
+  assert.match(lessonSource, /getRequiredChapters/);
+  assert.match(lessonSource, /getGraduationProgress/);
+});

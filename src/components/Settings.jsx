@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { CHAPTERS } from '../data/courses';
+import { getGraduationProgress } from '../utils/curriculumNavigation';
 import SaveSlots from './SaveSlots';
 import PageHeader from './ui/PageHeader';
 import Surface from './ui/Surface';
@@ -10,8 +11,10 @@ import Surface from './ui/Surface';
 export default function Settings() {
   const { lang, toggleLanguage, refresh, addToast } = useApp();
   const totalXp = STORAGE.getTotalXp();
-  const completedCount = STORAGE.getCompletedCount();
-  const totalLessons = CHAPTERS.reduce((sum, ch) => sum + ch.lessons.length, 0);
+  const {
+    completed: completedCount,
+    totalLessons,
+  } = getGraduationProgress(CHAPTERS, STORAGE.getProgress());
   const streak = STORAGE.getStreak();
   let curriculumArchives = [];
   let curriculumArchiveError = false;

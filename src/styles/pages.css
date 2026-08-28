@@ -803,6 +803,17 @@
   white-space: nowrap;
 }
 
+.chapter-lab-label {
+  width: fit-content;
+  margin-top: 7px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--xm-orange-soft);
+  color: var(--xm-orange);
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .chapter-progress-block {
   display: grid;
   gap: 7px;
