@@ -1,3 +1,57 @@
+export const isRequiredChapter = chapter => Boolean(chapter) && chapter.optional !== true;
+
+export function getRequiredChapters(chapters) {
+  return Array.isArray(chapters) ? chapters.filter(isRequiredChapter) : [];
+}
+
+export function getRequiredLessonCount(chapters) {
+  return getRequiredChapters(chapters)
+    .reduce((sum, chapter) => (
+      sum + (Array.isArray(chapter.lessons) ? chapter.lessons.length : 0)
+    ), 0);
+}
+
+export function getPreviousRequiredChapter(chapters, chapterId) {
+  if (!Array.isArray(chapters)) return null;
+  const chapterIndex = chapters.findIndex(chapter => chapter?.id === chapterId);
+  if (chapterIndex < 0) return null;
+
+  for (let index = chapterIndex - 1; index >= 0; index -= 1) {
+    if (isRequiredChapter(chapters[index])) return chapters[index];
+  }
+  return null;
+}
+
+function isLessonComplete(progress, chapterId, lessonId) {
+  return Boolean(progress?.[chapterId]?.[lessonId]);
+}
+
+function isChapterComplete(chapter, progress) {
+  return Boolean(chapter?.lessons?.length)
+    && chapter.lessons.every(lesson => isLessonComplete(progress, chapter.id, lesson.id));
+}
+
+export function isChapterUnlocked(chapters, chapterId, progress) {
+  const chapter = Array.isArray(chapters)
+    ? chapters.find(item => item?.id === chapterId)
+    : null;
+  if (!chapter) return false;
+
+  const previousRequired = getPreviousRequiredChapter(chapters, chapterId);
+  return !previousRequired || isChapterComplete(previousRequired, progress);
+}
+
+export function getNextRequiredLesson(chapters, progress) {
+  for (const chapter of getRequiredChapters(chapters)) {
+    for (const lesson of chapter.lessons || []) {
+      if (!isLessonComplete(progress, chapter.id, lesson.id)) {
+        return { chapter, lesson };
+      }
+    }
+  }
+  return null;
+}
+
 export function getNextDestination(chapters, chapterId, lessonId) {
   const coursesDestination = { page: 'courses', data: null };
   const hasId = value => typeof value === 'string' && value.trim().length > 0;
@@ -37,11 +91,12 @@ export function getNextDestination(chapters, chapterId, lessonId) {
     };
   }
 
-  if (chapterIndex < chapters.length - 1) {
-    const nextChapter = chapters[chapterIndex + 1];
-    if (!nextChapter || typeof nextChapter !== 'object') return coursesDestination;
-    const firstLesson = Array.isArray(nextChapter.lessons) && nextChapter.lessons[0];
-    if (!nextChapter.id || !firstLesson?.id) return coursesDestination;
+  if (!isRequiredChapter(chapter)) return coursesDestination;
+
+  for (let index = chapterIndex + 1; index < chapters.length; index += 1) {
+    const nextChapter = chapters[index];
+    if (!isRequiredChapter(nextChapter)) continue;
+    const firstLesson = nextChapter.lessons[0];
     return {
       page: 'lesson',
       data: { chapterId: nextChapter.id, lessonId: firstLesson.id },
@@ -55,17 +110,15 @@ export function getGraduationProgress(chapters, progress) {
   let totalLessons = 0;
   let completed = 0;
 
-  if (Array.isArray(chapters)) {
-    chapters.forEach(chapter => {
-      if (!chapter?.id || !Array.isArray(chapter.lessons)) return;
+  getRequiredChapters(chapters).forEach(chapter => {
+    if (!chapter?.id || !Array.isArray(chapter.lessons)) return;
 
-      chapter.lessons.forEach(lesson => {
-        if (!lesson?.id) return;
-        totalLessons += 1;
-        if (progress?.[chapter.id]?.[lesson.id]) completed += 1;
-      });
+    chapter.lessons.forEach(lesson => {
+      if (!lesson?.id) return;
+      totalLessons += 1;
+      if (isLessonComplete(progress, chapter.id, lesson.id)) completed += 1;
     });
-  }
+  });
 
   return {
     totalLessons,

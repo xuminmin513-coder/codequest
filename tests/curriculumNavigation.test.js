@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import {
   getGraduationProgress,
   getNextDestination,
+  getNextRequiredLesson,
+  getPreviousRequiredChapter,
+  getRequiredChapters,
+  getRequiredLessonCount,
+  isChapterUnlocked,
 } from '../src/utils/curriculumNavigation.js';
 
 const chapters = [
@@ -15,6 +20,70 @@ const chapters = [
     lessons: [{ id: 'b1' }],
   },
 ];
+
+const pathWithOptionalLab = [
+  {
+    id: 'core',
+    lessons: [{ id: 'core1' }],
+  },
+  {
+    id: 'lab',
+    optional: true,
+    availability: 'in-development',
+    lessons: [{ id: 'lab1' }],
+  },
+  {
+    id: 'final',
+    lessons: [{ id: 'final1' }],
+  },
+];
+
+test('required inventory excludes optional labs', () => {
+  assert.deepEqual(
+    getRequiredChapters(pathWithOptionalLab).map(chapter => chapter.id),
+    ['core', 'final'],
+  );
+  assert.equal(getRequiredLessonCount(pathWithOptionalLab), 2);
+});
+
+test('required navigation skips optional labs', () => {
+  assert.deepEqual(getNextDestination(pathWithOptionalLab, 'core', 'core1'), {
+    page: 'lesson',
+    data: { chapterId: 'final', lessonId: 'final1' },
+  });
+  assert.deepEqual(getNextDestination(pathWithOptionalLab, 'final', 'final1'), {
+    page: 'graduation',
+    data: null,
+  });
+});
+
+test('optional labs and final projects share the previous required prerequisite', () => {
+  assert.equal(getPreviousRequiredChapter(pathWithOptionalLab, 'lab').id, 'core');
+  assert.equal(getPreviousRequiredChapter(pathWithOptionalLab, 'final').id, 'core');
+  assert.equal(isChapterUnlocked(pathWithOptionalLab, 'lab', {}), false);
+  assert.equal(
+    isChapterUnlocked(pathWithOptionalLab, 'final', { core: { core1: true } }),
+    true,
+  );
+});
+
+test('continue learning and graduation ignore optional labs', () => {
+  assert.deepEqual(
+    getNextRequiredLesson(pathWithOptionalLab, { core: { core1: true } }),
+    {
+      chapter: pathWithOptionalLab[2],
+      lesson: pathWithOptionalLab[2].lessons[0],
+    },
+  );
+  assert.deepEqual(getGraduationProgress(pathWithOptionalLab, {
+    core: { core1: true },
+    final: { final1: true },
+  }), {
+    totalLessons: 2,
+    completed: 2,
+    finished: true,
+  });
+});
 
 test('moves to the next lesson in the current chapter', () => {
   assert.deepEqual(getNextDestination(chapters, 'a', 'a1'), {
