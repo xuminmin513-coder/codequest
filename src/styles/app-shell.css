@@ -1,6 +1,9 @@
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   display: flex;
+  overflow: hidden;
   background:
     radial-gradient(circle at 4% 0%, rgba(213, 233, 255, 0.72), transparent 28%),
     var(--xm-bg);
@@ -132,7 +135,9 @@
 
 .app-main {
   min-width: 0;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   flex: 1;
   overflow: auto;
 }
@@ -241,7 +246,6 @@
   }
 
   .app-main {
-    min-height: 100dvh;
     padding-top: 58px;
     padding-bottom: 72px;
   }

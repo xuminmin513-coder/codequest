@@ -82,3 +82,60 @@ test('XM²code keeps the approved desktop and mobile learning layout', { timeout
     await rm(profileDir, { recursive: true, force: true });
   }
 });
+
+test('long pages keep a real vertical scroll container', { timeout: 30000 }, async () => {
+  const profileDir = await mkdtemp(path.join(tmpdir(), 'xm2-scroll-e2e-'));
+  let electronApp;
+
+  try {
+    electronApp = await electron.launch({
+      args: ['.', '--xmcode-e2e'],
+      env: { ...process.env, XMCODE_E2E_USER_DATA: profileDir },
+    });
+    const page = await electronApp.firstWindow();
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForFunction(() => (document.querySelector('#root')?.childElementCount ?? 0) > 0);
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.locator('.dashboard-continue-card').waitFor();
+
+    const desktopScroll = await page.evaluate(() => {
+      const main = document.querySelector('.app-main');
+      return {
+        clientHeight: main.clientHeight,
+        scrollHeight: main.scrollHeight,
+        overflowY: getComputedStyle(main).overflowY,
+      };
+    });
+
+    assert.ok(
+      desktopScroll.scrollHeight > desktopScroll.clientHeight,
+      `Expected the main content to scroll: ${JSON.stringify(desktopScroll)}`,
+    );
+    assert.ok(
+      ['auto', 'scroll'].includes(desktopScroll.overflowY),
+      `Expected vertical overflow to be enabled: ${JSON.stringify(desktopScroll)}`,
+    );
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileScroll = await page.evaluate(() => {
+      const main = document.querySelector('.app-main');
+      return {
+        clientHeight: main.clientHeight,
+        scrollHeight: main.scrollHeight,
+        overflowY: getComputedStyle(main).overflowY,
+      };
+    });
+
+    assert.ok(
+      mobileScroll.scrollHeight > mobileScroll.clientHeight,
+      `Expected the mobile content to scroll: ${JSON.stringify(mobileScroll)}`,
+    );
+    assert.ok(
+      ['auto', 'scroll'].includes(mobileScroll.overflowY),
+      `Expected mobile vertical overflow to be enabled: ${JSON.stringify(mobileScroll)}`,
+    );
+  } finally {
+    await electronApp?.close();
+    await rm(profileDir, { recursive: true, force: true });
+  }
+});
