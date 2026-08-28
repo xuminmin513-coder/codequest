@@ -173,19 +173,19 @@ test('Electron migrates a legacy save and only adds a slot after an explicit cli
 
     await page.getByRole('button', { name: '保留当前进度' }).click();
     await page.locator('.curriculum-migration-overlay').waitFor({ state: 'detached' });
-    await page.locator('.nav-item[data-page="settings"]').click();
+    await page.getByRole('button', { name: '设置', exact: true }).click();
     await page.locator('.save-slots-card').waitFor();
-    assert.equal(await page.locator('.save-slot').count(), 1);
-    assert.equal(await page.locator('.save-slot.active').count(), 1);
+    assert.equal(await page.locator('.save-profile-card').count(), 1);
+    assert.equal(await page.locator('.save-profile-card.active').count(), 1);
 
-    await page.locator('.save-slot-add').click({ noWaitAfter: true, timeout: 5000 });
+    await page.locator('.save-add-tile').click({ noWaitAfter: true, timeout: 5000 });
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
     await page.waitForFunction(() => (document.querySelector('#root')?.childElementCount ?? 0) > 0);
-    await page.locator('.nav-item[data-page="settings"]').click();
+    await page.getByRole('button', { name: '设置', exact: true }).click();
     await page.locator('.save-slots-card').waitFor();
 
-    assert.equal(await page.locator('.save-slot').count(), 2);
-    assert.equal(await page.locator('.save-slot.active').count(), 1);
+    assert.equal(await page.locator('.save-profile-card').count(), 2);
+    assert.equal(await page.locator('.save-profile-card.active').count(), 1);
   } finally {
     await electronApp?.close();
     await rm(profileDir, { recursive: true, force: true });

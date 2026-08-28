@@ -12,6 +12,7 @@
     "electron": "electron main.cjs",
     "test": "node --test tests/*.test.js",
     "test:e2e": "node --test tests/electronSecurity.e2e.mjs",
+    "test:ui": "npm run build && node --test tests/uiVisual.e2e.mjs",
     "validate:curriculum": "node scripts/validate-curriculum.mjs"
   },
   "dependencies": {
