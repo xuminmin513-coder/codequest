@@ -22,6 +22,33 @@ test('Lesson guards async runs and exposes a real stop action while one is pendi
   assert.match(lessonSource, /isRunning\s*\?\s*\(lang === 'zh' \? '停止' : 'Stop'\)/);
 });
 
+test('Lesson keeps its sole run or stop action in the editor footer', () => {
+  const editorCard = lessonSource.match(
+    /<section className="lesson-editor-card"[\s\S]*?<\/section>/,
+  )?.[0];
+  const pageNavigation = lessonSource.match(
+    /<div className="lesson-actions">([\s\S]*?)\n\s*<\/div>\n\s*\)?\}\n\s*<\/main>/,
+  )?.[1];
+
+  assert.ok(editorCard, 'expected the editor card markup');
+  assert.ok(pageNavigation, 'expected the page navigation markup');
+  assert.match(editorCard, /lesson-editor-actions/);
+  assert.match(editorCard, /lesson-primary-action/);
+  assert.doesNotMatch(pageNavigation, /lesson-primary-action/);
+  assert.equal((lessonSource.match(/lesson-primary-action/g) || []).length, 1);
+});
+
+test('Lesson renders page navigation only when a navigation action is available', () => {
+  assert.match(
+    lessonSource,
+    /const showLessonNavigation = isReviewMode \|\| lesIdx > 0 \|\| completed;/,
+  );
+  assert.match(
+    lessonSource,
+    /\{showLessonNavigation && \(\s*<div className="lesson-actions">/,
+  );
+});
+
 test('Lesson reports runtime and output review failures', () => {
   const failureCalls = lessonSource.match(
     /if \(pageData\?\.reviewMode\) onReviewFailed\(les\);/g,

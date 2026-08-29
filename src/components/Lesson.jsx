@@ -396,6 +396,7 @@ export default function Lesson() {
   const content = lang === 'zh' ? les.content : les.contentEn;
   const title = lang === 'zh' ? les.title : les.titleEn;
   const isReviewMode = pageData?.reviewMode === true;
+  const showLessonNavigation = isReviewMode || lesIdx > 0 || completed;
   const reviewStage = isReviewMode ? STORAGE.getLessonReviewStage(les.id) : null;
   const totalStages = STORAGE.REVIEW_INTERVALS.length;
   const chainIndex = pageData?.reviewIndex ?? 0;
@@ -483,6 +484,11 @@ export default function Lesson() {
               <div className="editor-wrapper">
                 <CodeEditor ref={editorRef} onRun={isRunning ? handleStop : handleRun} />
               </div>
+              <div className="lesson-editor-actions">
+                <button className={`lesson-primary-action${isRunning ? ' stop' : ''}`} type="button" onClick={isRunning ? handleStop : handleRun}>
+                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行代码' : 'Run code')}
+                </button>
+              </div>
             </section>
 
             <LessonResultDrawer
@@ -492,29 +498,28 @@ export default function Lesson() {
               onTabChange={setActiveResultTab}
             />
 
-            <div className="lesson-actions">
-              <div className="left-buttons">
-                {isReviewMode ? (
-                  <button className="lesson-secondary-action" type="button" onClick={() => navigateTo('reviews')}>
-                    {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to reviews'}
-                  </button>
-                ) : lesIdx > 0 ? (
-                  <button className="lesson-secondary-action" type="button" onClick={goToPrev}>
-                    {'←'} {lang === 'zh' ? '上一关' : 'Previous'}
-                  </button>
-                ) : <span />}
+            {showLessonNavigation && (
+              <div className="lesson-actions">
+                <div className="left-buttons">
+                  {isReviewMode ? (
+                    <button className="lesson-secondary-action" type="button" onClick={() => navigateTo('reviews')}>
+                      {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to reviews'}
+                    </button>
+                  ) : lesIdx > 0 ? (
+                    <button className="lesson-secondary-action" type="button" onClick={goToPrev}>
+                      {'←'} {lang === 'zh' ? '上一关' : 'Previous'}
+                    </button>
+                  ) : <span />}
+                </div>
+                <div className="right-buttons">
+                  {!isReviewMode && completed && (
+                    <button className="lesson-secondary-action" type="button" onClick={goToNext}>
+                      {lang === 'zh' ? '下一关' : 'Next'} {'→'}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="right-buttons">
-                <button className={`lesson-primary-action${isRunning ? ' stop' : ''}`} type="button" onClick={isRunning ? handleStop : handleRun}>
-                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行代码' : 'Run code')}
-                </button>
-                {!isReviewMode && completed && (
-                  <button className="lesson-secondary-action" type="button" onClick={goToNext}>
-                    {lang === 'zh' ? '下一关' : 'Next'} {'→'}
-                  </button>
-                )}
-              </div>
-            </div>
+            )}
           </main>
         </div>
       </div>
