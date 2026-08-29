@@ -77,3 +77,15 @@ test('Lesson uses the centralized required path for access and badge progress', 
   assert.match(lessonSource, /getRequiredChapters/);
   assert.match(lessonSource, /getGraduationProgress/);
 });
+
+test('Lesson delegates curriculum markdown to the shared semantic renderer', () => {
+  assert.match(
+    lessonSource,
+    /import\s+\{\s*renderLessonMarkdown\s*\}\s+from\s+['"]\.\.\/utils\/lessonMarkdown['"];/,
+  );
+  assert.match(
+    lessonSource,
+    /dangerouslySetInnerHTML=\{\{\s*__html:\s*renderLessonMarkdown\(content\)\s*\}\}/,
+  );
+  assert.doesNotMatch(lessonSource, /const\s+renderMarkdown\s*=/);
+});

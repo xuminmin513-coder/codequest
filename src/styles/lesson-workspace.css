@@ -159,23 +159,76 @@
   background: transparent;
 }
 
-.lesson-brief-content blockquote {
-  margin: 14px 0;
-  padding: 10px 12px;
-  border-left: 3px solid var(--xm-blue);
+.lesson-content-section {
+  margin-bottom: 14px;
+  padding: 14px;
+  border-left: 4px solid var(--xm-blue);
+  border-radius: 12px;
+  background: var(--xm-blue-soft);
+  color: var(--xm-text);
+}
+
+.lesson-content-section > h2:first-child,
+.lesson-content-section > h3:first-child {
+  margin: 0 0 8px;
+  color: var(--xm-blue);
+}
+
+.lesson-content-section > :last-child {
+  margin-bottom: 0;
+}
+
+.lesson-content-section--learn {
+  border-left-color: var(--xm-blue);
   background: var(--xm-blue-soft);
 }
 
+.lesson-content-section--example {
+  border-left-color: var(--xm-purple);
+  background: var(--xm-purple-soft);
+}
+
+.lesson-content-section--task {
+  border-left-color: var(--xm-green);
+  background: var(--xm-green-soft);
+}
+
+.lesson-content-section--learn > h2:first-child,
+.lesson-content-section--learn > h3:first-child {
+  color: #0068d4;
+}
+
+.lesson-content-section--example > h2:first-child,
+.lesson-content-section--example > h3:first-child {
+  color: var(--xm-purple);
+}
+
+.lesson-content-section--task > h2:first-child,
+.lesson-content-section--task > h3:first-child {
+  color: var(--xm-green);
+}
+
+.lesson-content-callout--hint {
+  margin: 14px 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--xm-orange);
+  background: var(--xm-orange-soft);
+  color: var(--xm-text);
+}
+
 .lesson-brief .hints-inline {
-  margin-top: 24px;
-  padding-top: 18px;
-  border-top: 1px solid var(--xm-border);
+  margin-top: 18px;
+  padding: 14px;
+  border-left: 4px solid var(--xm-orange);
+  border-radius: 12px;
+  background: var(--xm-orange-soft);
 }
 
 .lesson-brief .hints-title {
   margin-bottom: 10px;
-  color: var(--xm-text);
+  color: var(--xm-orange);
   font-size: 14px;
+  font-weight: 850;
 }
 
 .lesson-brief .hint-step {
