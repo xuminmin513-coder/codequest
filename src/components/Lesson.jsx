@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
 import { judgeLesson } from '../utils/lessonJudge';
+import { renderLessonMarkdown } from '../utils/lessonMarkdown';
 import { buildLessonResultView } from '../utils/lessonResultView';
 import { createLessonRunGuard } from '../utils/lessonRunGuard';
 import {
@@ -345,48 +346,6 @@ export default function Lesson() {
     }
   };
 
-  const renderMarkdown = (md) => {
-    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const segs = md.split(/^```\w*$/gm);
-    const parts = [];
-    for (let i = 0; i < segs.length; i++) {
-      if (i % 2 === 1) {
-        if (segs[i].trim()) parts.push('<pre><code>' + esc(segs[i].trim()) + '</code></pre>');
-      } else {
-        const blocks = segs[i].split(/\n\n+/);
-        for (const b of blocks) {
-          const t = b.trim();
-          if (!t) continue;
-          let h = '';
-          if (/^## (.+)/.test(t)) h = '<h2>' + t.replace(/^## (.+)/, '$1') + '</h2>';
-          else if (/^### (.+)/.test(t)) h = '<h3>' + t.replace(/^### (.+)/, '$1') + '</h3>';
-          else if (/^> /.test(t)) {
-            const ls = t.split('\n').map(l => l.replace(/^> /, '').replace(/^>/, ''));
-            h = '<blockquote>' + ls.join('<br>') + '</blockquote>';
-          } else if (/^- /.test(t) || /^\d+\. /.test(t)) {
-            const ord = /^\d+\. /.test(t);
-            const its = t.split('\n').map(l => '<li>' + l.replace(/^- /, '').replace(/^\d+\. /, '') + '</li>');
-            h = (ord ? '<ol>' : '<ul>') + its.join('') + (ord ? '</ol>' : '</ul>');
-          } else {
-            h = '<p>' + t.replace(/\n/g, '<br>') + '</p>';
-          }
-          parts.push(h);
-        }
-      }
-    }
-    let html = parts.join('\n').replace(/`([^`]+)`/g, '<code>$1</code>');
-    const protectedBlocks = [];
-    html = html.replace(/(<pre[^>]*>.*?<\/pre>|<code[^>]*>.*?<\/code>)/gs, (match) => {
-      const idx = protectedBlocks.length;
-      protectedBlocks.push(match);
-      return '\x00PROTECT' + idx + '\x00';
-    });
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    html = html.replace(/\x00PROTECT(\d+)\x00/g, (_, idx) => protectedBlocks[+idx] || '');
-    return html;
-  };
-
   if (!lessonData) {
     return <div className="page active"><p style={{ padding: 28 }}>Loading...</p></div>;
   }
@@ -396,6 +355,7 @@ export default function Lesson() {
   const content = lang === 'zh' ? les.content : les.contentEn;
   const title = lang === 'zh' ? les.title : les.titleEn;
   const isReviewMode = pageData?.reviewMode === true;
+  const showLessonNavigation = isReviewMode || lesIdx > 0 || completed;
   const reviewStage = isReviewMode ? STORAGE.getLessonReviewStage(les.id) : null;
   const totalStages = STORAGE.REVIEW_INTERVALS.length;
   const chainIndex = pageData?.reviewIndex ?? 0;
@@ -433,7 +393,7 @@ export default function Lesson() {
               <span>{lang === 'zh' ? '先理解，再动手' : 'Understand, then build'}</span>
               <strong>{ch.icon} {lang === 'zh' ? '学习说明' : 'Lesson brief'}</strong>
             </div>
-            <div className="lesson-brief-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
+            <div className="lesson-brief-content" dangerouslySetInnerHTML={{ __html: renderLessonMarkdown(content) }} />
             {les.hints?.length > 0 && (
               <div className="hints-inline">
                 <div className="hints-title">{lang === 'zh' ? '分步提示' : 'Step-by-step hints'}</div>
@@ -483,6 +443,11 @@ export default function Lesson() {
               <div className="editor-wrapper">
                 <CodeEditor ref={editorRef} onRun={isRunning ? handleStop : handleRun} />
               </div>
+              <div className="lesson-editor-actions">
+                <button className={`lesson-primary-action${isRunning ? ' stop' : ''}`} type="button" onClick={isRunning ? handleStop : handleRun}>
+                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行代码' : 'Run code')}
+                </button>
+              </div>
             </section>
 
             <LessonResultDrawer
@@ -492,29 +457,28 @@ export default function Lesson() {
               onTabChange={setActiveResultTab}
             />
 
-            <div className="lesson-actions">
-              <div className="left-buttons">
-                {isReviewMode ? (
-                  <button className="lesson-secondary-action" type="button" onClick={() => navigateTo('reviews')}>
-                    {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to reviews'}
-                  </button>
-                ) : lesIdx > 0 ? (
-                  <button className="lesson-secondary-action" type="button" onClick={goToPrev}>
-                    {'←'} {lang === 'zh' ? '上一关' : 'Previous'}
-                  </button>
-                ) : <span />}
+            {showLessonNavigation && (
+              <div className="lesson-actions">
+                <div className="left-buttons">
+                  {isReviewMode ? (
+                    <button className="lesson-secondary-action" type="button" onClick={() => navigateTo('reviews')}>
+                      {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to reviews'}
+                    </button>
+                  ) : lesIdx > 0 ? (
+                    <button className="lesson-secondary-action" type="button" onClick={goToPrev}>
+                      {'←'} {lang === 'zh' ? '上一关' : 'Previous'}
+                    </button>
+                  ) : <span />}
+                </div>
+                <div className="right-buttons">
+                  {!isReviewMode && completed && (
+                    <button className="lesson-secondary-action" type="button" onClick={goToNext}>
+                      {lang === 'zh' ? '下一关' : 'Next'} {'→'}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="right-buttons">
-                <button className={`lesson-primary-action${isRunning ? ' stop' : ''}`} type="button" onClick={isRunning ? handleStop : handleRun}>
-                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行代码' : 'Run code')}
-                </button>
-                {!isReviewMode && completed && (
-                  <button className="lesson-secondary-action" type="button" onClick={goToNext}>
-                    {lang === 'zh' ? '下一关' : 'Next'} {'→'}
-                  </button>
-                )}
-              </div>
-            </div>
+            )}
           </main>
         </div>
       </div>
