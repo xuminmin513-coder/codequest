@@ -1,5 +1,5 @@
 const TASK_HEADING = /任务|挑战|练习|\b(?:task|challenge|exercise)\b/i;
-const EXAMPLE_TERM = /(?:示例|例子|演示(?!文稿)|拆解)|\b(?:example|demo|walkthrough)\b/i;
+const EXAMPLE_TERM = /(?:示例|例子|案例|演示(?!文稿)|拆解)|\b(?:example|demo|walkthrough|case|practical)\b/i;
 const FENCE_LINE = /^\s{0,3}```(?:[^`\s]+)?\s*$/;
 const HEADING_LINE = /^\s{0,3}(#{2,3})\s+(.+?)\s*$/;
 const BLOCKQUOTE_LINE = /^\s*>\s?(.*)$/;

@@ -28,6 +28,15 @@ test('classifies embedded example wording with safe bilingual boundaries', () =>
   assert.equal(classifyLessonSection('Exampled behavior'), 'learn');
 });
 
+test('classifies case and practical example labels with safe boundaries', () => {
+  for (const title of ['经典案例：阶乘', '实用案例：计算斜边', 'Practical: Right Triangle', 'Case: Factorial']) {
+    assert.equal(classifyLessonSection(title), 'example', title);
+  }
+  for (const title of ['Casey', 'Practicality']) {
+    assert.equal(classifyLessonSection(title), 'learn', title);
+  }
+});
+
 test('classifies English task terms at word boundaries with task precedence', () => {
   for (const title of ['Task', 'tAsK', 'Challenge', 'cHaLlEnGe', 'Exercise', 'eXeRcIsE']) {
     assert.equal(classifyLessonSection(title), 'task', title);
@@ -195,4 +204,24 @@ test('renders embedded real example labels with their following code', () => {
   assert.match(exampleSections[0][1], /<pre><code>[\s\S]*factorial\(n - 1\)/);
   assert.match(exampleSections[1][1], /<strong>函数注解完整示例<\/strong>：/);
   assert.match(exampleSections[1][1], /<pre><code>[\s\S]*def greet/);
+});
+
+test('renders paired curriculum example labels and code in both languages', () => {
+  const expectedExamples = [
+    ['ch15_04', 'content', '经典案例：阶乘', 'def factorial'],
+    ['ch15_04', 'contentEn', 'Classic example: Factorial', 'def factorial'],
+    ['ch17_03', 'content', '实用案例：计算直角三角形斜边', 'import math'],
+    ['ch17_03', 'contentEn', 'Practical: Right Triangle Hypotenuse', 'import math'],
+  ];
+
+  for (const [lessonId, field, label, codeMarker] of expectedExamples) {
+    const lesson = CHAPTERS.flatMap(chapter => chapter.lessons).find(item => item.id === lessonId);
+    assert.ok(lesson, `curriculum should contain ${lessonId}`);
+    const html = renderLessonMarkdown(lesson[field]);
+    const exampleSections = [...html.matchAll(/<section class="lesson-content-section lesson-content-section--example">([\s\S]*?)<\/section>/g)];
+    const matchingSection = exampleSections.find(section => section[1].includes(`<strong>${label}</strong>`));
+
+    assert.ok(matchingSection, `${lessonId} ${field} should render ${label} as an example`);
+    assert.ok(matchingSection[1].includes('<pre><code>') && matchingSection[1].includes(codeMarker), `${label} should own its following code`);
+  }
 });
