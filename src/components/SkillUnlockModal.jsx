@@ -16,7 +16,19 @@ export default function SkillUnlockModal({ skill, lang, onClose }) {
   return (
     <div className="skill-unlock-overlay" onClick={onClose}>
       {stage === 'unlocked' && <Confetti />}
-      <div className="skill-unlock-modal" onClick={e => e.stopPropagation()}>
+      <div
+        className="skill-unlock-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="skill-unlock-title"
+        onClick={e => e.stopPropagation()}
+      >
+        <h2
+          id="skill-unlock-title"
+          className={stage === 'opening' ? 'visually-hidden' : 'skill-unlock-title'}
+        >
+          {lang === 'zh' ? '恭喜解锁新技能！' : 'New Skill Unlocked!'}
+        </h2>
         {stage === 'opening' ? (
           <div className={`skill-gift-box ${showGift ? 'shake' : ''}`}>
             <div className="gift-lid">🎀</div>
@@ -27,9 +39,6 @@ export default function SkillUnlockModal({ skill, lang, onClose }) {
         ) : (
           <>
             <div className="skill-unlock-icon">{skill.icon}</div>
-            <h2 className="skill-unlock-title">
-              {lang === 'zh' ? '🎉 恭喜解锁新技能！' : '🎉 New Skill Unlocked!'}
-            </h2>
             <div className="skill-unlock-divider" />
             <p className="skill-unlock-name">
               {lang === 'zh' ? skill.nameCn : skill.name}
@@ -37,7 +46,7 @@ export default function SkillUnlockModal({ skill, lang, onClose }) {
             <p className="skill-unlock-desc">
               {lang === 'zh' ? skill.descCn : skill.desc}
             </p>
-            <button className="btn btn-pixel btn-primary skill-unlock-btn" onClick={onClose}>
+            <button className="btn btn-pixel btn-primary skill-unlock-btn" type="button" onClick={onClose} autoFocus>
               {lang === 'zh' ? '太棒了！' : 'Awesome!'}
             </button>
           </>

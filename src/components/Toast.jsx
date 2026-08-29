@@ -5,15 +5,15 @@ export default function Toast() {
   const { toasts, removeToast } = useApp();
 
   return (
-    <div className="toast-container">
+    <div className="toast-container" role="status" aria-live="polite" aria-atomic="false">
       {toasts.map(t => (
-        <div key={t.id} className={`toast ${t.type}`} onClick={() => removeToast(t.id)}>
+        <button key={t.id} className={`toast ${t.type}`} type="button" onClick={() => removeToast(t.id)}>
           <div className="toast-icon">{t.icon}</div>
           <div>
             <div className="toast-msg">{t.message}</div>
             {t.sub && <div className="toast-sub">{t.sub}</div>}
           </div>
-        </div>
+        </button>
       ))}
     </div>
   );

@@ -2,11 +2,23 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
-import { simulatePython } from '../utils/transpiler';
+import { judgeLesson } from '../utils/lessonJudge';
+import { renderLessonMarkdown } from '../utils/lessonMarkdown';
+import { buildLessonResultView } from '../utils/lessonResultView';
+import { createLessonRunGuard } from '../utils/lessonRunGuard';
+import {
+  getGraduationProgress,
+  getNextDestination,
+  getRequiredChapters,
+  isChapterUnlocked,
+} from '../utils/curriculumNavigation';
+import { createPythonRunner } from '../runtime/PythonRunner';
+import { getLessonRuntimeMode } from '../runtime/runtimePolicy';
 import { CHAPTERS } from '../data/courses';
 import CodeEditor from './CodeEditor';
 import BadgeModal from './BadgeModal';
-import AIChat from './AIChat';
+import Confetti from './Confetti';
+import LessonResultDrawer from './LessonResultDrawer';
 
 const isMac = typeof navigator !== 'undefined' && navigator.platform?.toLowerCase().includes('mac');
 const runShortcut = isMac ? 'Cmd+Enter 运行' : 'Ctrl+Enter 运行';
@@ -20,9 +32,20 @@ export default function Lesson() {
   const [currentBadge, setCurrentBadge] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [resultView, setResultView] = useState(() => buildLessonResultView({ report: null, lang }));
+  const [activeResultTab, setActiveResultTab] = useState('tests');
   const lastPageDataRef = useRef(null);
+  const runGuardRef = useRef(createLessonRunGuard());
+  const runnerRef = useRef(null);
 
   useEffect(() => {
+    runnerRef.current?.dispose();
+    runnerRef.current = null;
+    runGuardRef.current.invalidate();
+    setIsRunning(false);
+    setResultView(buildLessonResultView({ report: null, lang }));
+    setActiveResultTab('tests');
     if (!pageData) return;
 
     const { chapterId, lessonId } = pageData;
@@ -34,15 +57,11 @@ export default function Lesson() {
     const les = ch.lessons.find(l => l.id === lessonId);
     if (!les) { navigateTo('courses'); return; }
 
-    const chIdx = CHAPTERS.findIndex(c => c.id === chapterId);
     const lesIdx = ch.lessons.findIndex(l => l.id === lessonId);
-    if (chIdx > 0) {
-      const prevCh = CHAPTERS[chIdx - 1];
-      if (!STORAGE.isChapterCompleted(prevCh.id, prevCh.lessons.length)) {
-        addToast('error', '🔒', lang === 'zh' ? '请先完成上一章全部关卡！' : 'Complete all lessons in the previous chapter first!');
-        navigateTo('courses');
-        return;
-      }
+    if (!isChapterUnlocked(CHAPTERS, chapterId, STORAGE.getProgress())) {
+      addToast('error', '🔒', lang === 'zh' ? '请先完成上一章全部关卡！' : 'Complete all lessons in the previous chapter first!');
+      navigateTo('courses');
+      return;
     }
     if (lesIdx > 0) {
       const prevLes = ch.lessons[lesIdx - 1];
@@ -59,23 +78,22 @@ export default function Lesson() {
     STORAGE.saveLastLesson(ch.id, les.id);
 
     setTimeout(() => {
-      if (pageData?.reviewMode) {
-        if (editorRef.current) {
-          editorRef.current.setCode(les.starterCode || '');
-          editorRef.current.focus();
-        }
-      } else {
-        const saved = STORAGE.loadCode(les.id) || les.starterCode || '';
-        if (editorRef.current) {
-          editorRef.current.setCode(saved);
-          editorRef.current.focus();
-        }
+      const playerDraft = pageData?.reviewMode ? '' : STORAGE.loadCode(les.id);
+      if (editorRef.current) {
+        editorRef.current.setCode(playerDraft || '');
+        editorRef.current.focus();
       }
     }, 100);
     if (pageData?.reviewMode) {
       STORAGE.clearCode(les.id);
     }
   }, [pageData]);
+
+  useEffect(() => () => {
+    runnerRef.current?.dispose();
+    runnerRef.current = null;
+    runGuardRef.current.invalidate();
+  }, []);
 
   useEffect(() => {
     if (!pageData) {
@@ -93,58 +111,84 @@ export default function Lesson() {
     navigateTo('lesson', { chapterId, lessonId });
   }, [navigateTo]);
 
-  const handleRun = useCallback(() => {
+  const handleStop = useCallback(() => {
+    const cancelled = runGuardRef.current.cancelCurrent();
+    if (!cancelled) return;
+    runnerRef.current?.stop();
+    setIsRunning(false);
+    setResultView(buildLessonResultView({
+      report: {
+        passed: false,
+        status: 'stopped',
+        error: lang === 'zh' ? '运行已停止。' : 'Execution stopped.',
+        results: [],
+        output: '',
+      },
+      lang,
+    }));
+    setActiveResultTab('tests');
+  }, [lang]);
+
+  const handleRun = useCallback(async () => {
     if (!lessonData || !editorRef.current) return;
-    const { les, ch } = lessonData;
-    const code = editorRef.current.getCode();
-    if (!code.trim()) {
-      addToast('error', '⚠️', lang === 'zh' ? '请先编写代码' : 'Please write some code first');
-      return;
-    }
+    const runToken = runGuardRef.current.begin();
+    if (!runToken) return;
+    setIsRunning(true);
+    let runner = null;
 
-    const testCases = les.testCases || [{ input: '', expected: '' }];
-    const result = simulatePython(code, testCases[0].input);
+    try {
+      const { les, ch } = lessonData;
+      const code = editorRef.current.getCode();
+      if (!code.trim()) {
+        addToast('error', '⚠️', lang === 'zh' ? '请先编写代码' : 'Please write some code first');
+        return;
+      }
 
-    const outputEl = document.getElementById('lesson-output');
-    if (!outputEl) return;
+      if (getLessonRuntimeMode(les) === 'visual-lab-pending') {
+        const message = lang === 'zh'
+          ? '🧪 这一关正在迁移为安全教学实验，暂时不能判题。旧模拟器已经停用，以免让你学到不真实的 Python。'
+          : '🧪 This lesson is being migrated to a safe teaching lab and cannot be judged yet. The old simulator is disabled because it did not behave like real Python.';
+        const pendingView = buildLessonResultView({
+          report: { passed: false, status: 'invalid_request', error: message, results: [], output: message },
+          lang,
+        });
+        setResultView({ ...pendingView, summary: lang === 'zh' ? '暂不可运行' : 'Temporarily unavailable', guidance: message });
+        setActiveResultTab('tests');
+        return;
+      }
 
-    if (result.error) {
-      outputEl.textContent = '❌ ' + result.error;
-      outputEl.className = 'terminal-content error';
+      const testCases = les.testCases || [{ input: '', expected: '' }];
+      runner = createPythonRunner();
+      runnerRef.current = runner;
+      const report = await judgeLesson({
+        code,
+        testCases,
+        execute: async (source, input) => runner.run(source, input),
+      });
+
+      if (!runGuardRef.current.isCurrent(runToken)) return;
+
+      setResultView(buildLessonResultView({ report, lang }));
+      setActiveResultTab('tests');
+
+      if (report.error) {
+        if (pageData?.reviewMode) onReviewFailed(les);
+        setIsFirstTry(false);
+        return;
+      }
+
+      if (report.passed) {
+        if (pageData?.reviewMode) onReviewComplete(les, ch);
+        else onLessonComplete(les, ch);
+        return;
+      }
+
+      if (pageData?.reviewMode) onReviewFailed(les);
       setIsFirstTry(false);
-      return;
-    }
-
-    const normalize = (s) => (s || '').replace(/^﻿|\s+$/g, '').trim();
-    const actual = normalize(result.output);
-    const expected = normalize(testCases[0].expected);
-
-    if (actual === expected) {
-      const outText = result.output ? result.output.trim() + '\n\n' : '';
-      outputEl.textContent = outText + '🎉 ' + (lang === 'zh' ? '恭喜通关！' : 'Level Complete!');
-      outputEl.className = 'terminal-content success';
-      if (pageData?.reviewMode) {
-        onReviewComplete(les, ch);
-      } else {
-        onLessonComplete(les, ch);
-      }
-    } else {
-      if (pageData?.reviewMode) {
-        onReviewFailed(les);
-      }
-      let msg = lang === 'zh' ? '❌ 输出不正确，请重试。' : '❌ Output incorrect. Try again!';
-      if (result.output && result.output.trim()) {
-        msg += '\n--- ' + (lang === 'zh' ? '你的输出' : 'Your output') + ' ---\n' + result.output.trim();
-      } else {
-        msg += '\n--- ' + (lang === 'zh' ? '你的输出' : 'Your output') + ' ---\n(' + (lang === 'zh' ? '无输出' : 'no output') + ')';
-      }
-      msg += '\n--- ' + (lang === 'zh' ? '期望输出' : 'Expected') + ' ---\n' + expected;
-      if (actual.replace(/\s/g, '') === expected.replace(/\s/g, '')) {
-        msg += '\n💡 ' + (lang === 'zh' ? '提示：输出看起来很匹配，请检查是否有不可见字符或多余空格' : 'Hint: Outputs look identical - check for invisible characters or extra whitespace');
-      }
-      outputEl.textContent = msg;
-      outputEl.className = 'terminal-content error';
-      setIsFirstTry(false);
+    } finally {
+      runner?.dispose();
+      if (runnerRef.current === runner) runnerRef.current = null;
+      if (runGuardRef.current.finish(runToken)) setIsRunning(false);
     }
   }, [lessonData, lang]);
 
@@ -181,14 +225,16 @@ export default function Lesson() {
 
     const stats = (() => {
       const totalXp = STORAGE.getTotalXp();
-      const c = STORAGE.getCompletedCount();
+      const progress = STORAGE.getProgress();
+      const graduation = getGraduationProgress(CHAPTERS, progress);
+      const requiredChapters = getRequiredChapters(CHAPTERS);
       const b = STORAGE.getBadges();
       const s = STORAGE.getStreak();
       const p = STORAGE.getPerfectCount();
       const cpc = STORAGE.getCompletedPerChapter();
       let fcc = 0;
-      CHAPTERS.forEach(ch2 => { if ((cpc[ch2.id] || 0) >= ch2.lessons.length) fcc++; });
-      return { xp: totalXp, completedLessons: c, completedChapters: fcc, badges: b.length, streak: s, perfectLessons: p, fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0 };
+      requiredChapters.forEach(ch2 => { if ((cpc[ch2.id] || 0) >= ch2.lessons.length) fcc++; });
+      return { xp: totalXp, completedLessons: graduation.completed, completedChapters: fcc, totalLessons: graduation.totalLessons, badges: b.length, streak: s, perfectLessons: p, fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0 };
     })();
 
     const oldBadges = STORAGE.getBadges();
@@ -235,11 +281,13 @@ export default function Lesson() {
 
     const totalReviews = STORAGE.getTotalReviewsCompleted();
     const oldBadges = STORAGE.getBadges();
+    const graduation = getGraduationProgress(CHAPTERS, STORAGE.getProgress());
     const stats = {
       reviewsCompleted: totalReviews,
       xp: STORAGE.getTotalXp(),
-      completedLessons: STORAGE.getCompletedCount(),
+      completedLessons: graduation.completed,
       completedChapters: 0,
+      totalLessons: graduation.totalLessons,
       streak: STORAGE.getStreak(),
       perfectLessons: STORAGE.getPerfectCount(),
       fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0
@@ -290,59 +338,12 @@ export default function Lesson() {
 
   const goToNext = () => {
     if (!lessonData) return;
-    const { les, ch } = lessonData;
-    const idx = ch.lessons.findIndex(l => l.id === les.id);
-    if (idx < ch.lessons.length - 1) {
-      loadLesson(ch.id, ch.lessons[idx + 1].id);
+    const destination = getNextDestination(CHAPTERS, lessonData.ch.id, lessonData.les.id);
+    if (destination.page === 'lesson') {
+      loadLesson(destination.data.chapterId, destination.data.lessonId);
     } else {
-      const chIdx = CHAPTERS.findIndex(c => c.id === ch.id);
-      if (chIdx < CHAPTERS.length - 1) {
-        const nextCh = CHAPTERS[chIdx + 1];
-        loadLesson(nextCh.id, nextCh.lessons[0].id);
-      }
+      navigateTo(destination.page, destination.data);
     }
-  };
-
-  const renderMarkdown = (md) => {
-    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const segs = md.split(/^```\w*$/gm);
-    const parts = [];
-    for (let i = 0; i < segs.length; i++) {
-      if (i % 2 === 1) {
-        if (segs[i].trim()) parts.push('<pre><code>' + esc(segs[i].trim()) + '</code></pre>');
-      } else {
-        const blocks = segs[i].split(/\n\n+/);
-        for (const b of blocks) {
-          const t = b.trim();
-          if (!t) continue;
-          let h = '';
-          if (/^## (.+)/.test(t)) h = '<h2>' + t.replace(/^## (.+)/, '$1') + '</h2>';
-          else if (/^### (.+)/.test(t)) h = '<h3>' + t.replace(/^### (.+)/, '$1') + '</h3>';
-          else if (/^> /.test(t)) {
-            const ls = t.split('\n').map(l => l.replace(/^> /, '').replace(/^>/, ''));
-            h = '<blockquote>' + ls.join('<br>') + '</blockquote>';
-          } else if (/^- /.test(t) || /^\d+\. /.test(t)) {
-            const ord = /^\d+\. /.test(t);
-            const its = t.split('\n').map(l => '<li>' + l.replace(/^- /, '').replace(/^\d+\. /, '') + '</li>');
-            h = (ord ? '<ol>' : '<ul>') + its.join('') + (ord ? '</ol>' : '</ul>');
-          } else {
-            h = '<p>' + t.replace(/\n/g, '<br>') + '</p>';
-          }
-          parts.push(h);
-        }
-      }
-    }
-    let html = parts.join('\n').replace(/`([^`]+)`/g, '<code>$1</code>');
-    const protectedBlocks = [];
-    html = html.replace(/(<pre[^>]*>.*?<\/pre>|<code[^>]*>.*?<\/code>)/gs, (match) => {
-      const idx = protectedBlocks.length;
-      protectedBlocks.push(match);
-      return '\x00PROTECT' + idx + '\x00';
-    });
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    html = html.replace(/\x00PROTECT(\d+)\x00/g, (_, idx) => protectedBlocks[+idx] || '');
-    return html;
   };
 
   if (!lessonData) {
@@ -354,17 +355,27 @@ export default function Lesson() {
   const content = lang === 'zh' ? les.content : les.contentEn;
   const title = lang === 'zh' ? les.title : les.titleEn;
   const isReviewMode = pageData?.reviewMode === true;
+  const showLessonNavigation = isReviewMode || lesIdx > 0 || completed;
   const reviewStage = isReviewMode ? STORAGE.getLessonReviewStage(les.id) : null;
   const totalStages = STORAGE.REVIEW_INTERVALS.length;
   const chainIndex = pageData?.reviewIndex ?? 0;
   const chainTotal = pageData?.reviewTotal ?? 0;
 
   return (
-    <div className="page active" style={{ height: '100%', padding: 0, maxWidth: 'none' }}>
+    <div className="page active lesson-page">
       <div className="lesson-container">
-        <div className={`lesson-topbar${isReviewMode ? ' review-mode' : ''}`}>
-          <button className="back-btn" onClick={() => navigateTo(isReviewMode ? 'reviews' : 'courses')}>{'←'}</button>
-          <span className="lesson-title-bar">{ch.icon} {isReviewMode ? (lang === 'zh' ? `复习 ${title}` : `Review ${title}`) : title}</span>
+        <header className={`lesson-topbar${isReviewMode ? ' review-mode' : ''}`}>
+          <button
+            className="back-btn"
+            type="button"
+            aria-label={lang === 'zh' ? '返回' : 'Back'}
+            onClick={() => navigateTo(isReviewMode ? 'reviews' : 'courses')}
+          >
+            {'←'}
+          </button>
+          <span className="lesson-title-bar">
+            {isReviewMode ? (lang === 'zh' ? `复习 · ${title}` : `Review · ${title}`) : title}
+          </span>
           {isReviewMode && reviewStage ? (
             <span className="review-stage-badge">
               {chainTotal > 1
@@ -374,132 +385,105 @@ export default function Lesson() {
           ) : (
             <span className="lesson-xp-bar">+{les.xp} XP</span>
           )}
-        </div>
-        <div className="lesson-body">
-          <div className="lesson-instructions-panel">
-            <div dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }} />
+        </header>
+
+        <div className="lesson-workspace">
+          <aside className="lesson-brief" aria-label={lang === 'zh' ? '学习说明' : 'Lesson brief'}>
+            <div className="lesson-brief-heading">
+              <span>{lang === 'zh' ? '先理解，再动手' : 'Understand, then build'}</span>
+              <strong>{ch.icon} {lang === 'zh' ? '学习说明' : 'Lesson brief'}</strong>
+            </div>
+            <div className="lesson-brief-content" dangerouslySetInnerHTML={{ __html: renderLessonMarkdown(content) }} />
             {les.hints?.length > 0 && (
               <div className="hints-inline">
-                <div className="hints-title">{lang === 'zh' ? '💡 提示' : '💡 Hints'}</div>
+                <div className="hints-title">{lang === 'zh' ? '分步提示' : 'Step-by-step hints'}</div>
                 {(() => {
                   const stepHints = [];
                   for (let i = 0; i < les.hints.length; i += 2) {
-                    const zhHint = les.hints[i];
-                    if (!zhHint) continue;
-                    stepHints.push(zhHint);
+                    const hint = les.hints[i];
+                    if (hint) stepHints.push(hint);
                   }
 
-                  const renderHintBody = (hintText) => {
+                  const renderHintBody = hintText => {
                     const segments = hintText.split(/(【解释】|【代码】)/g).filter(Boolean);
-                    const els = [];
+                    const elements = [];
                     for (let i = 0; i < segments.length; i++) {
                       if (segments[i] === '【解释】' && i + 1 < segments.length) {
                         i++;
                         const lines = segments[i].trim().split('\n');
-                        els.push(<p className="hint-explain">{lines.map((l, li) => <>{li > 0 && <br />}{l}</>)}</p>);
+                        elements.push(<p className="hint-explain" key={`explain-${i}`}>{lines.map((line, lineIndex) => <React.Fragment key={lineIndex}>{lineIndex > 0 && <br />}{line}</React.Fragment>)}</p>);
                       } else if (segments[i] === '【代码】' && i + 1 < segments.length) {
                         i++;
-                        els.push(<pre className="hint-code">{segments[i].trim()}</pre>);
+                        elements.push(<pre className="hint-code" key={`code-${i}`}>{segments[i].trim()}</pre>);
                       } else {
-                        // Fallback: text without markers → treat as explanation
-                        const t = segments[i].trim();
-                        if (t) els.push(<p className="hint-explain">{t}</p>);
+                        const plainText = segments[i].trim();
+                        if (plainText) elements.push(<p className="hint-explain" key={`plain-${i}`}>{plainText}</p>);
                       }
                     }
-                    return els;
+                    return elements;
                   };
 
-                  return stepHints.map((h, idx) => (
-                    <details key={idx} className="hint-step">
-                      <summary>{lang === 'zh' ? `第${idx + 1}步` : `Step ${idx + 1}`}</summary>
-                      <div className="hint-body">
-                        {renderHintBody(h)}
-                      </div>
+                  return stepHints.map((hint, index) => (
+                    <details key={index} className="hint-step">
+                      <summary>{lang === 'zh' ? `提示 ${index + 1}` : `Hint ${index + 1}`}</summary>
+                      <div className="hint-body">{renderHintBody(hint)}</div>
                     </details>
                   ));
                 })()}
               </div>
             )}
-          </div>
-          <div className="lesson-workspace-panel">
-            <div className="workspace-header">
-              <span className="lang-badge">Python</span>
-              <span className="shortcut-hint">
-                {lang === 'zh' ? runShortcut : runShortcutEn}
-              </span>
-            </div>
-            <div className="editor-wrapper">
-              <CodeEditor ref={editorRef} onRun={handleRun} />
-            </div>
-            <div className="output-terminal">
-              <div className="terminal-header">
-                <span className="terminal-dot dot-red" />
-                <span className="terminal-dot dot-yellow" />
-                <span className="terminal-dot dot-green" />
-                <span className="terminal-label">{'▶'} Console / 控制台</span>
+          </aside>
+
+          <main className="lesson-coding-column">
+            <section className="lesson-editor-card" aria-label={lang === 'zh' ? '代码编辑器' : 'Code editor'}>
+              <div className="workspace-header">
+                <span className="lang-badge">Python</span>
+                <span className="shortcut-hint">{lang === 'zh' ? runShortcut : runShortcutEn}</span>
               </div>
-              <div className="terminal-content" id="lesson-output">
-                {'▶'} {lang === 'zh' ? '点击“运行”查看输出' : 'Click "Run" to see output'}
+              <div className="editor-wrapper">
+                <CodeEditor ref={editorRef} onRun={isRunning ? handleStop : handleRun} />
               </div>
-            </div>
-            <div className="lesson-actions">
-              <div className="left-buttons">
-                {isReviewMode ? (
-                  <button className="btn btn-pixel btn-ghost" onClick={() => navigateTo('reviews')}>
-                    {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to Reviews'}
-                  </button>
-                ) : (
-                  <>
-                    {lesIdx > 0 && (
-                      <button className="btn btn-pixel btn-ghost" onClick={goToPrev}>
-                        {'←'} {lang === 'zh' ? '上一关' : 'Prev'}
-                      </button>
-                    )}
-                    <AIChat lessonContent={content} language={lang} />
-                  </>
-                )}
-              </div>
-              <div className="right-buttons">
-                <button className="btn btn-pixel btn-primary" onClick={handleRun}>
-                  {'▶'} {lang === 'zh' ? '运行' : 'Run'}
+              <div className="lesson-editor-actions">
+                <button className={`lesson-primary-action${isRunning ? ' stop' : ''}`} type="button" onClick={isRunning ? handleStop : handleRun}>
+                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行代码' : 'Run code')}
                 </button>
-                {!isReviewMode && completed && (
-                  <button className="btn btn-pixel btn-ghost" onClick={goToNext}>
-                    {lang === 'zh' ? '下一关' : 'Next'} {'→'}
-                  </button>
-                )}
               </div>
-            </div>
-          </div>
+            </section>
+
+            <LessonResultDrawer
+              lang={lang}
+              view={resultView}
+              activeTab={activeResultTab}
+              onTabChange={setActiveResultTab}
+            />
+
+            {showLessonNavigation && (
+              <div className="lesson-actions">
+                <div className="left-buttons">
+                  {isReviewMode ? (
+                    <button className="lesson-secondary-action" type="button" onClick={() => navigateTo('reviews')}>
+                      {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to reviews'}
+                    </button>
+                  ) : lesIdx > 0 ? (
+                    <button className="lesson-secondary-action" type="button" onClick={goToPrev}>
+                      {'←'} {lang === 'zh' ? '上一关' : 'Previous'}
+                    </button>
+                  ) : <span />}
+                </div>
+                <div className="right-buttons">
+                  {!isReviewMode && completed && (
+                    <button className="lesson-secondary-action" type="button" onClick={goToNext}>
+                      {lang === 'zh' ? '下一关' : 'Next'} {'→'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </main>
         </div>
       </div>
       {showConfetti && <Confetti />}
       <BadgeModal badge={currentBadge} lang={lang} onClose={() => setCurrentBadge(null)} />
     </div>
-  );
-}
-
-function Confetti() {
-  const colors = ['#ff2d78','#00d4ff','#ffd700','#00ff88','#7b2ff7','#ff8c00','#ff5e5e','#5ec8ff','#ff69b4','#ffd700','#00ffcc','#ff4444'];
-  const shapes = ['50%','2px','50%','2px','50%','2px'];
-  return (
-    <>
-      <div className="level-complete-overlay">
-        <div className="level-complete-text">{'🎉'} Level Complete!</div>
-      </div>
-      <div className="confetti-container">
-        {Array.from({ length: 100 }, (_, i) => (
-          <div key={i} className="confetti-particle" style={{
-            left: Math.random() * 100 + '%',
-            backgroundColor: colors[Math.floor(Math.random() * colors.length)],
-            width: (Math.random() * 6 + 4) + 'px',
-            height: (Math.random() * 10 + 4) + 'px',
-            animationDuration: (Math.random() * 2 + 2.5) + 's',
-            animationDelay: Math.random() * 0.6 + 's',
-            borderRadius: shapes[Math.floor(Math.random() * shapes.length)],
-          }} />
-        ))}
-      </div>
-    </>
   );
 }

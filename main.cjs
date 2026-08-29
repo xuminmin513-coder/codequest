@@ -1,109 +1,128 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
-const { execFile } = require('child_process');
-const fs = require('fs');
-const os = require('os');
-const crypto = require('crypto');
+const { app, BrowserWindow, net, protocol, session } = require('electron');
+const path = require('node:path');
+const fs = require('node:fs');
+const { pathToFileURL } = require('node:url');
 
-// 确保使用一致的 userData 目录，防止存档分裂到不同位置
-app.name = 'codedex-app';
+const APP_SCHEME = 'xmcode';
+const APP_HOST = 'app';
+const APP_ORIGIN = `${APP_SCHEME}://${APP_HOST}`;
+const IS_E2E = process.argv.includes('--xmcode-e2e');
 
-// ============================================================
-// Python Execution IPC
-// ============================================================
-ipcMain.handle('run-python', async (event, { code, input }) => {
-  const tmpFile = path.join(os.tmpdir(), `${crypto.randomUUID()}.py`);
+app.name = 'XM²code';
 
+if (IS_E2E && process.env.XMCODE_E2E_USER_DATA) {
+  app.setPath('userData', path.resolve(process.env.XMCODE_E2E_USER_DATA));
+}
+
+protocol.registerSchemesAsPrivileged([{
+  scheme: APP_SCHEME,
+  privileges: {
+    standard: true,
+    secure: true,
+    supportFetchAPI: false,
+    corsEnabled: false,
+  },
+}]);
+
+function resolveBundlePath(bundleRoot, requestUrl) {
+  let parsed;
   try {
-    // Write code to temp file with UTF-8 BOM for proper encoding
-    fs.writeFileSync(tmpFile, code + '\n', 'utf-8');
-
-    const result = await new Promise((resolve) => {
-      const child = execFile(
-        'python3',
-        [tmpFile],
-        {
-          timeout: 5000,
-          maxBuffer: 1024 * 1024,
-          killSignal: 'SIGTERM',
-          env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
-        },
-        (error, stdout, stderr) => {
-          if (error) {
-            // Timeout or execution error
-            if (error.killed || error.signal === 'SIGTERM') {
-              resolve({ stdout, stderr: stderr + '\n⏱ 代码执行超时 (Code execution timed out)\n', error: 'timeout' });
-            } else if (error.code === 'ENOENT') {
-              resolve({ stdout, stderr: '需要安装 Python 3 才能运行代码 (Python 3 is required)', error: 'no_python' });
-            } else {
-              resolve({ stdout, stderr, error: 'runtime_error' });
-            }
-          } else {
-            resolve({ stdout, stderr, error: null });
-          }
-        }
-      );
-
-      // Write input to stdin if provided, always close stdin
-      if (input) {
-        child.stdin.write(input);
-      }
-      child.stdin.end();
-    });
-
-    return result;
-  } finally {
-    // Clean up temp file
-    try { fs.unlinkSync(tmpFile); } catch {}
+    parsed = new URL(requestUrl);
+  } catch {
+    return null;
   }
-});
+  if (parsed.protocol !== `${APP_SCHEME}:` || parsed.host !== APP_HOST) return null;
 
-// ============================================================
-// Window Creation
-// ============================================================
+  let pathname;
+  try {
+    pathname = decodeURIComponent(parsed.pathname);
+  } catch {
+    return null;
+  }
+
+  const relativeRequest = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  if (!relativeRequest || relativeRequest.includes('\0')) return null;
+
+  const resolved = path.resolve(bundleRoot, relativeRequest);
+  const relative = path.relative(bundleRoot, resolved);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return null;
+  return resolved;
+}
+
+function isTrustedAppUrl(target) {
+  try {
+    const parsed = new URL(target);
+    return parsed.protocol === `${APP_SCHEME}:` && parsed.host === APP_HOST;
+  } catch {
+    return false;
+  }
+}
+
+function installSessionSecurity(ses) {
+  ses.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
+  ses.setPermissionCheckHandler(() => false);
+  ses.webRequest.onBeforeRequest(
+    { urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] },
+    (_details, callback) => callback({ cancel: true }),
+  );
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 1024,
     minHeight: 700,
-    title: 'CodeQuest - 编程冒险',
+    title: 'XM²code',
     icon: path.join(__dirname, 'assets', 'icon.png'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
     },
-    backgroundColor: '#0a0a1a',
-    show: false
+    backgroundColor: '#f5f5f7',
+    show: false,
   });
 
-  // Try dist/index.html first (production build), fall back to dev server
-  const indexPath = fs.existsSync(path.join(__dirname, 'dist', 'index.html'))
-    ? path.join(__dirname, 'dist', 'index.html')
-    : path.join(__dirname, 'index.html');
-  win.loadFile(indexPath);
-
-  win.once('ready-to-show', () => {
-    win.show();
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', (event, target) => {
+    if (!isTrustedAppUrl(target)) event.preventDefault();
   });
 
-  // Remove menu bar for cleaner look
+  win.loadURL(`${APP_ORIGIN}/index.html`);
+  win.once('ready-to-show', () => win.show());
   win.setMenuBarVisibility(false);
 }
 
 app.whenReady().then(() => {
-  createWindow();
+  const bundleRoot = path.join(__dirname, 'dist');
+  installSessionSecurity(session.defaultSession);
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+  protocol.handle(APP_SCHEME, request => {
+    try {
+      const filePath = resolveBundlePath(bundleRoot, request.url);
+      if (!filePath || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+        return new Response('Not found', {
+          status: 404,
+          headers: { 'content-type': 'text/plain; charset=utf-8' },
+        });
+      }
+      return net.fetch(pathToFileURL(filePath).toString());
+    } catch {
+      return new Response('Internal application resource error', {
+        status: 500,
+        headers: { 'content-type': 'text/plain; charset=utf-8' },
+      });
     }
+  });
+
+  createWindow();
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });

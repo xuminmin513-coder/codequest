@@ -2,83 +2,104 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { CHAPTERS } from '../data/courses';
+import { isChapterUnlocked } from '../utils/curriculumNavigation';
+import PageHeader from './ui/PageHeader';
+import StatusBadge from './ui/StatusBadge';
 
 export default function CourseMap() {
   const { lang, navigateTo, refreshKey } = useApp();
   void refreshKey;
-
   const [openChapters, setOpenChapters] = useState(() => {
-    const init = {};
-    CHAPTERS.forEach((_, idx) => { init[idx] = idx === 0; });
-    return init;
+    const initial = {};
+    CHAPTERS.forEach((_, index) => { initial[index] = index === 0; });
+    return initial;
   });
-
   const completedCounts = STORAGE.getCompletedPerChapter();
+  const progressData = STORAGE.getProgress();
 
-  const toggleChapter = (idx) => {
-    setOpenChapters(prev => ({ ...prev, [idx]: !prev[idx] }));
+  const toggleChapter = index => {
+    setOpenChapters(previous => ({ ...previous, [index]: !previous[index] }));
   };
 
   return (
-    <div className="page active">
-      <h2 className="section-title">
-        🗺️ <span>{lang === 'zh' ? '课程地图' : 'Course Map'}</span>
-      </h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: 24, fontSize: 14 }}>
-        {lang === 'zh' ? '完成每个关卡来学习 Python，从基础到项目！' : 'Complete each lesson to learn Python, from basics to projects!'}
-      </p>
-      <div className="chapter-list">
-        {CHAPTERS.map((ch, chIdx) => {
-          const totalInCh = ch.lessons.length;
-          const doneInCh = completedCounts[ch.id] || 0;
-          const chProgress = Math.round((doneInCh / totalInCh) * 100);
+    <div className="page active page-standard course-page">
+      <PageHeader
+        eyebrow={lang === 'zh' ? 'Python 学习路线' : 'Python learning path'}
+        title={lang === 'zh' ? '课程地图' : 'Course map'}
+        description={lang === 'zh' ? '从基础开始，按顺序完成每一关。每一章都会告诉你正在学习什么。' : 'Start with the foundations and complete each lesson in order.'}
+      />
 
-          let isUnlocked = chIdx === 0;
-          if (chIdx > 0) {
-            const prevCh = CHAPTERS[chIdx - 1];
-            isUnlocked = STORAGE.isChapterCompleted(prevCh.id, prevCh.lessons.length);
-          }
-
-          const chTitle = lang === 'zh' ? ch.title : ch.titleEn;
-          const chDesc = lang === 'zh' ? ch.description : ch.descriptionEn;
+      <div className="chapter-list course-path">
+        {CHAPTERS.map((chapter, chapterIndex) => {
+          const totalLessons = chapter.lessons.length;
+          const completedLessons = completedCounts[chapter.id] || 0;
+          const progress = totalLessons === 0 ? 0 : Math.round((completedLessons / totalLessons) * 100);
+          const chapterUnlocked = isChapterUnlocked(CHAPTERS, chapter.id, progressData);
+          const expanded = Boolean(openChapters[chapterIndex]);
+          const panelId = `chapter-lessons-${chapter.id}`;
 
           return (
-            <div className="chapter-card" key={ch.id} style={{ opacity: isUnlocked ? 1 : 0.6 }}>
-              <div className="chapter-header" onClick={() => toggleChapter(chIdx)}>
-                <div className="chapter-icon">{ch.icon}</div>
-                <div className="chapter-info">
-                  <div className="chapter-title">{chTitle}</div>
-                  <div className="chapter-desc">{chDesc} · {totalInCh} {lang === 'zh' ? '关' : 'lessons'}</div>
-                </div>
-                <div className="chapter-progress">
-                  <div className="cp-text">{doneInCh}/{totalInCh}</div>
-                  <div className="cp-bar"><div className="cp-fill" style={{ width: `${chProgress}%` }} /></div>
-                </div>
-              </div>
-              <div className="lesson-list" style={{ display: openChapters[chIdx] ? 'block' : 'none' }}>
-                {ch.lessons.map((les, lesIdx) => {
-                  const isCompleted = STORAGE.isLessonCompleted(ch.id, les.id);
-                  const isLocked = !isUnlocked ||
-                    (lesIdx > 0 && !STORAGE.isLessonCompleted(ch.id, ch.lessons[lesIdx - 1].id) && !isCompleted);
-                  const lesTitle = lang === 'zh' ? les.title : les.titleEn;
+            <section className={`chapter-card${chapterUnlocked ? '' : ' locked'}`} key={chapter.id}>
+              <button
+                type="button"
+                className="chapter-toggle"
+                aria-expanded={expanded}
+                aria-controls={panelId}
+                onClick={() => toggleChapter(chapterIndex)}
+              >
+                <span className="chapter-icon" aria-hidden="true">{chapter.icon}</span>
+                <span className="chapter-info">
+                  <strong>{lang === 'zh' ? chapter.title : chapter.titleEn}</strong>
+                  <small>{lang === 'zh' ? chapter.description : chapter.descriptionEn}</small>
+                  {chapter.optional && (
+                    <span className="chapter-lab-label">
+                      {lang === 'zh' ? '选修实验 · 开发中' : 'Optional lab · In development'}
+                    </span>
+                  )}
+                </span>
+                <span className="chapter-progress-block">
+                  <span>{completedLessons}/{totalLessons}</span>
+                  <span className="chapter-progress-track" aria-label={`${progress}%`}>
+                    <span style={{ width: `${progress}%` }} />
+                  </span>
+                </span>
+                <span className="chapter-chevron" aria-hidden="true">{expanded ? '−' : '+'}</span>
+              </button>
 
-                  return (
-                    <div
-                      key={les.id}
-                      className={`lesson-item ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}`}
-                      onClick={isLocked ? undefined : () => navigateTo('lesson', { chapterId: ch.id, lessonId: les.id })}
-                    >
-                      <div className="lesson-status">{isCompleted ? '✅' : (isLocked ? '🔒' : '📖')}</div>
-                      <div className="lesson-num">{lesIdx + 1}</div>
-                      <div className="lesson-info">
-                        <div className="lesson-title">{lesTitle}</div>
-                      </div>
-                      <div className="lesson-xp">+{les.xp} XP</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              {expanded && (
+                <div className="lesson-path" id={panelId}>
+                  {chapter.lessons.map((lesson, lessonIndex) => {
+                    const completed = STORAGE.isLessonCompleted(chapter.id, lesson.id);
+                    const previousDone = lessonIndex === 0 || STORAGE.isLessonCompleted(chapter.id, chapter.lessons[lessonIndex - 1].id);
+                    const locked = !chapterUnlocked || (!previousDone && !completed);
+                    const current = !locked && !completed;
+                    const statusText = completed
+                      ? (lang === 'zh' ? '已完成' : 'Complete')
+                      : locked
+                        ? (lang === 'zh' ? '未解锁' : 'Locked')
+                        : (lang === 'zh' ? '当前课程' : 'Current');
+
+                    return (
+                      <button
+                        key={lesson.id}
+                        type="button"
+                        className={`lesson-path-item${completed ? ' completed' : ''}${current ? ' current' : ''}${locked ? ' locked' : ''}`}
+                        aria-disabled={locked}
+                        disabled={locked}
+                        onClick={() => navigateTo('lesson', { chapterId: chapter.id, lessonId: lesson.id })}
+                      >
+                        <span className="lesson-step" aria-hidden="true">{completed ? '✓' : lessonIndex + 1}</span>
+                        <span className="lesson-path-copy">
+                          <strong>{lang === 'zh' ? lesson.title : lesson.titleEn}</strong>
+                          <small>{statusText}</small>
+                        </span>
+                        <StatusBadge tone={completed ? 'success' : current ? 'neutral' : 'warning'}>+{lesson.xp} XP</StatusBadge>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           );
         })}
       </div>

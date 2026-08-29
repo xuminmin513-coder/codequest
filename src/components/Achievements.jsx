@@ -2,30 +2,37 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { GAMIFICATION } from '../utils/gamification';
+import PageHeader from './ui/PageHeader';
+import StatusBadge from './ui/StatusBadge';
+import Surface from './ui/Surface';
 
 export default function Achievements() {
   const { lang, refreshKey } = useApp();
   void refreshKey;
-
   const earnedIds = STORAGE.getBadges();
 
   return (
-    <div className="page active">
-      <h2 className="section-title">
-        🏅 <span>{lang === 'zh' ? '成就徽章' : 'Achievements'}</span>
-      </h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: 8, fontSize: 14 }}>
-        {lang === 'zh' ? '已获得' : 'Earned'}: <strong>{earnedIds.length} / {GAMIFICATION.BADGES.length}</strong>
-      </p>
-      <div className="badges-grid">
+    <div className="page active page-standard achievements-page">
+      <PageHeader
+        eyebrow={lang === 'zh' ? '学习记录' : 'Learning record'}
+        title={lang === 'zh' ? '成就' : 'Achievements'}
+        description={lang === 'zh' ? '每枚成就都对应一个明确的学习里程碑。' : 'Every achievement marks a clear learning milestone.'}
+        actions={<StatusBadge tone="success">{earnedIds.length} / {GAMIFICATION.BADGES.length}</StatusBadge>}
+      />
+      <div className="achievement-grid">
         {GAMIFICATION.BADGES.map(badge => {
           const earned = earnedIds.includes(badge.id);
           return (
-            <div key={badge.id} className={`badge-card ${earned ? 'earned' : 'locked'}`}>
-              <div className="badge-icon">{badge.icon}</div>
-              <div className="badge-name">{lang === 'zh' ? badge.nameCn : badge.name}</div>
-              <div className="badge-desc">{lang === 'zh' ? badge.descCn : badge.desc}</div>
-            </div>
+            <Surface className={`achievement-card${earned ? ' earned' : ' locked'}`} key={badge.id}>
+              <div className="achievement-icon" aria-hidden="true">{badge.icon}</div>
+              <div className="achievement-copy">
+                <strong>{lang === 'zh' ? badge.nameCn : badge.name}</strong>
+                <p>{lang === 'zh' ? badge.descCn : badge.desc}</p>
+              </div>
+              <StatusBadge tone={earned ? 'success' : 'neutral'}>
+                {earned ? (lang === 'zh' ? '已获得' : 'Earned') : (lang === 'zh' ? '未解锁' : 'Locked')}
+              </StatusBadge>
+            </Surface>
           );
         })}
       </div>

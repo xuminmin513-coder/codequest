@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { STORAGE } from './utils/storage';
 import { GAMIFICATION } from './utils/gamification';
 import { CHAPTERS } from './data/courses';
-import Sidebar from './components/Sidebar';
+import Sidebar, { MobileNavigation } from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import CourseMap from './components/CourseMap';
 import Lesson from './components/Lesson';
@@ -11,7 +11,10 @@ import Achievements from './components/Achievements';
 import Settings from './components/Settings';
 import ReviewList from './components/ReviewList';
 import Shortcuts from './components/Shortcuts';
+import Graduation from './components/Graduation';
+import CurriculumMigrationModal from './components/CurriculumMigrationModal';
 import Toast from './components/Toast';
+import { purgeDeprecatedSecrets } from './utils/deprecatedDataCleanup';
 import './styles/global.css';
 
 function PageRouter() {
@@ -32,13 +35,65 @@ function PageRouter() {
       return <ReviewList />;
     case 'shortcuts':
       return <Shortcuts />;
+    case 'graduation':
+      return <Graduation />;
     default:
       return <Dashboard />;
   }
 }
 
 function AppContent() {
-  const { addToast, refresh } = useApp();
+  const { lang, addToast, refresh, navigateTo, currentPage } = useApp();
+  useEffect(() => {
+    purgeDeprecatedSecrets();
+  }, []);
+
+  const [initialMigration] = useState(() => {
+    try {
+      return { show: STORAGE.needsCurriculumChoice(), error: '' };
+    } catch {
+      return {
+        show: true,
+        error: lang === 'zh'
+          ? '无法读取或初始化课程存档，请重试。'
+          : 'Unable to read or initialize curriculum archives. Please try again.',
+      };
+    }
+  });
+  const [showMigration, setShowMigration] = useState(initialMigration.show);
+  const [migrationError, setMigrationError] = useState(initialMigration.error);
+
+  const reportMigrationError = () => {
+    const message = lang === 'zh'
+      ? '迁移失败，原进度未被清除，请重试。'
+      : 'Migration failed. Your original progress was not cleared. Please try again.';
+    setMigrationError(message);
+    addToast('error', '❌', message);
+  };
+
+  const keepExistingProgress = () => {
+    try {
+      STORAGE.keepExistingProgress();
+      setMigrationError('');
+      setShowMigration(false);
+      refresh();
+      navigateTo('dashboard');
+    } catch {
+      reportMigrationError();
+    }
+  };
+
+  const restartForV2 = () => {
+    try {
+      STORAGE.restartForV2();
+      setMigrationError('');
+      setShowMigration(false);
+      refresh();
+      navigateTo('dashboard');
+    } catch {
+      reportMigrationError();
+    }
+  };
 
   useEffect(() => {
     // Check daily streak on mount
@@ -47,10 +102,6 @@ function AppContent() {
       const lang = STORAGE.getLang();
       addToast('info', '🔥', `${lang === 'zh' ? '连续学习' : 'Streak'} ${streak} ${lang === 'zh' ? '天！' : 'days!'}`);
     }
-
-    // Migrate old progress to review data
-    STORAGE.migrateReviewData();
-    refresh();
 
     // Global keyboard shortcuts
     const handleKeyDown = (e) => {
@@ -65,12 +116,33 @@ function AppContent() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (showMigration) return;
+    try {
+      STORAGE.migrateReviewData();
+      refresh();
+    } catch {
+      addToast('error', '❌', lang === 'zh'
+        ? '复习数据初始化失败，请检查存档后重试。'
+        : 'Review data initialization failed. Check the archive and try again.');
+    }
+  }, [showMigration, refresh, addToast, lang]);
+
   return (
-    <div className="app-container">
+    <div className="app-shell">
       <Sidebar />
-      <main className="main-content">
+      <MobileNavigation />
+      <main className={`app-main${currentPage === 'lesson' ? ' lesson-route' : ''}`}>
         <PageRouter />
       </main>
+      {showMigration && (
+        <CurriculumMigrationModal
+          lang={lang}
+          error={migrationError}
+          onKeep={keepExistingProgress}
+          onRestart={restartForV2}
+        />
+      )}
       <Toast />
     </div>
   );

@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { STORAGE } from '../utils/storage';
 import { CHAPTERS } from '../data/courses';
+import PageHeader from './ui/PageHeader';
 
 function formatDate(ts, lang) {
   const d = new Date(ts);
@@ -43,10 +44,12 @@ export default function ReviewList() {
   const completedCount = STORAGE.getCompletedCount();
   if (completedCount === 0) {
     return (
-      <div className="page active">
-        <h2 className="section-title">
-          🔄 <span>{lang === 'zh' ? '复习中心' : 'Review Center'}</span>
-        </h2>
+      <div className="page active page-standard review-page">
+        <PageHeader
+          eyebrow={lang === 'zh' ? '艾宾浩斯复习计划' : 'Spaced repetition'}
+          title={lang === 'zh' ? '复习计划' : 'Review plan'}
+          description={lang === 'zh' ? '完成第一节课后，系统会在合适的时间安排复习。' : 'Complete a lesson and it will appear here when review is due.'}
+        />
         <div className="empty-state">
           <div className="empty-icon">📚</div>
           <div className="empty-text">
@@ -155,10 +158,12 @@ export default function ReviewList() {
   };
 
   return (
-    <div className="page active">
-      <h2 className="section-title">
-        🔄 <span>{lang === 'zh' ? '复习中心' : 'Review Center'}</span>
-      </h2>
+    <div className="page active page-standard review-page">
+      <PageHeader
+        eyebrow={lang === 'zh' ? '艾宾浩斯复习计划' : 'Spaced repetition'}
+        title={lang === 'zh' ? '复习计划' : 'Review plan'}
+        description={lang === 'zh' ? '优先完成已到期内容，再查看接下来的复习安排。' : 'Start with overdue work, then preview upcoming reviews.'}
+      />
 
       {/* Stats bar */}
       <div className="review-stats">

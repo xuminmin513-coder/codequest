@@ -1,4 +1,6 @@
-export const CHAPTERS = [
+import { prepareCurriculum } from './curriculum.js';
+
+const RAW_CHAPTERS = [
   {
     id: 'ch1',
     title: 'Chapter 1: 冒险开始',
@@ -394,8 +396,8 @@ Concatenate \`"My name is "\` and \`"Python"\`, then print the result.
 \`input()\` 函数可以获取用户输入。输入的内容默认是字符串。
 
 \`\`\`python
-name = input("请输入你的名字: ")
-print("你好, " + name)
+name = input()
+print("Hello, " + name)
 \`\`\`
 
 ### 📝 挑战
@@ -409,7 +411,7 @@ print("你好, " + name)
 The \`input()\` function gets user input. Input is always a string.
 
 \`\`\`python
-name = input("Enter your name: ")
+name = input()
 print("Hello, " + name)
 \`\`\`
 
@@ -421,7 +423,7 @@ Use \`input()\` to get user input, save it to variable \`name\`, then print \`"H
         starterCode: '',
         answer: 'name = input()\nprint("Hello, " + name)',
         hints: ['第1步：用 name = input() 获取用户输入，括号里可以加提示文字', '第2步：用 print("Hello, " + name) 拼接字符串并输出', '运行后系统会自动输入测试值，看看输出效果'],
-        testCases: [{ input: 'World', expected: 'World\nHello, World' }]
+        testCases: [{ input: 'World', expected: 'Hello, World' }]
       }
     ]
   },
@@ -1708,428 +1710,260 @@ Create \`inventory\` list with three dicts, then loop and print each item.
     ]
   },
   {
-    id: 'ch9',
-    title: '最终项目',
-    titleEn: 'Final Project',
-    description: '综合运用所学知识构建项目',
-    descriptionEn: 'Build projects using everything you learned',
-    icon: '🏆',
+    id: 'ch10',
+    title: 'Chapter 9: 数据容器进阶',
+    titleEn: 'Chapter 9: Advanced Data Containers',
+    description: '掌握字符串、列表、字典的进阶方法与切片技巧',
+    descriptionEn: 'Master advanced string, list & dict methods and slicing',
+    icon: '🧰',
     lessons: [
       {
-        id: 'ch9_01',
-        title: '猜数字游戏',
-        titleEn: 'Number Guessing Game',
-        xp: 200,
+        id: 'ch10_01',
+        title: '字符串方法进阶',
+        titleEn: 'Advanced String Methods',
+        xp: 50,
         content: `
-## 猜数字游戏
+## 字符串方法进阶
 
-恭喜你走到了这里！让我们做一个完整的猜数字游戏。
-
-游戏规则：
-1. 程序设定一个 1-100 的秘密数字
-2. 玩家猜数字，程序提示"高了"或"低了"
-3. 猜中后显示猜的次数
+字符串有很多实用的方法。重点掌握这几个：
 
 \`\`\`python
-import random
+words = ["I", "love", "Python"]
+sentence = " ".join(words)   # → "I love Python"  把列表用空格连接
 
-secret = random.randint(1, 100)
-guess = 0
-attempts = 0
-
-while guess != secret:
-    guess = int(input("猜一个数字(1-100): "))
-    attempts += 1
-    if guess < secret:
-        print("低了！")
-    elif guess > secret:
-        print("高了！")
-
-print(f"恭喜！你猜了{attempts}次！")
+text = "hello world"
+print(text.find("world"))       # → 6   找到子串的起始索引，找不到返回 -1
+print(text.rfind("o"))          # → 7   从右往左找
+print(text.startswith("hello")) # → True  是否以...开头
+print(text.endswith("world"))   # → True  是否以...结尾
+print(text.count("o"))          # → 2   统计子串出现次数
 \`\`\`
 
-### 📝 挑战
-用 \`while\` 循环实现猜数字游戏。先创建 \`secret = 42\`（简化版），然后让用户猜，直到猜对为止。
+> 💡 \`join\` 是字符串方法，格式为 \`"分隔符".join(列表)\`；\`find\` 找不到时返回 \`-1\`。
 
-> 💡 **完整代码：**
->
-> \`\`\`python
-> secret = 42
-> guess = 0
-> attempts = 0
->
-> while guess != secret:
->     guess = int(input("猜一个数字(1-100): "))
->     attempts += 1
->     if guess < secret:
->         print("低了！")
->     elif guess > secret:
->         print("高了！")
->
-> print(f"恭喜！你猜了{attempts}次！")
-> \`\`\`
->
-> 缩进规则：
-> \`\`\`
-> while guess != secret:     ← 不缩进
->     ...                     ← 缩进 4 格（属于 while）
->     ...                     ← 缩进 4 格
->                             ← while 结束
-> print(...)                  ← 不缩进（和 while 对齐，在循环外面）
-> \`\`\`
+### 📝 任务
+把列表 \`words = ["Python", "is", "fun"]\` 用空格连接成一个句子并打印。然后打印 \`"banana"\` 中 \`"a"\` 出现的次数（用 \`.count()\`）。
 `,
         contentEn: `
-## Number Guessing Game
+## Advanced String Methods
 
-Congratulations on making it this far! Let's build a complete number guessing game.
+Strings have many useful methods. Master these:
 
-### 📝 Challenge
-Implement a number guessing game. Create \`secret = 42\`, let user guess until correct.
+\`\`\`python
+words = ["I", "love", "Python"]
+sentence = " ".join(words)   # → "I love Python"
 
-> 💡 Hint: Plan your loop condition first (when to stop), then inside the loop: read input, compare, count attempts.
+text = "hello world"
+print(text.find("world"))       # → 6
+print(text.startswith("hello")) # → True
+print(text.endswith("world"))   # → True
+print(text.count("o"))          # → 2
+\`\`\`
+
+### 📝 Task
+Join \`["Python", "is", "fun"]\` into a sentence with spaces and print it. Then print how many times \`"a"\` appears in \`"banana"\` using \`.count()\`.
 `,
         starterCode: '',
-        answer: 'secret = 42\nprint("Guess the number!")\n\nwhile True:\n    guess = int(input())\n    if guess < secret:\n        print("Too low!")\n    elif guess > secret:\n        print("Too high!")\n    else:\n        print("Correct!")\n        break',
-        hints: [
-          '先定义 secret = 42，再初始化 guess = 0 和 attempts = 0',
-          'First define secret = 42, then init guess = 0 and attempts = 0',
-          '用 while guess != secret: 做循环条件，注意冒号和缩进',
-          'Use while guess != secret: as loop condition, watch colon and indent',
-          '循环内用 int(input()) 获取玩家输入，每次 attempts += 1',
-          'Use int(input()) for player input inside loop, increment attempts',
-          '用 if guess < secret 提示"低了！"，elif guess > secret 提示"高了！"',
-          'Use if guess < secret for "Too low", elif guess > secret for "Too high"',
-          '循环结束后用 f-string 打印 print(f"恭喜！你猜了{attempts}次！")',
-          'After loop, use f-string: print(f"You got it in {attempts} tries!")'
-        ],
-        testCases: [
-          { input: '50\n42', expected: '猜一个数字(1-100): 50\n高了！\n猜一个数字(1-100): 42\n恭喜！你猜了2次！' },
-          { input: '30\n42', expected: '猜一个数字(1-100): 30\n低了！\n猜一个数字(1-100): 42\n恭喜！你猜了2次！' },
-          { input: '42', expected: '猜一个数字(1-100): 42\n恭喜！你猜了1次！' }
-        ]
+        answer: 'words = ["Python", "is", "fun"]\nprint(" ".join(words))\nprint("banana".count("a"))',
+        hints: ['用 " ".join(words) 连接，用 "banana".count("a") 统计', 'Use " ".join(words) to join, "banana".count("a") to count'],
+        testCases: [{ input: '', expected: 'Python is fun\n3' }]
       },
       {
-        id: 'ch9_02',
-        title: '毕业项目',
-        titleEn: 'Graduation Project',
-        xp: 200,
+        id: 'ch10_02',
+        title: '列表进阶方法',
+        titleEn: 'Advanced List Methods',
+        xp: 50,
         content: `
-## 🏆 毕业项目：简单计算器
+## 列表进阶方法
 
-创建自己的函数库！用学过的函数知识，实现一个简单计算器。
+列表还有一些常用方法，可以更灵活地增删改：
 
-### 📝 最终挑战
+\`\`\`python
+nums = [3, 1, 2]
 
-定义以下四个函数，每个都接收 \`a\` 和 \`b\` 两个参数：
-1. \`add(a, b)\` - 返回 a + b
-2. \`sub(a, b)\` - 返回 a - b
-3. \`mul(a, b)\` - 返回 a * b
-4. \`div(a, b)\` - 返回 a / b（如果 b=0，返回 "Error"）
+nums.insert(0, 9)    # 在索引0插入9 → [9, 3, 1, 2]
+nums.extend([4, 5])  # 追加另一个列表 → [9, 3, 1, 2, 4, 5]
+nums.sort()          # 从小到大排序 → [1, 2, 3, 4, 5, 9]
+last = nums.pop()    # 移除并返回最后一个 → last = 9
+print(nums)          # → [1, 2, 3, 4, 5]
+print(nums.count(1)) # → 1  统计1出现次数
+\`\`\`
 
-然后依次用 \`a=10, b=5\` 调用它们并打印结果。
+> 💡 \`insert(索引, 值)\` 在指定位置插入；\`pop()\` 移除并返回最后一个元素。
 
-> 🎉 完成后恭喜你毕业了！
+### 📝 任务
+创建列表 \`nums = [5, 2, 8, 2]\`。依次执行：用 \`.insert(0, 1)\` 在开头插入 1；用 \`.sort()\` 排序；用 \`.pop()\` 移除最后一个元素；最后打印列表。
 `,
         contentEn: `
-## 🏆 Graduation Project: Simple Calculator
+## Advanced List Methods
 
-Create your own function library! Use what you've learned about functions.
+Lists have more methods for flexible edits:
 
-### 📝 Final Challenge
+\`\`\`python
+nums = [3, 1, 2]
+nums.insert(0, 9)   # insert 9 at index 0
+nums.extend([4, 5]) # append another list
+nums.sort()         # sort ascending
+last = nums.pop()   # remove & return last
+print(nums)
+\`\`\`
 
-Define four functions:
-1. \`add(a, b)\` - return a + b
-2. \`sub(a, b)\` - return a - b
-3. \`mul(a, b)\` - return a * b
-4. \`div(a, b)\` - return a / b (if b=0, return "Error")
-
-Then call them with \`a=10, b=5\` and print results.
-
-> 🎉 Complete this to graduate!
+### 📝 Task
+Create \`nums = [5, 2, 8, 2]\`. Then: \`.insert(0, 1)\`, \`.sort()\`, \`.pop()\`, and print the list.
 `,
         starterCode: '',
-        answer: 'def add(a, b):\n    return a + b\n\ndef sub(a, b):\n    return a - b\n\ndef mul(a, b):\n    return a * b\n\ndef div(a, b):\n    if b == 0:\n        return "Error"\n    return a / b\n\nprint(add(10, 5))\nprint(sub(10, 5))\nprint(mul(10, 5))\nprint(div(10, 5))',
-        hints: ['定义所有4个函数', 'Define all 4 functions', 'div 函数要处理 b=0', 'div needs to handle b=0'],
-        testCases: [{ input: '', expected: '15\n5\n50\n2.0' }]
+        answer: 'nums = [5, 2, 8, 2]\nnums.insert(0, 1)\nnums.sort()\nnums.pop()\nprint(nums)',
+        hints: ['insert 在开头加 1，sort 排序，pop 移除最后一个', 'insert(0,1) → sort() → pop()'],
+        testCases: [{ input: '', expected: '[1, 2, 2, 5]' }]
+      },
+      {
+        id: 'ch10_03',
+        title: '字典进阶方法',
+        titleEn: 'Advanced Dict Methods',
+        xp: 50,
+        content: `
+## 字典进阶方法
+
+字典有几个非常实用的方法：
+
+\`\`\`python
+scores = {"math": 90, "english": 85}
+
+print(scores.get("math"))    # → 90
+print(scores.get("art", 0))  # → 0  键不存在时返回默认值
+
+# 遍历键值对
+for subject, score in scores.items():
+    print(subject, score)
+# → math 90
+# → english 85
+\`\`\`
+
+> 💡 用 \`.get(key, 默认值)\` 可以安全地取值，键不存在时不会报错。
+
+### 📝 任务
+创建字典 \`menu = {"apple": 3, "banana": 5, "cherry": 2}\`。用 \`for k, v in menu.items():\` 遍历并打印每个键和值（键和值之间一个空格）。
+`,
+        contentEn: `
+## Advanced Dict Methods
+
+Dictionaries have very useful methods:
+
+\`\`\`python
+scores = {"math": 90, "english": 85}
+print(scores.get("math"))   # → 90
+print(scores.get("art", 0)) # → 0
+
+for subject, score in scores.items():
+    print(subject, score)
+\`\`\`
+
+### 📝 Task
+Create \`menu = {"apple": 3, "banana": 5, "cherry": 2}\`. Loop with \`for k, v in menu.items():\` and print each key and value (space-separated).
+`,
+        starterCode: '',
+        answer: 'menu = {"apple": 3, "banana": 5, "cherry": 2}\nfor k, v in menu.items():\n    print(k, v)',
+        hints: ['用 for k, v in menu.items(): 遍历，print(k, v) 打印', 'Loop with for k, v in menu.items(): and print(k, v)'],
+        testCases: [{ input: '', expected: 'apple 3\nbanana 5\ncherry 2' }]
+      },
+      {
+        id: 'ch10_04',
+        title: '切片进阶',
+        titleEn: 'Advanced Slicing',
+        xp: 50,
+        content: `
+## 切片进阶
+
+切片除了 \`[开始:结束]\`，还支持**步长**和**负索引**：
+
+\`\`\`python
+nums = [10, 20, 30, 40, 50]
+
+print(nums[-1])    # → 50   负索引：最后一个
+print(nums[-2])    # → 40   倒数第二个
+print(nums[::2])   # → [10, 30, 50]   步长2：隔一个取一个
+print(nums[::-1])  # → [50, 40, 30, 20, 10]   负步长：反转
+
+text = "Python"
+print(text[::-1])  # → nohtyP
+\`\`\`
+
+> 💡 格式为 \`[开始:结束:步长]\`；步长为负表示从右往左（反转）。
+
+### 📝 任务
+创建列表 \`nums = [10, 20, 30, 40, 50]\`。打印最后一个元素（负索引），打印反转后的列表（\`[::-1]\`），再打印 \`"Python"\` 反转后的字符串。
+`,
+        contentEn: `
+## Advanced Slicing
+
+Slicing supports **step** and **negative index**:
+
+\`\`\`python
+nums = [10, 20, 30, 40, 50]
+print(nums[-1])   # → 50
+print(nums[::2])  # → [10, 30, 50]
+print(nums[::-1]) # → [50, 40, 30, 20, 10]
+\`\`\`
+
+### 📝 Task
+Create \`nums = [10, 20, 30, 40, 50]\`. Print the last element (negative index), the reversed list (\`[::-1]\`), and \`"Python"\` reversed.
+`,
+        starterCode: '',
+        answer: 'nums = [10, 20, 30, 40, 50]\nprint(nums[-1])\nprint(nums[::-1])\ntext = "Python"\nprint(text[::-1])',
+        hints: ['nums[-1] 取最后一个，nums[::-1] 反转列表，text[::-1] 反转字符串', 'nums[-1], nums[::-1], text[::-1]'],
+        testCases: [{ input: '', expected: '50\n[50, 40, 30, 20, 10]\nnohtyP' }]
+      },
+      {
+        id: 'ch10_05',
+        title: '通用操作',
+        titleEn: 'General Operations',
+        xp: 50,
+        content: `
+## 通用操作
+
+Python 内置了几个处理序列的通用函数：
+
+\`\`\`python
+scores = [88, 92, 76, 95, 61]
+
+print(max(scores))      # → 95   最大值
+print(min(scores))      # → 61   最小值
+print(sum(scores))      # → 412  求和
+print(sorted(scores))   # → [61, 76, 88, 92, 95]  排序（返回新列表）
+\`\`\`
+
+> 💡 \`max\`/\`min\`/\`sum\` 直接返回结果；\`sorted\` 返回排序后的**新列表**，原列表不变。
+
+### 📝 任务
+创建列表 \`scores = [88, 92, 76, 95, 61]\`。分别打印最高分 \`max\`、最低分 \`min\`、总分 \`sum\`，以及从小到大排序后的列表 \`sorted\`。
+`,
+        contentEn: `
+## General Operations
+
+Python has built-in functions for sequences:
+
+\`\`\`python
+scores = [88, 92, 76, 95, 61]
+print(max(scores))    # → 95
+print(min(scores))    # → 61
+print(sum(scores))    # → 412
+print(sorted(scores)) # → [61, 76, 88, 92, 95]
+\`\`\`
+
+### 📝 Task
+Create \`scores = [88, 92, 76, 95, 61]\`. Print the max, min, sum, and the sorted list.
+`,
+        starterCode: '',
+        answer: 'scores = [88, 92, 76, 95, 61]\nprint(max(scores))\nprint(min(scores))\nprint(sum(scores))\nprint(sorted(scores))',
+        hints: ['max 最高分，min 最低分，sum 总分，sorted 排序', 'max, min, sum, sorted'],
+        testCases: [{ input: '', expected: '95\n61\n412\n[61, 76, 88, 92, 95]' }]
       }
     ]
   },
   {
-    id: 'ch10',
-    title: 'Chapter 10: 快捷键大师',
-    titleEn: 'Chapter 10: Shortcut Master',
-    description: '用快捷键让编程效率翻倍，支持 macOS / Win / Linux / HarmonyOS',
-    descriptionEn: 'Double your coding speed with shortcuts, supports macOS / Win / Linux / HarmonyOS',
-    icon: '⌨️',
-    lessons: [
-      {
-        id: 'ch10_01',
-        title: '认识快捷键',
-        titleEn: 'Know Your Shortcuts',
-        xp: 50,
-        content: `
-## 认识快捷键
-
-快捷键是提升编程效率的"秘密武器"！记住一组按键就能代替鼠标点来点去。
-
-### ⌨️ 核心按键对照
-
-| macOS | Windows / Linux / HarmonyOS | 含义 |
-|-------|------|------|
-| \`⌘\` (Command) | \`Ctrl\` | 主要修饰键 |
-| \`⌥\` (Option) | \`Alt\` | 辅助修饰键 |
-| \`⇧\` (Shift) | \`Shift\` | 大写切换 |
-| \`⌃\` (Control) | \`Ctrl\`（部分场景） | 终端控制 |
-
-> 💡 在你的 Mac 上：\`⌘ = Command 键\`，大部分编辑操作都用它。
-
-### 📝 任务
-先热热身！下面代码分别打印了不同系统的快捷键符号，补全代码让它输出 Mac 的快捷键符号：
-\`"⌘"\`
-`,
-        contentEn: `
-## Know Your Shortcuts
-
-Hotkeys are the "secret weapons" of coding efficiency! A single key combo replaces multiple mouse clicks.
-
-### ⌨️ Key Reference
-
-| macOS | Windows / Linux / HarmonyOS | Meaning |
-|-------|------|------|
-| \`⌘\` (Command) | \`Ctrl\` | Primary modifier |
-| \`⌥\` (Option) | \`Alt\` | Secondary modifier |
-| \`⇧\` (Shift) | \`Shift\` | Capitalize |
-| \`⌃\` (Control) | \`Ctrl\` | Terminal control |
-
-> 💡 On your Mac: \`⌘ = Command key\`, used for most editing operations.
-
-### 📝 Task
-Warm up! The code below prints shortcut symbols for different systems. Complete it to output the Mac shortcut symbol:
-\`"⌘"\`
-`,
-        starterCode: '# 不同系统的快捷键符号\nwin = "Ctrl"\nlin = "Ctrl"\nmac = ""\n\nprint(mac)',
-        answer: 'win = "Ctrl"\nlin = "Ctrl"\nmac = "⌘"\n\nprint(mac)',
-        hints: ['macOS 的快捷键符号是 ⌘', 'The macOS shortcut symbol is ⌘'],
-        testCases: [{ input: '', expected: '⌘' }]
-      },
-      {
-        id: 'ch10_02',
-        title: '运行代码',
-        titleEn: 'Run Your Code',
-        xp: 50,
-        content: `
-## 运行代码
-
-最常用的快捷键就是**运行代码**！
-
-### ▶️ 运行快捷键
-
-| 系统 | 快捷键 |
-|------|--------|
-| macOS | \`⌘ + Enter\` 或 \`⌃ + F5\` |
-| Windows | \`Ctrl + Enter\` 或 \`Ctrl + F5\` |
-| Linux | \`Ctrl + Enter\` 或 \`Ctrl + F5\` |
-| HarmonyOS | \`Ctrl + Enter\` 或 \`Ctrl + F5\` |
-
-> 💡 当前页面右上角就显示了运行快捷键，每次写完代码按一下就能看到结果。
-
-### 📝 任务
-用 \`print()\` 输出 macOS 的运行快捷键文本 \`"Cmd+Enter"\`。
-`,
-        contentEn: `
-## Run Your Code
-
-The most used shortcut is **Run Code**!
-
-### ▶️ Run Shortcuts
-
-| System | Shortcut |
-|--------|----------|
-| macOS | \`⌘ + Enter\` or \`⌃ + F5\` |
-| Windows | \`Ctrl + Enter\` or \`Ctrl + F5\` |
-| Linux | \`Ctrl + Enter\` or \`Ctrl + F5\` |
-| HarmonyOS | \`Ctrl + Enter\` or \`Ctrl + F5\` |
-
-> 💡 The run shortcut is displayed in the top-right corner of this page. Use it after writing code.
-
-### 📝 Task
-Use \`print()\` to output the macOS run shortcut text \`"Cmd+Enter"\`.
-`,
-        starterCode: '# 输出你的系统的运行快捷键\nprint()',
-        answer: 'print("Cmd+Enter")',
-        hints: ['在 print() 的括号里输入文本', 'Put text inside print() parentheses'],
-        testCases: [{ input: '', expected: 'Cmd+Enter' }]
-      },
-      {
-        id: 'ch10_03',
-        title: '注释与反注释',
-        titleEn: 'Comment & Uncomment',
-        xp: 50,
-        content: `
-## 注释与反注释
-
-注释是给代码写"便签"，帮助自己和他人理解代码。快捷键一键添加/移除注释！
-
-### 💬 注释快捷键
-
-| 系统 | 快捷键 |
-|------|--------|
-| macOS | \`⌘ + /\` |
-| Windows | \`Ctrl + /\` |
-| Linux | \`Ctrl + /\` |
-| HarmonyOS | \`Ctrl + /\` |
-
-选中一行或多行代码，按快捷键即可添加注释（\`#\`）；再次按则取消注释。
-
-> 💡 代码中的 \`#\` 是 Python 注释符号，\`#\` 后面的内容不会被运行。
-
-### 📝 任务
-下面代码中有一行被注释掉了。取消注释它（删除 \`#\`），让程序输出正确的结果。
-`,
-        contentEn: `
-## Comment & Uncomment
-
-Comments are "sticky notes" for your code. Use shortcuts to toggle them instantly!
-
-### 💬 Comment Shortcuts
-
-| System | Shortcut |
-|--------|----------|
-| macOS | \`⌘ + /\` |
-| Windows | \`Ctrl + /\` |
-| Linux | \`Ctrl + /\` |
-| HarmonyOS | \`Ctrl + /\` |
-
-Select one or more lines and press the shortcut to add comments (\`#\`); press again to remove.
-
-> 💡 \`#\` is the Python comment symbol. Everything after it is ignored when running.
-
-### 📝 Task
-One line below is commented out. Remove the \`#\` to make the program output correctly.
-`,
-        starterCode: '# msg = "Python Shortcuts"\nprint(msg)',
-        answer: 'msg = "Python Shortcuts"\nprint(msg)',
-        hints: ['删除 #msg 前面的 # 符号', 'Remove the # before msg', '确保 msg 的值为 "Python Shortcuts"', 'Make sure msg = "Python Shortcuts"'],
-        testCases: [{ input: '', expected: 'Python Shortcuts' }]
-      },
-      {
-        id: 'ch10_04',
-        title: '代码格式化',
-        titleEn: 'Code Formatting',
-        xp: 50,
-        content: `
-## 代码格式化
-
-整洁的代码不仅好看，而且更容易发现 bug。一键格式化让代码自动对齐！
-
-### ✨ 格式化快捷键
-
-| 系统 | 快捷键 |
-|------|--------|
-| macOS | \`⇧ + ⌥ + F\` |
-| Windows | \`Shift + Alt + F\` |
-| Linux | \`Shift + Alt + F\` |
-| HarmonyOS | \`Shift + Alt + F\` |
-
-格式化会自动处理：缩进对齐、多余空格、空行等。
-
-> 💡 Python 用缩进（4个空格）表示代码块，格式化快捷键确保缩进始终正确。
-
-### 📝 任务
-下面代码的缩进乱了。在代码编辑器中修复缩进，让函数能正确运行并输出 \`"20"\`。
-`,
-        contentEn: `
-## Code Formatting
-
-Clean code is easier to read and debug. One shortcut auto-formats your code!
-
-### ✨ Format Shortcuts
-
-| System | Shortcut |
-|--------|----------|
-| macOS | \`⇧ + ⌥ + F\` |
-| Windows | \`Shift + Alt + F\` |
-| Linux | \`Shift + Alt + F\` |
-| HarmonyOS | \`Shift + Alt + F\` |
-
-Formatting handles: indentation, extra spaces, blank lines, and more.
-
-> 💡 Python uses indentation (4 spaces) for code blocks. The format shortcut keeps indentation perfect.
-
-### 📝 Task
-The indentation below is broken. Fix the indentation so the function runs correctly and outputs \`"20"\`.
-`,
-        starterCode: 'def add(a, b):\nresult = a + b\nreturn result\n\nprint(add(8, 12))',
-        answer: 'def add(a, b):\n    result = a + b\n    return result\n\nprint(add(8, 12))',
-        hints: ['函数体内的代码需要缩进4个空格', 'Code inside functions needs 4-space indentation', 'print() 不需要缩进，它在函数外面', 'print() should not be indented, it is outside the function'],
-        testCases: [{ input: '', expected: '20' }]
-      },
-      {
-        id: 'ch10_05',
-        title: '快捷键终极挑战',
-        titleEn: 'Shortcut Final Challenge',
-        xp: 100,
-        content: `
-## 🔥 快捷键终极挑战
-
-你已经学会了常用的编程快捷键！现在来做一个快捷键速查表。
-
-### 📖 本课学到的快捷键
-
-| 操作 | macOS | Win / Linux / HarmonyOS |
-|------|-------|-------------------------|
-| 运行代码 | \`⌘ + Enter\` | \`Ctrl + Enter\` |
-| 注释/反注释 | \`⌘ + /\` | \`Ctrl + /\` |
-| 格式化代码 | \`⇧ + ⌥ + F\` | \`Shift + Alt + F\` |
-| 保存文件 | \`⌘ + S\` | \`Ctrl + S\` |
-| 撤销 | \`⌘ + Z\` | \`Ctrl + Z\` |
-
-> 💡 不止这章学到的，你可以在主菜单的「快捷键」页面查看全部快捷键。
-
-### 📝 挑战
-用 \`print()\` 输出以下内容（每行一个，共三行）：
-- \`"Mac: ⌘+Enter"\`
-- \`"Win: Ctrl+Enter"\`
-- \`"Linux: Ctrl+Enter"\`
-
-> 💡 提示：用三个 \`print()\`，每个输出一行。
-`,
-        contentEn: `
-## 🔥 Shortcut Final Challenge
-
-You've learned the essential coding shortcuts! Now create a shortcut reference chart.
-
-### 📖 Shortcuts You've Learned
-
-| Action | macOS | Win / Linux / HarmonyOS |
-|--------|-------|-------------------------|
-| Run Code | \`⌘ + Enter\` | \`Ctrl + Enter\` |
-| Toggle Comment | \`⌘ + /\` | \`Ctrl + /\` |
-| Format Code | \`⇧ + ⌥ + F\` | \`Shift + Alt + F\` |
-| Save File | \`⌘ + S\` | \`Ctrl + S\` |
-| Undo | \`⌘ + Z\` | \`Ctrl + Z\` |
-
-> 💡 Check the "Shortcuts" page in the main menu for the full reference.
-
-### 📝 Challenge
-Use \`print()\` to output (one per line, three lines total):
-- \`"Mac: ⌘+Enter"\`
-- \`"Win: Ctrl+Enter"\`
-- \`"Linux: Ctrl+Enter"\`
-
-> 💡 Hint: Use three \`print()\` calls, one per line.
-`,
-        starterCode: '# 快捷键速查表\n# 用 print() 输出三个系统的运行快捷键\n\n',
-        answer: 'print("Mac: ⌘+Enter")\nprint("Win: Ctrl+Enter")\nprint("Linux: Ctrl+Enter")',
-        hints: ['用三个 print() 各输出一行', 'Use three print() calls, one per line', '字符串需要用引号包裹', 'Strings need to be wrapped in quotes'],
-        testCases: [{ input: '', expected: 'Mac: ⌘+Enter\nWin: Ctrl+Enter\nLinux: Ctrl+Enter' }]
-      }
-    ]
-  },
-{
     id: 'ch11',
-    title: 'Chapter 11: 文件探险',
-    titleEn: 'Chapter 11: File Adventure',
+    title: 'Chapter 10: 文件探险',
+    titleEn: 'Chapter 10: File Adventure',
     description: '学习读写文件，让数据持久化',
     descriptionEn: 'Learn to read/write files, make data persistent',
     icon: '📂',
@@ -2331,7 +2165,7 @@ file.close()
 > 1. 在 \`open("log.txt", "a")\` 下面写 \`file.write("日志2: 用户登录\\n")\`
 > 2. 关闭文件：\`file.close()\`
 > 3. 用 "r" 模式打开并读取：\`file = open("log.txt", "r")\`
-> 4. 打印内容：\`print(file.read())\`
+> 4. 打印内容：\`print(file.read(), end="")\`，避免 \`print()\` 再添加一个空行
 > 5. 关闭文件：\`file.close()\`
 `,
         contentEn: `
@@ -2358,18 +2192,18 @@ A file was already created with the first log entry. Use \`"a"\` mode to append 
 > 1. After \`open("log.txt", "a")\`, write \`file.write("日志2: 用户登录\\n")\`
 > 2. Close: \`file.close()\`
 > 3. Open in "r" mode: \`file = open("log.txt", "r")\`
-> 4. Print: \`print(file.read())\`
+> 4. Print: \`print(file.read(), end="")\` to avoid adding an extra blank line
 > 5. Close: \`file.close()\`
 `,
         starterCode: 'file = open("log.txt", "w")\nfile.write("日志1: 程序启动\\n")\nfile.close()\n\n# 用 "a" 模式追加第二条日志\nfile = open("log.txt", "a")\n',
-        answer: 'file = open("log.txt", "w")\nfile.write("日志1: 程序启动\\n")\nfile.close()\n\nfile = open("log.txt", "a")\nfile.write("日志2: 用户登录\\n")\nfile.close()\n\nfile = open("log.txt", "r")\nprint(file.read())\nfile.close()',
+        answer: 'file = open("log.txt", "w")\nfile.write("日志1: 程序启动\\n")\nfile.close()\n\nfile = open("log.txt", "a")\nfile.write("日志2: 用户登录\\n")\nfile.close()\n\nfile = open("log.txt", "r")\nprint(file.read(), end="")\nfile.close()',
         hints: [
           '在 `file = open("log.txt", "a")` 后用 `file.write("日志2: 用户登录\\n")` 追加',
           'After `file = open("log.txt", "a")`, use `file.write("日志2: 用户登录\\n")` to append',
           '追加后关闭文件，再用 "r" 模式打开读取全部内容',
           'Close after appending, then open with "r" mode to read everything',
-          '使用 `print(file.read())` 输出读取的内容',
-          'Use `print(file.read())` to output the content'
+          '使用 `print(file.read(), end="")` 输出内容，避免额外空行',
+          'Use `print(file.read(), end="")` to avoid an extra blank line'
         ],
         testCases: [{ input: '', expected: '日志1: 程序启动\n日志2: 用户登录' }]
       },
@@ -2400,7 +2234,7 @@ A file was already created with the first log entry. Use \`"a"\` mode to append 
 > 2. 分两次 \`file.write()\` 写入两条事项：\`file.write("- Learn Python\\n")\` 和 \`file.write("- Master files\\n")\`
 > 3. 关闭文件：\`file.close()\`
 > 4. 第 3 步：用 \`open("memo.txt", "r")\` 打开读取
-> 5. 用 \`print(file.read())\` 输出内容
+> 5. 用 \`print(file.read(), end="")\` 输出内容，避免额外空行
 > 6. 关闭文件：\`file.close()\`
 >
 > ⚠️ 注意：每条事项需要用单独一行 \`file.write()\`，不要用 \`and\` 连接！
@@ -2427,20 +2261,20 @@ Create a "memo" program:
 > 2. Write each item with separate \`file.write()\` calls: \`file.write("- Learn Python\\n")\` and \`file.write("- Master files\\n")\`
 > 3. Close: \`file.close()\`
 > 4. Step 3: Open with \`open("memo.txt", "r")\` in read mode
-> 5. Print: \`print(file.read())\`
+> 5. Print: \`print(file.read(), end="")\` to avoid an extra blank line
 > 6. Close: \`file.close()\`
 >
 > ⚠️ Each item needs its own \`file.write()\` line — don't use \`and\` to combine them!
 `,
         starterCode: '# 第1步：用 "w" 创建文件并写入标题\nfile = open("memo.txt", "w")\nfile.write("TODO List\\n")\nfile.close()\n\n# 第2步：用 "a" 追加事项\n\n\n# 第3步：用 "r" 读取并打印\n',
-        answer: 'file = open("memo.txt", "w")\nfile.write("TODO List\\n")\nfile.close()\n\nfile = open("memo.txt", "a")\nfile.write("- Learn Python\\n")\nfile.write("- Master files\\n")\nfile.close()\n\nfile = open("memo.txt", "r")\nprint(file.read())\nfile.close()',
+        answer: 'file = open("memo.txt", "w")\nfile.write("TODO List\\n")\nfile.close()\n\nfile = open("memo.txt", "a")\nfile.write("- Learn Python\\n")\nfile.write("- Master files\\n")\nfile.close()\n\nfile = open("memo.txt", "r")\nprint(file.read(), end="")\nfile.close()',
         hints: [
           '第2步：用 `open("memo.txt", "a")` 以追加模式打开，然后用 `file.write()` 写入两条事项',
           'Step 2: Use `open("memo.txt", "a")` to open in append mode, then `file.write()` for each item',
           '每条事项都需要 `\\n` 换行符，如 `file.write("- Learn Python\\n")`',
           'Each item needs a `\\n` newline, e.g. `file.write("- Learn Python\\n")`',
-          '第3步：用 `open("memo.txt", "r")` 读取，然后用 `print(file.read())` 输出',
-          'Step 3: Use `open("memo.txt", "r")` to read, then `print(file.read())` to output'
+          '第3步：用 `open("memo.txt", "r")` 读取，然后用 `print(file.read(), end="")` 输出',
+          'Step 3: Read with `open("memo.txt", "r")`, then output with `print(file.read(), end="")`'
         ],
         testCases: [{ input: '', expected: 'TODO List\n- Learn Python\n- Master files' }]
       }
@@ -2448,8 +2282,8 @@ Create a "memo" program:
   },
   {
     id: 'ch12',
-    title: 'Chapter 12: 异常处理',
-    titleEn: 'Chapter 12: Exception Handling',
+    title: 'Chapter 11: 异常处理',
+    titleEn: 'Chapter 11: Exception Handling',
     description: '学会优雅地处理程序错误',
     descriptionEn: 'Learn to handle errors gracefully',
     icon: '🛡️',
@@ -2650,16 +2484,70 @@ Define \`safe_divide(a, b)\` using \`try-except\` to handle division by zero. Re
           'In except ZeroDivisionError: write return "Cannot divide"'
         ],
         testCases: [{ input: '', expected: '5.0\nCannot divide' }]
+      },
+      {
+        id: 'ch12_04',
+        title: '异常传递',
+        titleEn: 'Exception Propagation',
+        xp: 50,
+        content: `
+## 异常传递
+
+当函数内部出错、而函数自身没有捕获时，异常会**向上传递**给调用它的地方。
+
+\`\`\`python
+def inner():
+    return 10 / 0     # 这里出错，但 inner 没有捕获
+
+def outer():
+    return inner()    # outer 也没捕获
+
+try:
+    outer()           # 异常一路传到最外层，在这里被捕获
+except ZeroDivisionError:
+    print("错误被顶层捕获！")
+\`\`\`
+
+> 💡 异常会沿着函数调用链一路向上传递，直到被某个 \`try-except\` 捕获。
+
+### 📝 任务
+定义 \`inner()\` 让它执行 \`10 / 0\`（会出错），再定义 \`outer()\` 让它调用 \`inner()\`。最后用 \`try-except ZeroDivisionError\` 包裹 \`outer()\` 的调用，捕获后打印 \`"Caught at top"\`。
+`,
+        contentEn: `
+## Exception Propagation
+
+When an error happens inside a function that doesn't catch it, the exception **propagates up** to the caller.
+
+\`\`\`python
+def inner():
+    return 10 / 0
+
+def outer():
+    return inner()
+
+try:
+    outer()
+except ZeroDivisionError:
+    print("Caught at top!")
+\`\`\`
+
+### 📝 Task
+Define \`inner()\` that runs \`10 / 0\`, and \`outer()\` that calls \`inner()\`. Wrap the \`outer()\` call in \`try-except ZeroDivisionError\` and print \`"Caught at top"\`.
+`,
+        starterCode: '',
+        answer: 'def inner():\n    return 10 / 0\n\ndef outer():\n    return inner()\n\ntry:\n    outer()\nexcept ZeroDivisionError:\n    print("Caught at top")',
+        hints: ['inner 里写 return 10 / 0，outer 里写 return inner()，外面用 try-except 包裹', 'Define inner/outer, then wrap outer() in try-except ZeroDivisionError'],
+        testCases: [{ input: '', expected: 'Caught at top' }]
       }
     ]
   },
   {
     id: 'ch13',
-    title: 'Chapter 13: 面向对象',
-    titleEn: 'Chapter 13: Object-Oriented Programming',
+    title: 'Chapter 12: 面向对象',
+    titleEn: 'Chapter 12: Object-Oriented Programming',
     description: '学习类与对象，构建更大的程序',
     descriptionEn: 'Learn classes and objects to build larger programs',
-    icon: '🏗️',
+    icon: '🏛️',
     lessons: [
       {
         id: 'ch13_01',
@@ -2963,8 +2851,8 @@ Complete the \`BankAccount\` class below: implement the constructor, deposit, an
 
   {
     id: 'ch14',
-    title: 'Chapter 14: 集合与推导式',
-    titleEn: 'Chapter 14: Sets & Comprehensions',
+    title: 'Chapter 13: 集合与推导式',
+    titleEn: 'Chapter 13: Sets & Comprehensions',
     description: '掌握集合操作和Python推导式',
     descriptionEn: 'Master set operations and Python comprehensions',
     icon: '🧩',
@@ -3180,7 +3068,7 @@ The list \`lst = [1, 2, 2, 3, 3, 3, 4, 5, 5]\` has duplicates. Use \`set()\` to 
 > 1. 创建集合 \`a = set(["苹果", "香蕉", "橘子", "葡萄", "西瓜"])\` — **每个名字要加引号！**
 > 2. 创建集合 \`b = set(["橘子", "葡萄", "草莓", "蓝莓", "芒果"])\`
 > 3. 用 \`a.difference(b)\` 计算差集，存到变量：\`only_a = a.difference(b)\`
-> 4. 打印结果：\`print(only_a)\`
+> 4. 集合顺序不固定，用 \`print(sorted(only_a))\` 打印稳定的排序结果
 >
 > ⚠️ 注意：\`.difference()\` 返回**新集合**，不会修改原集合。记得把结果存到变量再打印！
 
@@ -3192,7 +3080,7 @@ The list \`lst = [1, 2, 2, 3, 3, 3, 4, 5, 5]\` has duplicates. Use \`set()\` to 
 仓库B：橘子, 葡萄, 草莓, 蓝莓, 芒果
 \`\`\`
 
-用集合的**差集**找出**只在仓库A**有的商品，并打印结果。
+用集合的**差集**找出**只在仓库A**有的商品，再用 \`sorted()\` 排序并打印结果列表。
 `,
         contentEn: `
 ## Sets & Dedup Challenge
@@ -3203,7 +3091,7 @@ Combine set operations to solve a real problem.
 > 1. Create \`a = set(["apple", "banana", "orange", "grape", "watermelon"])\` — **quotes around each item!**
 > 2. Create \`b = set(["orange", "grape", "strawberry", "blueberry", "mango"])\`
 > 3. Compute difference & store: \`only_a = a.difference(b)\`
-> 4. Print: \`print(only_a)\`
+> 4. Set order is not fixed, so print a stable result with \`print(sorted(only_a))\`
 >
 > ⚠️ \`.difference()\` returns a **new set** — don't forget to store the result before printing!
 
@@ -3215,26 +3103,26 @@ Warehouse A: apple, banana, orange, grape, watermelon
 Warehouse B: orange, grape, strawberry, blueberry, mango
 \`\`\`
 
-Use **set difference** to find items **only in Warehouse A** and print the result.
+Use **set difference** to find items **only in Warehouse A**, then sort and print the result list.
 `,
         starterCode: '# 仓库A的商品\n\n# 仓库B的商品\n\n# 找出只在仓库A的商品并打印\n',
-        answer: 'a = set(["苹果", "香蕉", "橘子", "葡萄", "西瓜"])\nb = set(["橘子", "葡萄", "草莓", "蓝莓", "芒果"])\nonly_a = a.difference(b)\nprint(only_a)',
+        answer: 'a = set(["苹果", "香蕉", "橘子", "葡萄", "西瓜"])\nb = set(["橘子", "葡萄", "草莓", "蓝莓", "芒果"])\nonly_a = a.difference(b)\nprint(sorted(only_a))',
         hints: [
           '用 `set(["苹果", "香蕉", ...])` 创建集合，每个商品名用引号括起来',
           'Create sets with `set(["apple", "banana", ...])`, each item in quotes',
           '差集用 `a.difference(b)`，会返回只在 a 中的元素',
           'Use `a.difference(b)` to get elements only in a',
-          '把结果打印出来检查',
-          'Print the result to check'
+          '集合顺序不固定，用 `print(sorted(only_a))` 排序后打印',
+          'Set order is not fixed, so use `print(sorted(only_a))`'
         ],
-        testCases: [{ input: '', expected: '{苹果, 西瓜, 香蕉}' }]
+        testCases: [{ input: '', expected: "['苹果', '西瓜', '香蕉']" }]
       }
     ]
   },
   {
     id: 'ch15',
-    title: 'Chapter 15: 函数进阶',
-    titleEn: 'Chapter 15: Advanced Functions',
+    title: 'Chapter 14: 函数进阶',
+    titleEn: 'Chapter 14: Advanced Functions',
     description: '掌握可变参数、lambda和高阶函数',
     descriptionEn: 'Master *args, lambda, and higher-order functions',
     icon: '🎯',
@@ -3538,11 +3426,11 @@ Implement factorial using recursion. Calculate \`6!\` and print the result.
   },
   {
     id: 'ch16',
-    title: 'Chapter 16: 循环进阶',
-    titleEn: 'Chapter 16: Advanced Loops',
+    title: 'Chapter 15: 循环进阶',
+    titleEn: 'Chapter 15: Advanced Loops',
     description: '掌握嵌套循环和经典算法模式',
     descriptionEn: 'Master nested loops and classic algorithms',
-    icon: '🔄',
+    icon: '🌀',
     lessons: [
       {
         id: 'ch16_01',
@@ -3861,8 +3749,8 @@ i = 1 → range(1, 2)  → prints "1"
     ],
   },  {
     id: 'ch17',
-    title: 'Chapter 17: 模块管理',
-    titleEn: 'Chapter 17: Module Management',
+    title: 'Chapter 16: 模块管理',
+    titleEn: 'Chapter 16: Module Management',
     description: '学会导入和使用Python模块与包',
     descriptionEn: 'Learn to import and use Python modules and packages',
     icon: '📦',
@@ -3931,11 +3819,11 @@ Import the \`math\` module and use \`math.ceil()\` to round \`4.2\` **up** to th
       },
       {
         id: 'ch17_02',
-        title: '自定义模块',
-        titleEn: 'Custom Modules',
+        title: '模块与主程序入口',
+        titleEn: 'Modules & Main Entry',
         xp: 60,
         content: `
-## 自定义模块
+## 模块与主程序入口
 
 你可以创建自己的模块并在其他文件中导入使用。
 
@@ -3979,7 +3867,7 @@ if __name__ == "__main__":
 \`\`\`
 `,
         contentEn: `
-## Custom Modules
+## Modules & Main Entry
 
 Create your own .py files and import them.
 
@@ -4085,15 +3973,74 @@ Print the results on separate lines.
 `,
         starterCode: '# 请填写两条导入语句\n\n\n# 打印结果\nprint(sqrt(49))\nprint(math.ceil(2.3))',
         answer: 'from math import sqrt\nimport math\nprint(sqrt(49))\nprint(math.ceil(2.3))',
-        hints: ['from math import sqrt → 直接用 sqrt(49) 就能调用', 'import math → 需要用 math.ceil(2.3) 带上前缀', '第一行输出 sqrt(49)=7，第二行输出 math.ceil(2.3)=3'],
-        testCases: [{ input: '', expected: '7\n3' }]
+        hints: ['from math import sqrt → 直接用 sqrt(49) 就能调用', 'import math → 需要用 math.ceil(2.3) 带上前缀', 'sqrt() 返回浮点数，所以第一行是 7.0；第二行是 3'],
+        testCases: [{ input: '', expected: '7.0\n3' }]
+      },
+      {
+        id: 'ch17_04',
+        title: '包与pip',
+        titleEn: 'Packages & pip',
+        xp: 50,
+        content: `
+## 包与 pip
+
+**包（package）** 是一个包含多个模块的文件夹，用 \`__init__.py\` 标记。
+
+\`\`\`python
+# 目录结构
+# mypackage/
+#   __init__.py
+#   utils.py
+#   models.py
+
+# 从包中导入
+from mypackage import utils
+from mypackage.utils import helper
+\`\`\`
+
+**pip** 是 Python 的包管理工具，用来安装第三方库：
+
+\`\`\`bash
+pip install requests    # 安装 requests 库
+pip install numpy       # 安装 numpy 库
+\`\`\`
+
+> 💡 安装第三方库后，就能用 \`import\` 导入它们。标准库（如 \`math\`）无需安装，开箱即用。
+
+### 📝 任务
+用 \`from math import floor, ceil\` 一次导入两个函数。打印 \`floor(3.7)\`（向下取整）和 \`ceil(3.2)\`（向上取整）的结果。
+`,
+        contentEn: `
+## Packages & pip
+
+A **package** is a folder of modules, marked with \`__init__.py\`.
+
+\`\`\`python
+# mypackage/__init__.py
+# mypackage/utils.py
+from mypackage import utils
+\`\`\`
+
+**pip** installs third-party libraries:
+
+\`\`\`bash
+pip install requests
+\`\`\`
+
+### 📝 Task
+Use \`from math import floor, ceil\` to import two functions. Print \`floor(3.7)\` (round down) and \`ceil(3.2)\` (round up).
+`,
+        starterCode: '',
+        answer: 'from math import floor, ceil\nprint(floor(3.7))\nprint(ceil(3.2))',
+        hints: ['from math import floor, ceil 一次导入两个，floor 向下取整，ceil 向上取整', 'from math import floor, ceil'],
+        testCases: [{ input: '', expected: '3\n4' }]
       }
     ]
   },
   {
     id: 'ch18',
-    title: 'Chapter 18: 闭包与装饰器',
-    titleEn: 'Chapter 18: Closures & Decorators',
+    title: 'Chapter 17: 闭包与装饰器',
+    titleEn: 'Chapter 17: Closures & Decorators',
     description: '掌握闭包原理和装饰器模式',
     descriptionEn: 'Master closures and the decorator pattern',
     icon: '🎭',
@@ -4462,8 +4409,8 @@ Then apply \`@count_calls\` to \`say_hi\` and call it 3 times.
   },
   {
     id: 'ch19',
-    title: 'Chapter 19: 正则表达式',
-    titleEn: 'Chapter 19: Regular Expressions',
+    title: 'Chapter 18: 正则表达式',
+    titleEn: 'Chapter 18: Regular Expressions',
     description: '用正则表达式高效处理文本',
     descriptionEn: 'Process text efficiently with regex',
     icon: '🔍',
@@ -4552,8 +4499,8 @@ Write code to extract all numbers from the text and print the result list.
 `,
         starterCode: '# 导入 re 模块\n\n# 给定文本\ntext = "苹果8元, 香蕉5元, 橙子6元"\n\n# 用 re.findall 提取所有数字\n\n\n# 打印结果\n',
         answer: 'import re\ntext = "苹果8元, 香蕉5元, 橙子6元"\nprices = re.findall(r"\\d+", text)\nprint(prices)',
-        hints: ['第1步：用 import re 导入正则模块。这是使用正则表达式前必须做的第一步。', 'Step 1: Use import re to import the regex module. This is required before using any regex functions.', '第2步：想想用什么方法可以提取所有匹配。\n从上面表格中找：要返回所有匹配的列表，应该用 re.findall(pattern, text)。\n第一个参数填正则模式 r"\\d+"（\d 匹配数字，+ 表示一个或多个），第二个参数填 text。\n把结果保存到变量 prices 中。', 'Step 2: Think about which method to use.\nFrom the table above: to return all matches as a list, use re.findall(pattern, text).\nFirst argument is the pattern r"\\d+"（\\d matches digits, + means one or more）, second is text.\nSave the result to variable prices.', '第3步：用 print(prices) 打印结果。运行后应该看到 [8, 5, 6]', 'Step 3: Use print(prices) to print the result. Expected output: [8, 5, 6]'],
-        testCases: [{ input: '', expected: '[8, 5, 6]' }]
+        hints: ['第1步：用 import re 导入正则模块。这是使用正则表达式前必须做的第一步。', 'Step 1: Use import re to import the regex module. This is required before using any regex functions.', '第2步：想想用什么方法可以提取所有匹配。\n从上面表格中找：要返回所有匹配的列表，应该用 re.findall(pattern, text)。\n第一个参数填正则模式 r"\\d+"（\d 匹配数字，+ 表示一个或多个），第二个参数填 text。\n把结果保存到变量 prices 中。', 'Step 2: Think about which method to use.\nFrom the table above: to return all matches as a list, use re.findall(pattern, text).\nFirst argument is the pattern r"\\d+"（\\d matches digits, + means one or more）, second is text.\nSave the result to variable prices.', "第3步：用 print(prices) 打印结果。正则提取的是字符串，所以会看到 ['8', '5', '6']", "Step 3: Print prices. Regex matches are strings, so the result is ['8', '5', '6']"],
+        testCases: [{ input: '', expected: "['8', '5', '6']" }]
       },
       {
         id: 'ch19_02',
@@ -4657,7 +4604,7 @@ text = "apple, banana; cherry | date"
         starterCode: 'import re\ntext = "apple, banana; cherry | date"\n# 用 re.findall 提取所有单词\nwords = \nprint(words)',
         answer: 'import re\ntext = "apple, banana; cherry | date"\nwords = re.findall(r"\\w+", text)\nprint(words)',
         hints: ['用 re.findall(r"\\w+", text) 查找所有单词，\w 匹配字母数字下划线，+ 表示一个或多个', 'Use re.findall(r"\\w+", text) to find all words, \\w matches letters/digits/underscores, + means one or more'],
-        testCases: [{ input: '', expected: '[apple, banana, cherry, date]' }]
+        testCases: [{ input: '', expected: "['apple', 'banana', 'cherry', 'date']" }]
       },
       {
         id: 'ch19_03',
@@ -4743,278 +4690,17 @@ Use \`re.findall(r"\\w+@\\w+\\.\\w+", text)\` to extract all email addresses fro
         starterCode: 'import re\ntext = "联系邮箱: alice@gmail.com, 客服: bob@web.com"\n# 用 re.findall 提取所有邮箱\nemails = \nprint(emails)',
         answer: 'import re\ntext = "联系邮箱: alice@gmail.com, 客服: bob@web.com"\nemails = re.findall(r"\\w+@\\w+\\.\\w+", text)\nprint(emails)',
         hints: ['用 re.findall(r"\\w+@\\w+\\.\\w+", text) 提取邮箱，\w+匹配用户名/域名，\.匹配点号', 'Use re.findall(r"\\w+@\\w+\\.\\w+", text) — \\w+ matches usernames/domains, \\. matches the dot'],
-        testCases: [{ input: '', expected: '[alice@gmail.com, bob@web.com]' }]
-      }
-    ]
-  },
-  {
-    id: 'ch20',
-    title: 'Chapter 20: 多线程与网络编程',
-    titleEn: 'Chapter 20: Threading & Networking',
-    description: '了解多线程并发和Socket网络通信',
-    descriptionEn: 'Learn multithreading and Socket networking',
-    icon: '🌐',
-    lessons: [
-      {
-        id: 'ch20_01',
-        title: '多线程概念',
-        titleEn: 'Threading Concepts',
-        xp: 60,
-        content: `
-## 多线程概念
-
-**进程 vs 线程**：
-- **进程**（Process）：操作系统分配资源的单位，每个进程有独立内存
-- **线程**（Thread）：CPU调度的最小单位，同一进程的线程共享内存
-
-在代码中，线程通过 \`threading.Thread(函数, [参数列表])\` 创建，用 \`.start()\` 启动，用 \`.join()\` 等待完成。
-
-\`\`\`python
-import threading
-
-def worker(name):
-    """定义线程要执行的任务"""
-    print(f"工人 {name} 开始工作")
-    print(f"工人 {name} 完成")
-
-# 创建两个线程
-t1 = threading.Thread(worker, ["A"])
-t2 = threading.Thread(worker, ["B"])
-
-t1.start()  # 启动线程 A
-t2.start()  # 启动线程 B
-t1.join()   # 等待 A 结束
-t2.join()   # 等待 B 结束
-print("所有线程执行完毕")
-\`\`\`
-
-> ⚠️ **GIL（全局解释器锁）**：CPython中同一时刻只有一个线程执行Python代码。多线程适合**I/O密集型**任务（网络请求、文件读写），CPU密集型用多进程。
-
-### 📝 任务
-定义 \`worker(name)\` 函数，打印开始和完成信息。然后用 \`threading.Thread\` 创建两个线程分别执行 \`worker("A")\` 和 \`worker("B")\`，启动并等待它们完成，最后打印 \`"所有线程执行完毕"\`。
-`,
-        contentEn: `
-## Threading Concepts
-
-**Process vs Thread**:
-- **Process**: OS resource unit, each has independent memory
-- **Thread**: Smallest CPU scheduling unit, threads in same process share memory
-
-In code, threads are created with \`threading.Thread(func, [args])\`, started with \`.start()\`, and waited on with \`.join()\`.
-
-\`\`\`python
-import threading
-
-def worker(name):
-    """Define the task for the thread"""
-    print(f"Worker {name} starts")
-    print(f"Worker {name} done")
-
-t1 = threading.Thread(worker, ["A"])
-t2 = threading.Thread(worker, ["B"])
-
-t1.start()
-t2.start()
-t1.join()
-t2.join()
-print("All threads done")
-\`\`\`
-
-> ⚠️ **GIL**: In CPython, only one thread executes Python code at a time. Multithreading suits **I/O-bound** tasks (network, file I/O); use multiprocessing for CPU-bound tasks.
-
-### 📝 Task
-Define a \`worker(name)\` function that prints start and done messages. Then create two threads with \`threading.Thread\` to run \`worker("A")\` and \`worker("B")\`, start and join them, and print \`"All threads done"\`.
-`,
-        starterCode: 'import threading\n\ndef worker(name):\n    # 打印开始信息\n    # 打印完成信息\n\n# 创建两个线程\n\n# 启动线程\n\n# 等待线程结束\n\n# 打印完成',
-        answer: 'import threading\n\ndef worker(name):\n    print(f"工人 {name} 开始工作")\n    print(f"工人 {name} 完成")\n\nt1 = threading.Thread(worker, ["A"])\nt2 = threading.Thread(worker, ["B"])\nt1.start()\nt2.start()\nt1.join()\nt2.join()\nprint("所有线程执行完毕")',
-        hints: ['【解释】\n第一步：导入 threading 模块，定义 worker 函数。\n- \`import threading\` 导入线程模块\n- \`worker(name)\` 接收一个名字参数\n- 函数体内用两个 print 分别打印开始和完成信息\n\n注意：print 中使用 f-string 格式化字符串，如 \`f"工人 {name} 开始工作"\`\n\n【代码】\nimport threading\n\ndef worker(name):\n    print(f"工人 {name} 开始工作")\n    print(f"工人 {name} 完成")', '【解释】\nStep 1: Import threading and define the worker function.\n- \`import threading\` loads the threading module\n- \`worker(name)\` takes a name parameter\n- Use two print statements for start and done messages\n\n【代码】\nimport threading\n\ndef worker(name):\n    print(f"Worker {name} starts")\n    print(f"Worker {name} done")', '【解释】\n第二步：使用 threading.Thread 创建并管理线程。\n\n关键语法：\n- \`threading.Thread(worker, ["A"])\`\n  • 第一个参数：要执行的函数（**不加括号**，只传函数引用）\n  • 第二个参数：参数列表（用方括号包裹，如 \`["A"]\`）\n- \`.start()\`：启动线程，开始执行函数\n- \`.join()\`：等待线程执行完毕\n\n执行流程：\n① t1.start() → worker("A") 执行\n② t2.start() → worker("B") 执行\n③ t1.join() / t2.join() 等待完成\n④ 最后打印 "所有线程执行完毕"\n\n【代码】\nimport threading\n\ndef worker(name):\n    print(f"工人 {name} 开始工作")\n    print(f"工人 {name} 完成")\n\nt1 = threading.Thread(worker, ["A"])\nt2 = threading.Thread(worker, ["B"])\nt1.start()\nt2.start()\nt1.join()\nt2.join()\nprint("所有线程执行完毕")\n\n预期输出：\n工人 A 开始工作\n工人 A 完成\n工人 B 开始工作\n工人 B 完成\n所有线程执行完毕', '【解释】\nStep 2: Use threading.Thread to create and manage threads.\n\nKey syntax:\n- \`threading.Thread(worker, ["A"])\`\n  • 1st argument: function reference — **no parentheses**\n  • 2nd argument: argument list (use square brackets)\n- \`.start()\`: begin thread execution\n- \`.join()\`: wait for thread to finish\n\n【代码】\nimport threading\n\ndef worker(name):\n    print(f"Worker {name} starts")\n    print(f"Worker {name} done")\n\nt1 = threading.Thread(worker, ["A"])\nt2 = threading.Thread(worker, ["B"])\nt1.start()\nt2.start()\nt1.join()\nt2.join()\nprint("All threads done")\n\nExpected output:\nWorker A starts\nWorker A done\nWorker B starts\nWorker B done\nAll threads done'],
-        testCases: [{ input: '', expected: '工人 A 开始工作\n工人 A 完成\n工人 B 开始工作\n工人 B 完成\n所有线程执行完毕' }]
-      },
-      {
-        id: 'ch20_02',
-        title: '多线程实战',
-        titleEn: 'Threading Practice',
-        xp: 70,
-        content: `
-## 多线程实战
-
-**场景：多线程操作共享数据**
-
-多个线程同时修改同一个变量时，必须用锁保护，否则数据会错乱。
-
-- \`threading.Lock()\` 创建锁
-- \`with lock:\` 自动获取和释放锁
-
-\`\`\`python
-import threading
-
-counter = 0
-lock = threading.Lock()  # 创建锁
-
-def safe_worker():
-    global counter
-    for _ in range(1000):
-        with lock:  # 加锁保护
-            counter += 1  # 这段代码一次只有一个线程能执行
-        # 退出 with 自动释放锁
-
-# 启动5个线程
-for i in range(5):
-    t = threading.Thread(target=safe_worker)
-    t.start()
-
-# 等待所有线程结束（实际需要存储线程引用）
-print(f"Result: {counter}")
-\`\`\`
-
-> ⚠️ 不加锁的话，多个线程同时修改同一变量会导致数据错乱！
-
-### 📝 任务
-定义 \`worker(n)\` 函数：将全局变量 \`counter\` 增加 \`n\` 次（每次 +1）。
-然后用循环模拟5个"工人"，每人加200次，最后打印 \`"Result: {counter}"\`。
-
-\`\`\`
-预期输出：
-Result: 1000
-\`\`\`
-`,
-        contentEn: `
-## Threading Practice
-
-**Scenario: Thread-safe shared data**
-
-When multiple threads modify the same variable, use a lock (\`threading.Lock()\`) to prevent data races.
-
-\`\`\`python
-import threading
-
-counter = 0
-lock = threading.Lock()
-
-def safe_worker():
-    global counter
-    for _ in range(1000):
-        with lock:
-            counter += 1
-
-# Start 5 threads
-for i in range(5):
-    t = threading.Thread(target=safe_worker)
-    t.start()
-
-print(f"Result: {counter}")
-\`\`\`
-
-> ⚠️ Without a lock, concurrent writes corrupt shared data!
-
-### 📝 Task
-Define a \`worker(n)\` function that increments global \`counter\` \`n\` times (by 1 each).
-Then loop 5 times calling \`worker(200)\`, and finally print \`"Result: {counter}"\`.
-
-\`\`\`
-Expected output:
-Result: 1000
-\`\`\`
-`,
-        starterCode: '',
-        answer: 'counter = 0\n\ndef worker(n):\n    global counter\n    for _ in range(n):\n        counter += 1\n\nfor i in range(5):\n    worker(200)\n\nprint(f"Result: {counter}")',
-        hints: ['【解释】\n第一步：定义全局变量 counter 和 worker 函数。\n\n关键语法：\n- \`counter = 0\`：在函数外定义的变量是全局变量\n- \`def worker(n)\`：接收一个参数 n，表示要加多少次\n- \`global counter\`：在函数内部声明要使用全局变量 counter（不加 global 的话，counter += 1 会报错！）\n- \`for _ in range(n): counter += 1\`：循环 n 次，每次让 counter 加 1\n\n注意：循环变量用 \`_\` 表示"我们不在乎这个变量的值"，只需要循环次数。\n\n【代码】\ncounter = 0\n\ndef worker(n):\n    global counter\n    for _ in range(n):\n        counter += 1', '【解释】\nStep 1: Define the global counter and worker function.\n\nKey syntax:\n- \`counter = 0\`: variable defined outside a function = global\n- \`def worker(n)\`: takes param n = how many times to increment\n- \`global counter\`: declare intent to use the global counter (without this, \`counter += 1\` fails!)\n- \`for _ in range(n): counter += 1\`: loop n times, incrementing each time\n\nNote: \`_\` as loop variable means "we don\'t care about the value" — just need the loop count.\n\n【代码】\ncounter = 0\n\ndef worker(n):\n    global counter\n    for _ in range(n):\n        counter += 1', '【解释】\n第二步：调用 worker 函数 5 次，每人加 200 次，然后打印结果。\n\n关键逻辑：\n- \`for i in range(5):\` 循环 5 次\n- \`worker(200)\` 每次调用让 counter 加 200\n- 5 个工人 × 每人 200 次 = 1000\n- 最后用 \`print(f"Result: {counter}")\` 输出最终结果\n\n执行流程：\n① 初始 counter = 0\n② 第 1 次 worker(200) → counter 变成 200\n③ 第 2 次 worker(200) → counter 变成 400\n④ ...以此类推...\n⑤ 第 5 次 worker(200) → counter 变成 1000\n⑥ print(f"Result: {counter}") → 输出 Result: 1000\n\n【代码】\ncounter = 0\n\ndef worker(n):\n    global counter\n    for _ in range(n):\n        counter += 1\n\nfor i in range(5):\n    worker(200)\n\nprint(f"Result: {counter}")\n\n预期输出：\nResult: 1000', '【解释】\nStep 2: Call worker 5 times (each adds 200), then print the result.\n\nLogic:\n- \`for i in range(5):\` loop 5 times\n- \`worker(200)\` adds 200 to counter per call\n- 5 workers × 200 each = 1000\n- Print with \`print(f"Result: {counter}")\`\n\nExpected output:\nResult: 1000'],
-        testCases: [{ input: '', expected: 'Result: 1000' }]
-      },
-      {
-        id: 'ch20_03',
-        title: 'Socket 网络编程',
-        titleEn: 'Socket Programming',
-        xp: 80,
-        content: `
-## Socket 网络编程
-
-Socket（套接字）是网络通信的端点，由 **IP地址 + 端口号** 组成。
-
-**服务端流程**：socket() → bind() → listen() → accept() → recv()/send() → close()
-
-\`\`\`python
-import socket
-
-# 创建 TCP Socket
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(("127.0.0.1", 8888))
-server.listen(5)
-client_socket, addr = server.accept()
-
-data = client_socket.recv(1024).decode("utf-8")
-print(f"收到：{data}")
-client_socket.send("你好，客户端！".encode("utf-8"))
-
-client_socket.close()
-server.close()
-\`\`\`
-
-**客户端流程**：
-
-\`\`\`python
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(("127.0.0.1", 8888))
-
-client.send("Hello Server!".encode("utf-8"))
-response = client.recv(1024).decode("utf-8")
-print(f"服务端回复：{response}")
-
-client.close()
-\`\`\`
-
-> 💡 \`AF_INET\` = IPv4, \`SOCK_STREAM\` = TCP协议
-> 网络传输的是**字节**（bytes），所以发送前要 \`.encode()\`，接收后要 \`.decode()\`
-
-### 📝 任务
-定义 \`send_message(msg)\` 函数，将消息 \`msg\` 编码为字节，统计字节数，然后模拟服务器回复格式。
-然后依次发送 "Hello" 和 "你好" 两条消息，最后打印完成提示。
-
-\`\`\`
-预期输出：
-[Hello] 5 bytes → 已发送
-[你好] 6 bytes → 已发送
-All messages sent
-\`\`\`
-
-> 💡 中文每个字符占3字节（UTF-8），所以"你好"是6字节
-`,
-        contentEn: `
-## Socket Programming
-
-Socket = IP + Port. Data is sent as **bytes** over the network.
-
-**Server**: socket() → bind() → listen() → accept() → recv()/send() → close()
-**Client**: socket() → connect() → send()/recv() → close()
-
-> 💡 Always \`.encode()\` before sending, \`.decode()\` after receiving.
-
-### 📝 Task
-Define \`send_message(msg)\` that encodes \`msg\` to bytes, counts the bytes, and formats server reply.
-Then define \`server_process(msg1, msg2)\` that calls \`send_message()\` twice and combines results.
-
-\`\`\`
-Input: server_process("Hello", "你好")
-Output:
-[Hello] 5 bytes → 已发送
-[你好] 6 bytes → 已发送
-\`\`\`
-`,
-        starterCode: '',
-        answer: 'def send_message(msg):\n    data = msg.encode("utf-8")\n    return f"[{msg}] {len(data)} bytes → 已发送"\n\nprint(send_message("Hello"))\nprint(send_message("你好"))\nprint("All messages sent")',
-        hints: ['【解释】\n第一步：定义 send_message(msg) 函数。\n\n需求拆解：\n- 用 \`.encode("utf-8")\` 把字符串转成字节对象\n- 用 \`len(data)\` 统计字节长度\n- 用 f-string 返回格式化的结果\n\n关键语法：\n- \`str.encode("utf-8")\`：字符串 → 字节（网络传输需要字节）\n- \`len(字节对象)\`：统计字节数量\n  - 英文字母："Hello" = 5 字节（每个字母 1 字节）\n  - 中文字："你好" = 6 字节（每个汉字 3 字节）\n- \`f"[{msg}] {len(data)} bytes → 已发送"\`：格式化输出\n\n注意：函数用 \`return\` 返回结果，print 在外部调用时执行。\n\n【代码】\ndef send_message(msg):\n    data = msg.encode("utf-8")\n    return f"[{msg}] {len(data)} bytes → 已发送"', '【解释】\nStep 1: Define the send_message(msg) function.\n\nRequirements:\n- Use \`.encode("utf-8")\` to convert string to bytes\n- Use \`len(data)\` to get byte count\n- Return a formatted string with f-string\n\nKey syntax:\n- \`str.encode("utf-8")\`: string → bytes (network sends bytes)\n- \`len(bytes_obj)\`: count the bytes\n- \`f"[{msg}] {len(data)} bytes → 已发送"\`: format the output\n\n【代码】\ndef send_message(msg):\n    data = msg.encode("utf-8")\n    return f"[{msg}] {len(data)} bytes → 已发送"', '【解释】\n第二步：调用函数并打印结果。\n\n三步走：\n① \`print(send_message("Hello"))\` → 编码 "Hello"，5 字节 → \`[Hello] 5 bytes → 已发送\`\n② \`print(send_message("你好"))\` → 编码 "你好"，6 字节 → \`[你好] 6 bytes → 已发送\`\n③ \`print("All messages sent")\` → 直接打印完成提示\n\n执行流程详解（以 "Hello" 为例）：\n1. send_message("Hello") 被调用，msg = "Hello"\n2. \`msg.encode("utf-8")\` → b"Hello"（5 字节）\n3. \`len(data)\` → 5\n4. \`return f"[Hello] 5 bytes → 已发送"\` → 返回字符串\n5. \`print(返回的字符串)\` → 输出 [Hello] 5 bytes → 已发送\n\n【代码】\ndef send_message(msg):\n    data = msg.encode("utf-8")\n    return f"[{msg}] {len(data)} bytes → 已发送"\n\nprint(send_message("Hello"))\nprint(send_message("你好"))\nprint("All messages sent")\n\n预期输出：\n[Hello] 5 bytes → 已发送\n[你好] 6 bytes → 已发送\nAll messages sent', '【解释】\nStep 2: Call the function and print the results.\n\n① \`print(send_message("Hello"))\` → "Hello" encoded to 5 bytes\n② \`print(send_message("你好"))\` → "你好" encoded to 6 bytes\n③ \`print("All messages sent")\` → final message\n\n【代码】\ndef send_message(msg):\n    data = msg.encode("utf-8")\n    return f"[{msg}] {len(data)} bytes → 已发送"\n\nprint(send_message("Hello"))\nprint(send_message("你好"))\nprint("All messages sent")\n\nExpected output:\n[Hello] 5 bytes → 已发送\n[你好] 6 bytes → 已发送\nAll messages sent'],
-        testCases: [{ input: '', expected: '[Hello] 5 bytes → 已发送\n[你好] 6 bytes → 已发送\nAll messages sent' }]
-
+        testCases: [{ input: '', expected: "['alice@gmail.com', 'bob@web.com']" }]
       }
     ]
   },
   {
     id: 'ch21',
-    title: 'Chapter 21: 设计模式与高级特性',
-    titleEn: 'Chapter 21: Design Patterns & Advanced Features',
+    title: 'Chapter 19: 设计模式与高级特性',
+    titleEn: 'Chapter 19: Design Patterns & Advanced Features',
     description: '学习设计模式、类型注解和实用工具函数',
     descriptionEn: 'Learn design patterns, type hints, and utility functions',
-    icon: '🏗️',
+    icon: '🧬',
     lessons: [
       {
         id: 'ch21_01',
@@ -5387,8 +5073,8 @@ Use the test code to print results.
   },
   {
     id: 'ch22',
-    title: 'Chapter 22: 高级特性补完',
-    titleEn: 'Chapter 22: Advanced Python Features',
+    title: 'Chapter 20: 高级特性补完',
+    titleEn: 'Chapter 20: Advanced Python Features',
     description: '文档字符串、作用域、魔术方法、封装、多态等核心高级特性',
     descriptionEn: 'Docstrings, scoping, magic methods, encapsulation, polymorphism, and more',
     icon: '⭐',
@@ -5974,5 +5660,1351 @@ Requirements:
         testCases: [{ input: '', expected: '赵六\n李四\n王五\n4' }]
       }
     ]
+  },
+  {
+    id: 'ch23',
+    title: 'Chapter 21: SQL 与数据库',
+    titleEn: 'Chapter 21: SQL & Databases',
+    description: '用 SQL 存储、查询和排序数据',
+    descriptionEn: 'Store, query, and sort data with SQL',
+    icon: '🗄️',
+    lessons: [
+      {
+        id: 'ch23_01',
+        title: '认识数据库与建表',
+        titleEn: 'Databases & Create Table',
+        xp: 80,
+        content: `
+## 认识数据库与建表
+
+**数据库 (Database)** 是用来**存储大量数据**的仓库。你可以把它想象成一个超级大的表格，每一行是一条记录，每一列是一种信息。
+
+**SQL**（Structured Query Language，结构化查询语言）是操作数据库的标准语言。无论是 MySQL、SQLite 还是 PostgreSQL，都用 SQL 来读写数据。
+
+> 本节用 \`sqlite3\` 模块来**模拟** MySQL 的操作，语法几乎一样！
+
+**建表**：创建一张表，定义有哪些列（字段）。
+
+\`\`\`python
+import sqlite3
+
+# 连接数据库（:memory: 表示在内存中临时建库）
+conn = sqlite3.connect(":memory:")
+cur = conn.cursor()
+
+# 创建一张学生表：有 name 和 age 两列
+cur.execute("CREATE TABLE students (name TEXT, age INTEGER)")
+\`\`\`
+
+**插入数据**：往表里添加一行。
+
+\`\`\`python
+cur.execute("INSERT INTO students VALUES ('Alice', 20)")
+cur.execute("INSERT INTO students VALUES ('Bob', 25)")
+\`\`\`
+
+**查询**：用 SELECT 取出数据。
+
+\`\`\`python
+cur.execute("SELECT * FROM students")
+for row in cur.fetchall():
+    print(row)
+# ('Alice', 20)
+# ('Bob', 25)
+\`\`\`
+
+> SQLite 查询结果中的每一行是一个元组，所以文字会带引号，整行会使用圆括号。
+
+### 📝 任务
+创建一张学生表，插入两条数据，然后查询并打印所有行。
+
+要求：
+1. \`sqlite3.connect(":memory:")\` 连接数据库，\`conn.cursor()\` 获取游标
+2. \`CREATE TABLE students (name TEXT, age INTEGER)\` 建表
+3. 插入两条数据：\`('Alice', 20)\` 和 \`('Bob', 25)\`
+4. \`SELECT * FROM students\` 查询，用 \`for\` 循环打印每一行
+`,
+        contentEn: `
+## Databases & Create Table
+
+A **database** stores large amounts of data. Think of it as a big table: each row is a record, each column is a field.
+
+**SQL** (Structured Query Language) is the standard language for working with databases — MySQL, SQLite, and PostgreSQL all use it.
+
+> We use \`sqlite3\` to simulate MySQL; the syntax is almost identical!
+
+**CREATE TABLE** defines the columns. **INSERT INTO** adds a row. **SELECT** reads data.
+
+> Each SQLite result row is a tuple, so text keeps its quotes and the row uses parentheses.
+
+### 📝 Task
+Create a students table, insert two rows, then query and print all rows.
+
+Requirements:
+1. Connect with \`sqlite3.connect(":memory:")\` and get a cursor
+2. \`CREATE TABLE students (name TEXT, age INTEGER)\`
+3. Insert \`('Alice', 20)\` and \`('Bob', 25)\`
+4. \`SELECT * FROM students\` and print each row
+`,
+        starterCode: '# 用 SQL 建表、插数据、查询\n\nimport sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\n# 1. 创建学生表\n# 2. 插入两条数据\n# 3. 查询并打印',
+        answer: 'import sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\ncur.execute("CREATE TABLE students (name TEXT, age INTEGER)")\ncur.execute("INSERT INTO students VALUES (\'Alice\', 20)")\ncur.execute("INSERT INTO students VALUES (\'Bob\', 25)")\n\ncur.execute("SELECT * FROM students")\nfor row in cur.fetchall():\n    print(row)',
+        hints: [
+          '【解释】SQL 操作三步走：连接 → 执行 → 查询。先连接内存数据库并获取游标，再用 execute 建表和插入数据。',
+          '【解释】查询后用 cur.fetchall() 取回所有行。返回值是列表，其中每一行是元组，所以打印结果会保留字符串引号和圆括号。\n\n【代码】cur.execute("SELECT * FROM students")\nfor row in cur.fetchall():\n    print(row)\n\n预期输出：\n(\'Alice\', 20)\n(\'Bob\', 25)',
+          '【解释】SQL workflow: connect → execute → fetch. cur.fetchall() returns a list of rows, and each row is a tuple, so printed text keeps quotes and parentheses.\n\nExpected output:\n(\'Alice\', 20)\n(\'Bob\', 25)',
+        ],
+        testCases: [{ input: '', expected: "('Alice', 20)\n('Bob', 25)" }]
+      },
+      {
+        id: 'ch23_02',
+        title: '条件查询 WHERE',
+        titleEn: 'Query with WHERE',
+        xp: 80,
+        content: `
+## 条件查询 WHERE
+
+数据库里往往有成千上万条数据，我们常常只想看**符合条件**的那一部分。SQL 用 \`WHERE\` 来筛选。
+
+\`\`\`python
+import sqlite3
+
+conn = sqlite3.connect(":memory:")
+cur = conn.cursor()
+
+cur.execute("CREATE TABLE products (name TEXT, price INTEGER)")
+cur.execute("INSERT INTO products VALUES ('apple', 3)")
+cur.execute("INSERT INTO products VALUES ('banana', 5)")
+cur.execute("INSERT INTO products VALUES ('cherry', 5)")
+
+# 只查询价格等于 5 的商品
+cur.execute("SELECT * FROM products WHERE price = 5")
+for row in cur.fetchall():
+    print(row)
+# [banana, 5]
+# [cherry, 5]
+\`\`\`
+
+**WHERE 语法**：\`SELECT ... FROM 表 WHERE 列 = 值\`
+
+- \`=\` 等于、\`>\` 大于、\`<\` 小于
+- 查询结果每一行仍是一个列表，\`row[0]\` 是名字，\`row[1]\` 是价格
+
+### 📝 任务
+查询价格等于 5 的商品，只打印商品**名字**（\`row[0]\`）。
+
+要求：
+1. 建表 \`products (name TEXT, price INTEGER)\`
+2. 插入 apple(3)、banana(5)、cherry(5) 三条数据
+3. \`SELECT * FROM products WHERE price = 5\` 筛选
+4. 用 \`row[0]\` 只打印名字
+`,
+        contentEn: `
+## Query with WHERE
+
+Databases can hold thousands of rows, so we often only want the rows that match a condition. SQL uses \`WHERE\` to filter.
+
+\`\`\`python
+cur.execute("SELECT * FROM products WHERE price = 5")
+\`\`\`
+
+**WHERE syntax**: \`SELECT ... FROM table WHERE column = value\`
+
+### 📝 Task
+Query products with price 5, printing only the name (\`row[0]\`).
+
+Requirements:
+1. Create \`products (name TEXT, price INTEGER)\`
+2. Insert apple(3), banana(5), cherry(5)
+3. \`SELECT * FROM products WHERE price = 5\`
+4. Print \`row[0]\` for each row
+`,
+        starterCode: '# 用 WHERE 筛选数据\n\nimport sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\n# 1. 建 products 表\n# 2. 插入 apple/banana/cherry\n# 3. WHERE price = 5 筛选\n# 4. 打印 row[0]（名字）',
+        answer: 'import sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\ncur.execute("CREATE TABLE products (name TEXT, price INTEGER)")\ncur.execute("INSERT INTO products VALUES (\'apple\', 3)")\ncur.execute("INSERT INTO products VALUES (\'banana\', 5)")\ncur.execute("INSERT INTO products VALUES (\'cherry\', 5)")\n\ncur.execute("SELECT * FROM products WHERE price = 5")\nfor row in cur.fetchall():\n    print(row[0])',
+        hints: ['【解释】\nWHERE 用来筛选符合条件的行。\n\ncur.execute("SELECT * FROM products WHERE price = 5")\n表示：从 products 表中选出 price 等于 5 的所有行。\n\n每一行 row 是一个列表 [名字, 价格]。\nrow[0] 是名字，row[1] 是价格。\n\n【代码】\nimport sqlite3\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\ncur.execute("CREATE TABLE products (name TEXT, price INTEGER)")', '【解释】\n先插入数据，再用 WHERE price = 5 筛选出 banana 和 cherry。\n最后遍历结果，打印 row[0]（名字）。\n\n【代码】\nimport sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\ncur.execute("CREATE TABLE products (name TEXT, price INTEGER)")\ncur.execute("INSERT INTO products VALUES (\'apple\', 3)")\ncur.execute("INSERT INTO products VALUES (\'banana\', 5)")\ncur.execute("INSERT INTO products VALUES (\'cherry\', 5)")\n\ncur.execute("SELECT * FROM products WHERE price = 5")\nfor row in cur.fetchall():\n    print(row[0])\n\n预期输出：\nbanana\ncherry', '【解释】\nWHERE filters rows matching a condition.\n\ncur.execute("SELECT * FROM products WHERE price = 5")\nselects rows where price equals 5.\n\nEach row is a list [name, price]; row[0] is the name.\n\n【代码】\nimport sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\ncur.execute("CREATE TABLE products (name TEXT, price INTEGER)")\ncur.execute("INSERT INTO products VALUES (\'apple\', 3)")\ncur.execute("INSERT INTO products VALUES (\'banana\', 5)")\ncur.execute("INSERT INTO products VALUES (\'cherry\', 5)")\n\ncur.execute("SELECT * FROM products WHERE price = 5")\nfor row in cur.fetchall():\n    print(row[0])\n\nExpected output:\nbanana\ncherry'],
+        testCases: [{ input: '', expected: 'banana\ncherry' }]
+      },
+      {
+        id: 'ch23_03',
+        title: '排序 ORDER BY',
+        titleEn: 'Sort with ORDER BY',
+        xp: 80,
+        content: `
+## 排序 ORDER BY
+
+查询结果默认按插入顺序排列。用 \`ORDER BY\` 可以让结果**按某列排序**。
+
+\`\`\`python
+import sqlite3
+
+conn = sqlite3.connect(":memory:")
+cur = conn.cursor()
+
+cur.execute("CREATE TABLE scores (name TEXT, score INTEGER)")
+cur.execute("INSERT INTO scores VALUES ('A', 80)")
+cur.execute("INSERT INTO scores VALUES ('B', 95)")
+cur.execute("INSERT INTO scores VALUES ('C', 60)")
+
+# 按分数从高到低排序
+cur.execute("SELECT name, score FROM scores ORDER BY score DESC")
+for row in cur.fetchall():
+    print(row[0], row[1])
+# B 95
+# A 80
+# C 60
+\`\`\`
+
+**ORDER BY 语法**：\`SELECT ... ORDER BY 列 DESC\`
+
+- \`ASC\` 升序（从小到大，默认）、\`DESC\` 降序（从大到小）
+- 可以只查询部分列：\`SELECT name, score\`（而不是 \`*\`）
+
+### 📝 任务
+按分数从高到低（DESC）排序，打印每个人的名字和分数。
+
+要求：
+1. 建表 \`scores (name TEXT, score INTEGER)\`
+2. 插入 A(80)、B(95)、C(60)
+3. \`SELECT name, score FROM scores ORDER BY score DESC\`
+4. 用 \`print(row[0], row[1])\` 打印名字和分数
+`,
+        contentEn: `
+## Sort with ORDER BY
+
+Results come back in insertion order by default. Use \`ORDER BY\` to sort by a column.
+
+\`\`\`python
+cur.execute("SELECT name, score FROM scores ORDER BY score DESC")
+\`\`\`
+
+**ORDER BY syntax**: \`SELECT ... ORDER BY column DESC\`
+
+- \`ASC\` ascending (default), \`DESC\` descending
+- Select specific columns: \`SELECT name, score\` instead of \`*\`
+
+### 📝 Task
+Sort by score descending and print each name and score.
+
+Requirements:
+1. Create \`scores (name TEXT, score INTEGER)\`
+2. Insert A(80), B(95), C(60)
+3. \`SELECT name, score FROM scores ORDER BY score DESC\`
+4. \`print(row[0], row[1])\`
+`,
+        starterCode: '# 用 ORDER BY 排序\n\nimport sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\n# 1. 建 scores 表\n# 2. 插入 A/B/C 的成绩\n# 3. ORDER BY score DESC 排序\n# 4. 打印名字和分数',
+        answer: 'import sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\ncur.execute("CREATE TABLE scores (name TEXT, score INTEGER)")\ncur.execute("INSERT INTO scores VALUES (\'A\', 80)")\ncur.execute("INSERT INTO scores VALUES (\'B\', 95)")\ncur.execute("INSERT INTO scores VALUES (\'C\', 60)")\n\ncur.execute("SELECT name, score FROM scores ORDER BY score DESC")\nfor row in cur.fetchall():\n    print(row[0], row[1])',
+        hints: ['【解释】\nORDER BY 对查询结果排序。\n\nDESC 表示降序（从大到小），ASC 表示升序。\n\ncur.execute("SELECT name, score FROM scores ORDER BY score DESC")\n按 score 从高到低排序，只取 name 和 score 两列。\n\n每一行 row 是 [name, score]，print(row[0], row[1]) 打印两个值。\n\n【代码】\nimport sqlite3\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\ncur.execute("CREATE TABLE scores (name TEXT, score INTEGER)")', '【解释】\n插入三条成绩，用 ORDER BY score DESC 从高到低排序。\nB(95) 最高，A(80) 其次，C(60) 最低。\n\n【代码】\nimport sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\ncur.execute("CREATE TABLE scores (name TEXT, score INTEGER)")\ncur.execute("INSERT INTO scores VALUES (\'A\', 80)")\ncur.execute("INSERT INTO scores VALUES (\'B\', 95)")\ncur.execute("INSERT INTO scores VALUES (\'C\', 60)")\n\ncur.execute("SELECT name, score FROM scores ORDER BY score DESC")\nfor row in cur.fetchall():\n    print(row[0], row[1])\n\n预期输出：\nB 95\nA 80\nC 60', '【解释】\nORDER BY sorts the result. DESC = descending, ASC = ascending.\n\ncur.execute("SELECT name, score FROM scores ORDER BY score DESC")\nsorts by score descending and selects only name and score.\n\nEach row is [name, score]; print(row[0], row[1]) prints both.\n\n【代码】\nimport sqlite3\n\nconn = sqlite3.connect(":memory:")\ncur = conn.cursor()\n\ncur.execute("CREATE TABLE scores (name TEXT, score INTEGER)")\ncur.execute("INSERT INTO scores VALUES (\'A\', 80)")\ncur.execute("INSERT INTO scores VALUES (\'B\', 95)")\ncur.execute("INSERT INTO scores VALUES (\'C\', 60)")\n\ncur.execute("SELECT name, score FROM scores ORDER BY score DESC")\nfor row in cur.fetchall():\n    print(row[0], row[1])\n\nExpected output:\nB 95\nA 80\nC 60'],
+        testCases: [{ input: '', expected: 'B 95\nA 80\nC 60' }]
+      }
+    ]
+  },
+  {
+    id: 'ch24',
+    optional: true,
+    availability: 'in-development',
+    title: 'Chapter 22: 数据可视化',
+    titleEn: 'Chapter 22: Data Visualization',
+    description: '把数据变成直观的图表',
+    descriptionEn: 'Turn data into intuitive charts',
+    icon: '📊',
+    lessons: [
+      {
+        id: 'ch24_01',
+        title: '折线图 Line',
+        titleEn: 'Line Chart',
+        xp: 80,
+        content: `
+## 折线图 Line
+
+**数据可视化**是把枯燥的数字变成直观的图表，让人一眼看懂趋势。
+
+现实中 Python 常用 \`pyecharts\` 生成精美的网页图表（折线图、柱状图、地图等）。本游戏里我们用 \`pyecharts\` 模拟，\`render()\` 会打印出图表的文本摘要。
+
+**折线图**最适合展示**随时间变化的趋势**，比如温度变化。
+
+\`\`\`python
+from pyecharts import Line
+
+# 创建折线图，标题为"温度变化"
+line = Line("温度变化")
+
+# 设置 x 轴（月份）和 y 轴（温度）
+line.add_xaxis(["1月", "2月", "3月"])
+line.add_yaxis("温度", [5, 12, 18])
+
+# 渲染图表
+line.render()
+\`\`\`
+
+输出：
+\`\`\`
+折线图《温度变化》
+1月: 5
+2月: 12
+3月: 18
+\`\`\`
+
+**三个步骤**：\`Line(标题)\` → \`add_xaxis + add_yaxis\` → \`render()\`
+
+### 📝 任务
+画一个"温度变化"折线图，展示 1 月到 4 月的温度。
+
+要求：
+1. \`Line("温度变化")\` 创建图表
+2. x 轴：\`["1月", "2月", "3月", "4月"]\`
+3. y 轴：\`[5, 12, 18, 25]\`
+4. 调用 \`render()\` 输出图表
+`,
+        contentEn: `
+## Line Chart
+
+**Data visualization** turns boring numbers into intuitive charts.
+
+Python uses \`pyecharts\` to generate beautiful web charts. Here we simulate it — \`render()\` prints a text summary.
+
+**Line charts** show trends over time.
+
+\`\`\`python
+from pyecharts import Line
+line = Line("温度变化")
+line.add_xaxis(["1月", "2月", "3月"])
+line.add_yaxis("温度", [5, 12, 18])
+line.render()
+\`\`\`
+
+**Three steps**: \`Line(title)\` → \`add_xaxis + add_yaxis\` → \`render()\`
+
+### 📝 Task
+Draw a "温度变化" line chart for January to April.
+
+Requirements:
+1. \`Line("温度变化")\`
+2. x-axis: \`["1月", "2月", "3月", "4月"]\`
+3. y-axis: \`[5, 12, 18, 25]\`
+4. Call \`render()\`
+`,
+        starterCode: '# 画折线图\n\nfrom pyecharts import Line\n\n# 1. 创建折线图\n# 2. add_xaxis 设置月份\n# 3. add_yaxis 设置温度\n# 4. render() 渲染',
+        answer: 'from pyecharts import Line\n\nline = Line("温度变化")\nline.add_xaxis(["1月", "2月", "3月", "4月"])\nline.add_yaxis("温度", [5, 12, 18, 25])\nline.render()',
+        hints: ['【解释】\n折线图三步走：创建 → 添加数据 → 渲染。\n\n1. line = Line("温度变化") 创建折线图\n2. line.add_xaxis([...]) 设置 x 轴\n3. line.add_yaxis("温度", [...]) 设置 y 轴\n4. line.render() 输出图表\n\n【代码】\nfrom pyecharts import Line\nline = Line("温度变化")\nline.add_xaxis(["1月", "2月", "3月", "4月"])', '【解释】\nadd_xaxis 放月份，add_yaxis 放对应温度，最后 render() 渲染。\n\n【代码】\nfrom pyecharts import Line\n\nline = Line("温度变化")\nline.add_xaxis(["1月", "2月", "3月", "4月"])\nline.add_yaxis("温度", [5, 12, 18, 25])\nline.render()\n\n预期输出：\n折线图《温度变化》\n1月: 5\n2月: 12\n3月: 18\n4月: 25', '【解释】\nLine chart steps: create → add data → render.\n\n1. line = Line("温度变化")\n2. line.add_xaxis([...]) sets x-axis\n3. line.add_yaxis("温度", [...]) sets y-axis\n4. line.render() outputs the chart\n\n【代码】\nfrom pyecharts import Line\n\nline = Line("温度变化")\nline.add_xaxis(["1月", "2月", "3月", "4月"])\nline.add_yaxis("温度", [5, 12, 18, 25])\nline.render()\n\nExpected output:\n折线图《温度变化》\n1月: 5\n2月: 12\n3月: 18\n4月: 25'],
+        testCases: [{ input: '', expected: '折线图《温度变化》\n1月: 5\n2月: 12\n3月: 18\n4月: 25' }]
+      },
+      {
+        id: 'ch24_02',
+        title: '柱状图 Bar',
+        titleEn: 'Bar Chart',
+        xp: 80,
+        content: `
+## 柱状图 Bar
+
+**柱状图**适合**比较不同类别的数量**，比如比较几个人的成绩。
+
+\`\`\`python
+from pyecharts import Bar
+
+bar = Bar("成绩")
+bar.add_xaxis(["张三", "李四"])
+bar.add_yaxis("分数", [90, 85])
+bar.render()
+\`\`\`
+
+输出（用 \`#\` 表示柱子的高度）：
+\`\`\`
+柱状图《成绩》
+张三 ######### 90
+李四 ######## 85
+\`\`\`
+
+和折线图的用法几乎一样：\`Bar(标题)\` → \`add_xaxis + add_yaxis\` → \`render()\`。只是类名不同。
+
+### 📝 任务
+画一个"成绩"柱状图，比较三个人的分数。
+
+要求：
+1. \`Bar("成绩")\` 创建柱状图
+2. x 轴：\`["张三", "李四", "王五"]\`
+3. y 轴：\`[90, 85, 78]\`
+4. 调用 \`render()\`
+`,
+        contentEn: `
+## Bar Chart
+
+**Bar charts** compare quantities across categories, like scores.
+
+\`\`\`python
+from pyecharts import Bar
+bar = Bar("成绩")
+bar.add_xaxis(["张三", "李四"])
+bar.add_yaxis("分数", [90, 85])
+bar.render()
+\`\`\`
+
+Same usage as Line: \`Bar(title)\` → \`add_xaxis + add_yaxis\` → \`render()\`.
+
+### 📝 Task
+Draw a "成绩" bar chart comparing three scores.
+
+Requirements:
+1. \`Bar("成绩")\`
+2. x-axis: \`["张三", "李四", "王五"]\`
+3. y-axis: \`[90, 85, 78]\`
+4. Call \`render()\`
+`,
+        starterCode: '# 画柱状图\n\nfrom pyecharts import Bar\n\n# 1. 创建柱状图\n# 2. add_xaxis 设置名字\n# 3. add_yaxis 设置分数\n# 4. render() 渲染',
+        answer: 'from pyecharts import Bar\n\nbar = Bar("成绩")\nbar.add_xaxis(["张三", "李四", "王五"])\nbar.add_yaxis("分数", [90, 85, 78])\nbar.render()',
+        hints: ['【解释】\n柱状图 Bar 的用法和折线图几乎一样。\n\n1. bar = Bar("成绩") 创建柱状图\n2. bar.add_xaxis([...]) 设置类别\n3. bar.add_yaxis("分数", [...]) 设置数值\n4. bar.render() 输出图表\n\n【代码】\nfrom pyecharts import Bar\nbar = Bar("成绩")\nbar.add_xaxis(["张三", "李四", "王五"])', '【解释】\nadd_xaxis 放名字，add_yaxis 放分数，最后 render() 渲染。\n\n【代码】\nfrom pyecharts import Bar\n\nbar = Bar("成绩")\nbar.add_xaxis(["张三", "李四", "王五"])\nbar.add_yaxis("分数", [90, 85, 78])\nbar.render()\n\n预期输出：\n柱状图《成绩》\n张三 ######### 90\n李四 ######## 85\n王五 ####### 78', '【解释】\nBar chart usage is nearly identical to Line.\n\n1. bar = Bar("成绩")\n2. bar.add_xaxis([...]) sets categories\n3. bar.add_yaxis("分数", [...]) sets values\n4. bar.render() outputs the chart\n\n【代码】\nfrom pyecharts import Bar\n\nbar = Bar("成绩")\nbar.add_xaxis(["张三", "李四", "王五"])\nbar.add_yaxis("分数", [90, 85, 78])\nbar.render()\n\nExpected output:\n柱状图《成绩》\n张三 ######### 90\n李四 ######## 85\n王五 ####### 78'],
+        testCases: [{ input: '', expected: '柱状图《成绩》\n张三 ######### 90\n李四 ######## 85\n王五 ####### 78' }]
+      },
+      {
+        id: 'ch24_03',
+        title: '地图 Map',
+        titleEn: 'Map Chart',
+        xp: 80,
+        content: `
+## 地图 Map
+
+**地图**用来展示**不同地区的数据差异**，比如各省的得分、各省的人口等。
+
+\`\`\`python
+from pyecharts import Map
+
+m = Map("各省得分")
+m.add_xaxis(["北京", "上海"])
+m.add_yaxis("得分", [99, 98])
+m.render()
+\`\`\`
+
+输出：
+\`\`\`
+地图《各省得分》
+北京: 99
+上海: 98
+\`\`\`
+
+地图的用法和折线图、柱状图一致：\`Map(标题)\` → \`add_xaxis(地区) + add_yaxis(数值)\` → \`render()\`。
+
+> 现实中 pyecharts 的地图会把数据标注在中国地图上，这里我们用文本摘要模拟。
+
+### 📝 任务
+画一个"各省得分"地图，展示三个地区的得分。
+
+要求：
+1. \`Map("各省得分")\` 创建地图
+2. x 轴（地区）：\`["北京", "上海", "广东"]\`
+3. y 轴（得分）：\`[99, 98, 97]\`
+4. 调用 \`render()\`
+`,
+        contentEn: `
+## Map Chart
+
+**Maps** show data differences across regions, like scores by province.
+
+\`\`\`python
+from pyecharts import Map
+m = Map("各省得分")
+m.add_xaxis(["北京", "上海"])
+m.add_yaxis("得分", [99, 98])
+m.render()
+\`\`\`
+
+Same pattern as Line and Bar: \`Map(title)\` → \`add_xaxis + add_yaxis\` → \`render()\`.
+
+### 📝 Task
+Draw a "各省得分" map for three regions.
+
+Requirements:
+1. \`Map("各省得分")\`
+2. x-axis (regions): \`["北京", "上海", "广东"]\`
+3. y-axis (scores): \`[99, 98, 97]\`
+4. Call \`render()\`
+`,
+        starterCode: '# 画地图\n\nfrom pyecharts import Map\n\n# 1. 创建地图\n# 2. add_xaxis 设置地区\n# 3. add_yaxis 设置得分\n# 4. render() 渲染',
+        answer: 'from pyecharts import Map\n\nm = Map("各省得分")\nm.add_xaxis(["北京", "上海", "广东"])\nm.add_yaxis("得分", [99, 98, 97])\nm.render()',
+        hints: ['【解释】\n地图 Map 用法和折线图、柱状图一致。\n\n1. m = Map("各省得分") 创建地图\n2. m.add_xaxis([...]) 设置地区\n3. m.add_yaxis("得分", [...]) 设置数值\n4. m.render() 输出图表\n\n【代码】\nfrom pyecharts import Map\nm = Map("各省得分")\nm.add_xaxis(["北京", "上海", "广东"])', '【解释】\nadd_xaxis 放地区名，add_yaxis 放对应得分，最后 render() 渲染。\n\n【代码】\nfrom pyecharts import Map\n\nm = Map("各省得分")\nm.add_xaxis(["北京", "上海", "广东"])\nm.add_yaxis("得分", [99, 98, 97])\nm.render()\n\n预期输出：\n地图《各省得分》\n北京: 99\n上海: 98\n广东: 97', '【解释】\nMap usage is identical to Line and Bar.\n\n1. m = Map("各省得分")\n2. m.add_xaxis([...]) sets regions\n3. m.add_yaxis("得分", [...]) sets values\n4. m.render() outputs the chart\n\n【代码】\nfrom pyecharts import Map\n\nm = Map("各省得分")\nm.add_xaxis(["北京", "上海", "广东"])\nm.add_yaxis("得分", [99, 98, 97])\nm.render()\n\nExpected output:\n地图《各省得分》\n北京: 99\n上海: 98\n广东: 97'],
+        testCases: [{ input: '', expected: '地图《各省得分》\n北京: 99\n上海: 98\n广东: 97' }]
+      }
+    ]
+  },
+  {
+    id: 'ch25',
+    optional: true,
+    availability: 'in-development',
+    title: 'Chapter 23: 多线程编程',
+    titleEn: 'Chapter 23: Multithreading',
+    description: '让程序同时做多件事',
+    descriptionEn: 'Run multiple tasks at once',
+    icon: '🧵',
+    lessons: [
+      {
+        id: 'ch25_01',
+        title: '创建线程',
+        titleEn: 'Create a Thread',
+        xp: 80,
+        content: `
+## 创建线程
+
+**多线程 (Multithreading)** 让一个程序能"同时"做多件事。比如浏览器一边下载文件一边播放视频。
+
+Python 用 \`threading\` 模块创建线程。核心三要素：
+
+\`\`\`python
+from threading import Thread
+
+# 1. 定义一个任务函数
+def task():
+    print("任务开始")
+    print("任务结束")
+
+# 2. 创建线程，target 指向任务函数
+t = Thread(target=task)
+
+# 3. 启动线程，并等待它结束
+t.start()
+t.join()
+
+print("全部完成")
+\`\`\`
+
+输出：
+\`\`\`
+任务开始
+任务结束
+全部完成
+\`\`\`
+
+**关键点**：
+- \`Thread(target=函数)\` 创建线程（注意：函数名后**不加括号**）
+- \`start()\` 启动线程
+- \`join()\` 等待线程结束再继续
+
+### 📝 任务
+创建一个线程执行任务，启动后等待它结束，最后打印"全部完成"。
+
+要求：
+1. 定义函数 \`task\`，打印"任务开始"和"任务结束"
+2. \`Thread(target=task)\` 创建线程
+3. \`start()\` 启动，\`join()\` 等待
+4. 打印"全部完成"
+`,
+        contentEn: `
+## Create a Thread
+
+**Multithreading** lets a program do multiple things at once — like a browser downloading while playing video.
+
+Python uses the \`threading\` module. Three key elements:
+
+\`\`\`python
+from threading import Thread
+
+def task():
+    print("任务开始")
+    print("任务结束")
+
+t = Thread(target=task)   # note: no () after task
+t.start()                 # start the thread
+t.join()                  # wait for it to finish
+print("全部完成")
+\`\`\`
+
+- \`Thread(target=func)\` creates a thread
+- \`start()\` runs it
+- \`join()\` waits for it to finish
+
+### 📝 Task
+Create a thread that runs a task, start it, wait for it, then print "全部完成".
+
+Requirements:
+1. Define \`task\` printing two lines
+2. \`Thread(target=task)\`
+3. \`start()\` and \`join()\`
+4. Print "全部完成"
+`,
+        starterCode: '# 创建并启动一个线程\n\nfrom threading import Thread\n\n# 1. 定义任务函数 task\n# 2. Thread(target=task) 创建线程\n# 3. start() 和 join()\n# 4. 打印 "全部完成"',
+        answer: 'from threading import Thread\n\ndef task():\n    print("任务开始")\n    print("任务结束")\n\nt = Thread(target=task)\nt.start()\nt.join()\nprint("全部完成")',
+        hints: ['【解释】\n线程三要素：定义函数、创建线程、启动等待。\n\n1. def task(): 定义任务函数\n2. Thread(target=task) 创建线程（函数名后不加括号）\n3. t.start() 启动线程\n4. t.join() 等待线程结束\n\n【代码】\nfrom threading import Thread\n\ndef task():\n    print("任务开始")\n    print("任务结束")\n\nt = Thread(target=task)', '【解释】\n创建线程后必须调用 start() 才会真正执行，join() 等它跑完。\n\n【代码】\nfrom threading import Thread\n\ndef task():\n    print("任务开始")\n    print("任务结束")\n\nt = Thread(target=task)\nt.start()\nt.join()\nprint("全部完成")\n\n预期输出：\n任务开始\n任务结束\n全部完成', '【解释】\nThree elements: define the function, create the thread, start and wait.\n\n1. def task(): defines the task\n2. Thread(target=task) creates a thread (no () after task)\n3. t.start() starts it\n4. t.join() waits for it\n\n【代码】\nfrom threading import Thread\n\ndef task():\n    print("任务开始")\n    print("任务结束")\n\nt = Thread(target=task)\nt.start()\nt.join()\nprint("全部完成")\n\nExpected output:\n任务开始\n任务结束\n全部完成'],
+        testCases: [{ input: '', expected: '任务开始\n任务结束\n全部完成' }]
+      },
+      {
+        id: 'ch25_02',
+        title: '线程传参',
+        titleEn: 'Thread with Arguments',
+        xp: 80,
+        content: `
+## 线程传参
+
+线程的任务函数常常需要**接收参数**。用 \`Thread(target=函数, args=[参数])\` 传入。
+
+\`\`\`python
+from threading import Thread
+
+def greet(name):
+    print("你好, " + name)
+
+# 传入参数：args 是一个列表
+t1 = Thread(target=greet, args=["小明"])
+t2 = Thread(target=greet, args=["小红"])
+
+t1.start()
+t2.start()
+\`\`\`
+
+输出：
+\`\`\`
+你好, 小明
+你好, 小红
+\`\`\`
+
+**关键点**：
+- \`args\` 是**列表**，里面装传给函数的参数
+- 多个参数就写多个元素：\`args=[1, 2]\` 相当于 \`func(1, 2)\`
+
+### 📝 任务
+创建两个线程，分别向 \`greet\` 函数传入"小明"和"小红"，启动两个线程。
+
+要求：
+1. 定义 \`greet(name)\`，打印 \`"你好, " + name\`
+2. \`Thread(target=greet, args=["小明"])\` 和 \`args=["小红"]\`
+3. 两个线程都 \`start()\`
+`,
+        contentEn: `
+## Thread with Arguments
+
+Task functions often need arguments. Pass them with \`Thread(target=func, args=[...])\`.
+
+\`\`\`python
+from threading import Thread
+
+def greet(name):
+    print("你好, " + name)
+
+t1 = Thread(target=greet, args=["小明"])
+t2 = Thread(target=greet, args=["小红"])
+t1.start()
+t2.start()
+\`\`\`
+
+- \`args\` is a list of arguments
+- \`args=[1, 2]\` is like calling \`func(1, 2)\`
+
+### 📝 Task
+Create two threads passing "小明" and "小红" to \`greet\`.
+
+Requirements:
+1. Define \`greet(name)\` printing \`"你好, " + name\`
+2. \`Thread(target=greet, args=["小明"])\` and \`args=["小红"]\`
+3. \`start()\` both
+`,
+        starterCode: '# 线程传参\n\nfrom threading import Thread\n\n# 1. 定义 greet(name) 函数\n# 2. 创建两个线程，args 分别传 "小明" 和 "小红"\n# 3. 启动两个线程',
+        answer: 'from threading import Thread\n\ndef greet(name):\n    print("你好, " + name)\n\nt1 = Thread(target=greet, args=["小明"])\nt2 = Thread(target=greet, args=["小红"])\nt1.start()\nt2.start()',
+        hints: ['【解释】\nargs 是传给线程函数的参数列表。\n\n1. def greet(name): 定义带参数的函数\n2. Thread(target=greet, args=["小明"]) 传入参数\n3. t.start() 启动线程\n\n注意：args 是列表，即使只有一个参数也要用方括号 []。\n\n【代码】\nfrom threading import Thread\n\ndef greet(name):\n    print("你好, " + name)\n\nt1 = Thread(target=greet, args=["小明"])', '【解释】\n两个线程分别传不同参数，启动后按顺序执行。\n\n【代码】\nfrom threading import Thread\n\ndef greet(name):\n    print("你好, " + name)\n\nt1 = Thread(target=greet, args=["小明"])\nt2 = Thread(target=greet, args=["小红"])\nt1.start()\nt2.start()\n\n预期输出：\n你好, 小明\n你好, 小红', '【解释】\nargs is a list of arguments passed to the thread function.\n\n1. def greet(name): defines a function with a parameter\n2. Thread(target=greet, args=["小明"]) passes the argument\n3. t.start() starts the thread\n\n【代码】\nfrom threading import Thread\n\ndef greet(name):\n    print("你好, " + name)\n\nt1 = Thread(target=greet, args=["小明"])\nt2 = Thread(target=greet, args=["小红"])\nt1.start()\nt2.start()\n\nExpected output:\n你好, 小明\n你好, 小红'],
+        testCases: [{ input: '', expected: '你好, 小明\n你好, 小红' }]
+      },
+      {
+        id: 'ch25_03',
+        title: '线程锁 Lock',
+        titleEn: 'Thread Lock',
+        xp: 80,
+        content: `
+## 线程锁 Lock
+
+当多个线程**同时访问同一个资源**（比如同一个变量），可能会产生冲突。**锁 (Lock)** 用来保证同一时刻只有一个线程能操作这个资源。
+
+\`\`\`python
+from threading import Lock
+
+lock = Lock()
+
+# 加锁：获得资源的独占权
+lock.acquire()
+print(lock.locked())  # True（已锁定）
+
+# 解锁：释放资源
+lock.release()
+print(lock.locked())  # False（已解锁）
+\`\`\`
+
+输出：
+\`\`\`
+True
+False
+\`\`\`
+
+**关键点**：
+- \`acquire()\` 加锁，\`release()\` 解锁
+- \`locked()\` 判断当前是否被锁定
+- 真实场景中，线程会在修改共享数据前 \`acquire()\`，改完再 \`release()\`
+
+### 📝 任务
+创建一个锁，先加锁打印锁定状态，再解锁打印状态。
+
+要求：
+1. \`Lock()\` 创建锁
+2. \`acquire()\` 加锁，\`print(lock.locked())\` 打印状态
+3. \`release()\` 解锁，再次 \`print(lock.locked())\`
+`,
+        contentEn: `
+## Thread Lock
+
+When threads access the same resource, a **Lock** ensures only one thread operates on it at a time.
+
+\`\`\`python
+from threading import Lock
+
+lock = Lock()
+lock.acquire()
+print(lock.locked())  # True
+lock.release()
+print(lock.locked())  # False
+\`\`\`
+
+- \`acquire()\` locks, \`release()\` unlocks
+- \`locked()\` checks the state
+
+### 📝 Task
+Create a lock, acquire it, print the state, release it, print again.
+
+Requirements:
+1. \`Lock()\`
+2. \`acquire()\` then \`print(lock.locked())\`
+3. \`release()\` then \`print(lock.locked())\`
+`,
+        starterCode: '# 线程锁\n\nfrom threading import Lock\n\n# 1. 创建锁\n# 2. acquire() 加锁，打印状态\n# 3. release() 解锁，打印状态',
+        answer: 'from threading import Lock\n\nlock = Lock()\n\nlock.acquire()\nprint(lock.locked())\nlock.release()\nprint(lock.locked())',
+        hints: ['【解释】\n锁的三个方法：acquire() 加锁、release() 解锁、locked() 查状态。\n\n1. lock = Lock() 创建锁\n2. lock.acquire() 加锁\n3. print(lock.locked()) 打印 True\n4. lock.release() 解锁\n5. print(lock.locked()) 打印 False\n\n【代码】\nfrom threading import Lock\nlock = Lock()\nlock.acquire()\nprint(lock.locked())', '【解释】\n加锁后 locked() 返回 True，解锁后返回 False。\n\n【代码】\nfrom threading import Lock\n\nlock = Lock()\n\nlock.acquire()\nprint(lock.locked())\nlock.release()\nprint(lock.locked())\n\n预期输出：\nTrue\nFalse', '【解释】\nThree lock methods: acquire() locks, release() unlocks, locked() checks.\n\n1. lock = Lock() creates a lock\n2. lock.acquire() locks\n3. print(lock.locked()) → True\n4. lock.release() unlocks\n5. print(lock.locked()) → False\n\n【代码】\nfrom threading import Lock\n\nlock = Lock()\n\nlock.acquire()\nprint(lock.locked())\nlock.release()\nprint(lock.locked())\n\nExpected output:\nTrue\nFalse'],
+        testCases: [{ input: '', expected: 'True\nFalse' }]
+      }
+    ]
+  },
+  {
+    id: 'ch26',
+    optional: true,
+    availability: 'in-development',
+    title: 'Chapter 24: 网络编程 Socket',
+    titleEn: 'Chapter 24: Network Programming',
+    description: '让程序通过网络通信',
+    descriptionEn: 'Communicate over the network',
+    icon: '🌐',
+    lessons: [
+      {
+        id: 'ch26_01',
+        title: 'Socket 入门',
+        titleEn: 'Socket Basics',
+        xp: 80,
+        content: `
+## Socket 入门
+
+**Socket（套接字）** 是网络通信的**端点**。任何网络通信（浏览器访问网页、App 发消息）底层都靠 Socket。
+
+通信分两方：
+- **服务器 (Server)**：\`bind\` 绑定地址 → \`listen\` 监听 → \`accept\` 接受连接
+- **客户端 (Client)**：\`connect\` 主动连接
+
+\`\`\`python
+import socket
+
+# 服务器
+server = socket.socket()
+server.bind(("127.0.0.1", 8080))   # 绑定 IP 和端口
+server.listen(1)                    # 开始监听
+conn, addr = server.accept()        # 接受客户端连接
+
+# 客户端
+client = socket.socket()
+client.connect(("127.0.0.1", 8080)) # 连接服务器
+
+# 客户端发送，服务器接收
+client.send("hello")
+data = conn.recv(1024)
+print(data)                          # hello
+
+# 服务器回复，客户端接收
+conn.send("world")
+reply = client.recv(1024)
+print(reply)                         # world
+\`\`\`
+
+**关键点**：
+- \`send(数据)\` 发送，\`recv(大小)\` 接收
+- \`127.0.0.1\` 表示"本机"，8080 是端口号
+
+### 📝 任务
+搭建服务器和客户端，完成一次"hello/world"的往返通信。
+
+要求：
+1. 服务器 bind → listen → accept
+2. 客户端 connect
+3. 客户端 \`send("hello")\`，服务器 \`recv\` 并打印
+4. 服务器 \`send("world")\`，客户端 \`recv\` 并打印
+`,
+        contentEn: `
+## Socket Basics
+
+A **Socket** is an endpoint for network communication.
+
+- **Server**: \`bind\` → \`listen\` → \`accept\`
+- **Client**: \`connect\`
+
+\`\`\`python
+import socket
+
+server = socket.socket()
+server.bind(("127.0.0.1", 8080))
+server.listen(1)
+conn, addr = server.accept()
+
+client = socket.socket()
+client.connect(("127.0.0.1", 8080))
+
+client.send("hello")
+print(conn.recv(1024))   # hello
+
+conn.send("world")
+print(client.recv(1024)) # world
+\`\`\`
+
+- \`send(data)\` sends, \`recv(size)\` receives
+- \`127.0.0.1\` means "this machine", 8080 is the port
+
+### 📝 Task
+Set up a server and client and complete one hello/world round trip.
+
+Requirements:
+1. Server: bind → listen → accept
+2. Client: connect
+3. Client \`send("hello")\`, server \`recv\` and print
+4. Server \`send("world")\`, client \`recv\` and print
+`,
+        starterCode: '# Socket 入门：服务器与客户端通信\n\nimport socket\n\n# 1. 服务器 bind → listen → accept\n# 2. 客户端 connect\n# 3. client.send("hello")，conn.recv 打印\n# 4. conn.send("world")，client.recv 打印',
+        answer: 'import socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nclient.send("hello")\ndata = conn.recv(1024)\nprint(data)\n\nconn.send("world")\nreply = client.recv(1024)\nprint(reply)',
+        hints: ['【解释】\n服务器三步：bind 绑定、listen 监听、accept 接受连接。\n客户端：connect 连接。\n\n1. server.bind(("127.0.0.1", 8080)) 绑定本机端口\n2. server.listen(1) 开始监听\n3. conn, addr = server.accept() 接受连接，得到 conn\n4. client.connect(("127.0.0.1", 8080)) 客户端连接\n\n【代码】\nimport socket\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))', '【解释】\n客户端 send 的数据，服务器用 conn.recv 接收；服务器 conn.send 的数据，客户端 recv 接收。\n\n【代码】\nimport socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nclient.send("hello")\ndata = conn.recv(1024)\nprint(data)\n\nconn.send("world")\nreply = client.recv(1024)\nprint(reply)\n\n预期输出：\nhello\nworld', '【解释】\nServer: bind → listen → accept. Client: connect.\n\n1. server.bind(("127.0.0.1", 8080)) binds to the port\n2. server.listen(1) listens\n3. conn, addr = server.accept() accepts a connection\n4. client.connect(("127.0.0.1", 8080)) connects\n\nClient send → server recv; server send → client recv.\n\n【代码】\nimport socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nclient.send("hello")\ndata = conn.recv(1024)\nprint(data)\n\nconn.send("world")\nreply = client.recv(1024)\nprint(reply)\n\nExpected output:\nhello\nworld'],
+        testCases: [{ input: '', expected: 'hello\nworld' }]
+      },
+      {
+        id: 'ch26_02',
+        title: '客户端与服务器',
+        titleEn: 'Client & Server',
+        xp: 80,
+        content: `
+## 客户端与服务器
+
+理解客户端和服务器的角色很重要：
+
+- **服务器**：一直运行，等待连接，提供服务（像餐厅的后厨）
+- **客户端**：主动发起连接，请求服务（像点餐的客人）
+
+我们来练习**单向发送多条消息**。
+
+\`\`\`python
+import socket
+
+server = socket.socket()
+server.bind(("127.0.0.1", 8080))
+server.listen(1)
+conn, addr = server.accept()
+
+client = socket.socket()
+client.connect(("127.0.0.1", 8080))
+
+# 客户端发送，服务器接收并打印
+client.send("第一条消息")
+print(conn.recv(1024))
+
+conn.send("第二条消息")
+print(client.recv(1024))
+\`\`\`
+
+输出：
+\`\`\`
+第一条消息
+第二条消息
+\`\`\`
+
+### 📝 任务
+完成两次消息收发：先客户端发、服务器收，再服务器发、客户端收。
+
+要求：
+1. 服务器 bind → listen → accept，客户端 connect
+2. \`client.send("第一条消息")\`，\`print(conn.recv(1024))\`
+3. \`conn.send("第二条消息")\`，\`print(client.recv(1024))\`
+`,
+        contentEn: `
+## Client & Server
+
+- **Server**: keeps running, waits for connections, provides services
+- **Client**: actively connects and requests services
+
+\`\`\`python
+client.send("第一条消息")
+print(conn.recv(1024))
+
+conn.send("第二条消息")
+print(client.recv(1024))
+\`\`\`
+
+### 📝 Task
+Complete two message exchanges: client→server, then server→client.
+
+Requirements:
+1. Server bind → listen → accept; client connect
+2. \`client.send("第一条消息")\`, \`print(conn.recv(1024))\`
+3. \`conn.send("第二条消息")\`, \`print(client.recv(1024))\`
+`,
+        starterCode: '# 客户端与服务器通信\n\nimport socket\n\n# 1. 服务器 bind → listen → accept\n# 2. 客户端 connect\n# 3. 客户端发第一条消息，服务器接收打印\n# 4. 服务器发第二条消息，客户端接收打印',
+        answer: 'import socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nclient.send("第一条消息")\nprint(conn.recv(1024))\n\nconn.send("第二条消息")\nprint(client.recv(1024))',
+        hints: ['【解释】\n服务器被动等待，客户端主动连接。\n\n1. server.bind(("127.0.0.1", 8080)) 绑定\n2. server.listen(1) 监听\n3. conn, addr = server.accept() 接受\n4. client.connect(("127.0.0.1", 8080)) 连接\n\n客户端 send，服务器用 conn.recv 接收；反之亦然。\n\n【代码】\nimport socket\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))', '【解释】\n先客户端发消息，服务器接收；再服务器发消息，客户端接收。\n\n【代码】\nimport socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nclient.send("第一条消息")\nprint(conn.recv(1024))\n\nconn.send("第二条消息")\nprint(client.recv(1024))\n\n预期输出：\n第一条消息\n第二条消息', '【解释】\nServer waits passively; client connects actively.\n\n1. server.bind(("127.0.0.1", 8080))\n2. server.listen(1)\n3. conn, addr = server.accept()\n4. client.connect(("127.0.0.1", 8080))\n\nClient send → server recv; server send → client recv.\n\n【代码】\nimport socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nclient.send("第一条消息")\nprint(conn.recv(1024))\n\nconn.send("第二条消息")\nprint(client.recv(1024))\n\nExpected output:\n第一条消息\n第二条消息'],
+        testCases: [{ input: '', expected: '第一条消息\n第二条消息' }]
+      },
+      {
+        id: 'ch26_03',
+        title: '简易聊天',
+        titleEn: 'Mini Chat',
+        xp: 90,
+        content: `
+## 简易聊天
+
+把 Socket 的收发放进**循环**，就能模拟一个简易聊天：客户端发一条消息，服务器收到后回复"收到"。
+
+\`\`\`python
+import socket
+
+server = socket.socket()
+server.bind(("127.0.0.1", 8080))
+server.listen(1)
+conn, addr = server.accept()
+
+client = socket.socket()
+client.connect(("127.0.0.1", 8080))
+
+for msg in ["你好", "在吗", "再见"]:
+    client.send(msg)            # 客户端发送
+    print(conn.recv(1024))      # 服务器收到并打印
+    conn.send("收到")           # 服务器回复
+    print(client.recv(1024))    # 客户端收到回复
+\`\`\`
+
+输出：
+\`\`\`
+你好
+收到
+在吗
+收到
+再见
+收到
+\`\`\`
+
+**关键点**：用 \`for\` 循环重复"发送→接收→回复→接收"的过程。
+
+### 📝 任务
+模拟一个简易聊天，客户端依次发送三条消息，服务器收到并回复"收到"。
+
+要求：
+1. 服务器 bind → listen → accept，客户端 connect
+2. \`for msg in ["你好", "在吗", "再见"]\` 循环
+3. 每次循环：客户端 \`send(msg)\` → 服务器 \`recv\` 打印 → 服务器 \`send("收到")\` → 客户端 \`recv\` 打印
+`,
+        contentEn: `
+## Mini Chat
+
+Put Socket send/receive in a loop to simulate a mini chat.
+
+\`\`\`python
+for msg in ["你好", "在吗", "再见"]:
+    client.send(msg)
+    print(conn.recv(1024))
+    conn.send("收到")
+    print(client.recv(1024))
+\`\`\`
+
+### 📝 Task
+Simulate a mini chat: client sends three messages, server replies "收到" each time.
+
+Requirements:
+1. Server bind → listen → accept; client connect
+2. \`for msg in ["你好", "在吗", "再见"]\`
+3. Each loop: client \`send(msg)\` → server \`recv\` print → server \`send("收到")\` → client \`recv\` print
+`,
+        starterCode: '# 简易聊天\n\nimport socket\n\n# 1. 服务器 bind → listen → accept\n# 2. 客户端 connect\n# 3. for 循环收发消息',
+        answer: 'import socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nfor msg in ["你好", "在吗", "再见"]:\n    client.send(msg)\n    print(conn.recv(1024))\n    conn.send("收到")\n    print(client.recv(1024))',
+        hints: ['【解释】\n把"发送→接收→回复→接收"放进 for 循环，就能连续聊天。\n\n1. 服务器 bind → listen → accept\n2. 客户端 connect\n3. for msg in ["你好", "在吗", "再见"]: 循环\n4. 每次循环：client.send → conn.recv → conn.send → client.recv\n\n【代码】\nimport socket\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))', '【解释】\n循环里按顺序执行四步：客户端发、服务器收、服务器回、客户端收。\n\n【代码】\nimport socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nfor msg in ["你好", "在吗", "再见"]:\n    client.send(msg)\n    print(conn.recv(1024))\n    conn.send("收到")\n    print(client.recv(1024))\n\n预期输出：\n你好\n收到\n在吗\n收到\n再见\n收到', '【解释】\nPut "send → recv → reply → recv" in a loop to chat continuously.\n\n1. Server bind → listen → accept\n2. Client connect\n3. for msg in ["你好", "在吗", "再见"]:\n4. Each loop: client.send → conn.recv → conn.send → client.recv\n\n【代码】\nimport socket\n\nserver = socket.socket()\nserver.bind(("127.0.0.1", 8080))\nserver.listen(1)\nconn, addr = server.accept()\n\nclient = socket.socket()\nclient.connect(("127.0.0.1", 8080))\n\nfor msg in ["你好", "在吗", "再见"]:\n    client.send(msg)\n    print(conn.recv(1024))\n    conn.send("收到")\n    print(client.recv(1024))\n\nExpected output:\n你好\n收到\n在吗\n收到\n再见\n收到'],
+        testCases: [{ input: '', expected: '你好\n收到\n在吗\n收到\n再见\n收到' }]
+      }
+    ]
+  },
+  {
+    id: 'ch27',
+    optional: true,
+    availability: 'in-development',
+    title: 'Chapter 25: 大数据与 PySpark',
+    titleEn: 'Chapter 25: Big Data & PySpark',
+    description: '用分布式思想处理海量数据',
+    descriptionEn: 'Process big data with distributed thinking',
+    icon: '⚡',
+    lessons: [
+      {
+        id: 'ch27_01',
+        title: 'RDD 与 map',
+        titleEn: 'RDD & map',
+        xp: 80,
+        content: `
+## RDD 与 map
+
+当数据大到一台电脑装不下时，就需要**分布式计算**。**PySpark** 是处理大数据的利器，核心思想：把数据分散到多台机器并行处理。
+
+**RDD**（弹性分布式数据集）是 Spark 的数据容器。对 RDD 的操作分两类：
+- **转换 (Transformation)**：\`map\`、\`filter\` 等，返回新的 RDD（惰性）
+- **行动 (Action)**：\`collect\`、\`count\` 等，真正触发计算
+
+\`\`\`python
+from pyspark import SparkContext
+
+sc = SparkContext()
+rdd = sc.parallelize([1, 2, 3, 4, 5])
+
+# map：对每个元素做变换
+result = rdd.map(lambda x: x * 2).collect()
+print(result)   # [2, 4, 6, 8, 10]
+
+print(rdd.count())  # 5
+\`\`\`
+
+**关键点**：
+- \`parallelize(列表)\` 把数据变成 RDD
+- \`map(函数)\` 对每个元素应用函数
+- \`collect()\` 把结果收集回来，\`count()\` 统计个数
+
+### 📝 任务
+创建一个 RDD，用 \`map\` 让每个数字翻倍，打印结果和元素个数。
+
+要求：
+1. \`sc.parallelize([1, 2, 3, 4, 5])\` 创建 RDD
+2. \`rdd.map(lambda x: x * 2).collect()\` 翻倍并收集
+3. 打印结果，再打印 \`rdd.count()\`
+`,
+        contentEn: `
+## RDD & map
+
+When data is too big for one machine, use **distributed computing**. **PySpark** handles big data by splitting work across machines.
+
+**RDD** (Resilient Distributed Dataset) is Spark's data container. Operations:
+- **Transformations**: \`map\`, \`filter\` return new RDDs (lazy)
+- **Actions**: \`collect\`, \`count\` trigger computation
+
+\`\`\`python
+from pyspark import SparkContext
+
+sc = SparkContext()
+rdd = sc.parallelize([1, 2, 3, 4, 5])
+result = rdd.map(lambda x: x * 2).collect()
+print(result)   # [2, 4, 6, 8, 10]
+print(rdd.count())  # 5
+\`\`\`
+
+- \`parallelize(list)\` creates an RDD
+- \`map(func)\` applies a function to each element
+- \`collect()\` gathers results, \`count()\` counts
+
+### 📝 Task
+Create an RDD, double each number with \`map\`, print the result and the count.
+
+Requirements:
+1. \`sc.parallelize([1, 2, 3, 4, 5])\`
+2. \`rdd.map(lambda x: x * 2).collect()\`
+3. Print the result, then \`rdd.count()\`
+`,
+        starterCode: '# RDD 与 map\n\nfrom pyspark import SparkContext\n\n# 1. 创建 SparkContext 和 RDD\n# 2. map 让数字翻倍，collect 收集\n# 3. 打印结果和 count()',
+        answer: 'from pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5])\n\nresult = rdd.map(lambda x: x * 2).collect()\nprint(result)\n\nprint(rdd.count())',
+        hints: ['【解释】\nSpark 三步：创建上下文 → parallelize 数据 → 转换 + 行动。\n\n1. sc = SparkContext() 创建上下文\n2. rdd = sc.parallelize([1, 2, 3, 4, 5]) 数据变 RDD\n3. rdd.map(lambda x: x * 2) 对每个元素翻倍\n4. .collect() 收集结果\n5. rdd.count() 统计元素个数\n\n【代码】\nfrom pyspark import SparkContext\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5])\nresult = rdd.map(lambda x: x * 2).collect()', '【解释】\nmap 是惰性转换，collect 才真正执行并返回列表。\n\n【代码】\nfrom pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5])\n\nresult = rdd.map(lambda x: x * 2).collect()\nprint(result)\n\nprint(rdd.count())\n\n预期输出：\n[2, 4, 6, 8, 10]\n5', '【解释】\nSpark steps: create context → parallelize data → transform + act.\n\n1. sc = SparkContext()\n2. rdd = sc.parallelize([1, 2, 3, 4, 5])\n3. rdd.map(lambda x: x * 2) doubles each element\n4. .collect() gathers results\n5. rdd.count() counts elements\n\n【代码】\nfrom pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5])\n\nresult = rdd.map(lambda x: x * 2).collect()\nprint(result)\n\nprint(rdd.count())\n\nExpected output:\n[2, 4, 6, 8, 10]\n5'],
+        testCases: [{ input: '', expected: '[2, 4, 6, 8, 10]\n5' }]
+      },
+      {
+        id: 'ch27_02',
+        title: 'filter 与 reduce',
+        titleEn: 'filter & reduce',
+        xp: 80,
+        content: `
+## filter 与 reduce
+
+除了 \`map\`，还有两个常用操作：
+
+- **filter**：按条件筛选元素
+- **reduce**：把元素两两合并成一个值（求和、求积等）
+
+\`\`\`python
+from pyspark import SparkContext
+
+sc = SparkContext()
+rdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])
+
+# filter：保留偶数
+even = rdd.filter(lambda x: x % 2 == 0).collect()
+print(even)   # [2, 4, 6, 8]
+
+# reduce：求和
+total = rdd.reduce(lambda a, b: a + b)
+print(total)  # 36
+
+print(rdd.count())  # 8
+\`\`\`
+
+**关键点**：
+- \`filter(lambda x: 条件)\` 保留满足条件的元素
+- \`reduce(lambda a, b: 计算)\` 两两合并，最终得到单一结果
+
+### 📝 任务
+创建一个 RDD，筛选出偶数并打印，再用 \`reduce\` 求和，最后打印元素个数。
+
+要求：
+1. \`sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])\`
+2. \`filter(lambda x: x % 2 == 0)\` 筛偶数并 \`collect()\`
+3. \`reduce(lambda a, b: a + b)\` 求和
+4. 打印 \`rdd.count()\`
+`,
+        contentEn: `
+## filter & reduce
+
+Two more common operations:
+
+- **filter**: keeps elements matching a condition
+- **reduce**: combines elements into a single value
+
+\`\`\`python
+from pyspark import SparkContext
+
+sc = SparkContext()
+rdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])
+
+even = rdd.filter(lambda x: x % 2 == 0).collect()
+print(even)   # [2, 4, 6, 8]
+
+total = rdd.reduce(lambda a, b: a + b)
+print(total)  # 36
+
+print(rdd.count())  # 8
+\`\`\`
+
+### 📝 Task
+Create an RDD, filter even numbers, sum with reduce, and print the count.
+
+Requirements:
+1. \`sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])\`
+2. \`filter(lambda x: x % 2 == 0)\` then \`collect()\`
+3. \`reduce(lambda a, b: a + b)\`
+4. Print \`rdd.count()\`
+`,
+        starterCode: '# filter 与 reduce\n\nfrom pyspark import SparkContext\n\n# 1. 创建 SparkContext 和 RDD\n# 2. filter 筛偶数并 collect\n# 3. reduce 求和\n# 4. 打印 count()',
+        answer: 'from pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])\n\neven = rdd.filter(lambda x: x % 2 == 0).collect()\nprint(even)\n\ntotal = rdd.reduce(lambda a, b: a + b)\nprint(total)\n\nprint(rdd.count())',
+        hints: ['【解释】\nfilter 筛选，reduce 聚合。\n\n1. rdd.filter(lambda x: x % 2 == 0) 保留偶数\n2. .collect() 收集结果\n3. rdd.reduce(lambda a, b: a + b) 两两相加求和\n4. rdd.count() 统计个数\n\n【代码】\nfrom pyspark import SparkContext\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])\neven = rdd.filter(lambda x: x % 2 == 0).collect()', '【解释】\nx % 2 == 0 判断偶数；reduce 把 1+2+...+8 得到 36。\n\n【代码】\nfrom pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])\n\neven = rdd.filter(lambda x: x % 2 == 0).collect()\nprint(even)\n\ntotal = rdd.reduce(lambda a, b: a + b)\nprint(total)\n\nprint(rdd.count())\n\n预期输出：\n[2, 4, 6, 8]\n36\n8', '【解释】\nfilter selects, reduce aggregates.\n\n1. rdd.filter(lambda x: x % 2 == 0) keeps even numbers\n2. .collect() gathers results\n3. rdd.reduce(lambda a, b: a + b) sums them\n4. rdd.count() counts\n\n【代码】\nfrom pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8])\n\neven = rdd.filter(lambda x: x % 2 == 0).collect()\nprint(even)\n\ntotal = rdd.reduce(lambda a, b: a + b)\nprint(total)\n\nprint(rdd.count())\n\nExpected output:\n[2, 4, 6, 8]\n36\n8'],
+        testCases: [{ input: '', expected: '[2, 4, 6, 8]\n36\n8' }]
+      },
+      {
+        id: 'ch27_03',
+        title: '综合练习',
+        titleEn: 'Combined Practice',
+        xp: 90,
+        content: `
+## 综合练习：链式操作
+
+真实的大数据任务往往是**多个操作串在一起**（链式调用）。比如：先筛选，再变换，最后收集。
+
+\`\`\`python
+from pyspark import SparkContext
+
+sc = SparkContext()
+rdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+
+# 链式：先筛偶数，再求平方
+result = rdd.filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()
+print(result)   # [4, 16, 36, 64, 100]
+
+# 求和
+print(rdd.reduce(lambda a, b: a + b))  # 55
+\`\`\`
+
+**链式调用**：上一个操作的返回值，直接调用下一个操作，代码读起来像一条流水线。
+
+### 📝 任务
+对 1 到 10 的 RDD 做链式操作：筛偶数 → 求平方 → 收集，再打印总和。
+
+要求：
+1. \`sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\`
+2. \`filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()\`
+3. 打印结果，再打印 \`rdd.reduce(lambda a, b: a + b)\`
+`,
+        contentEn: `
+## Combined Practice: Chaining
+
+Real big-data tasks chain multiple operations: filter, then transform, then collect.
+
+\`\`\`python
+sc = SparkContext()
+rdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+
+result = rdd.filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()
+print(result)   # [4, 16, 36, 64, 100]
+
+print(rdd.reduce(lambda a, b: a + b))  # 55
+\`\`\`
+
+### 📝 Task
+Chain filter → map → collect on 1..10, then print the sum.
+
+Requirements:
+1. \`sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\`
+2. \`filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()\`
+3. Print the result, then \`rdd.reduce(lambda a, b: a + b)\`
+`,
+        starterCode: '# 链式操作：filter → map → collect\n\nfrom pyspark import SparkContext\n\n# 1. 创建 SparkContext 和 RDD\n# 2. 链式：filter 偶数 → map 平方 → collect\n# 3. 打印结果和 reduce 求和',
+        answer: 'from pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\n\nresult = rdd.filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()\nprint(result)\n\nprint(rdd.reduce(lambda a, b: a + b))',
+        hints: ['【解释】\n链式调用：一个操作的结果直接接下一个操作。\n\n1. rdd.filter(lambda x: x % 2 == 0) 筛偶数\n2. .map(lambda x: x * x) 求平方\n3. .collect() 收集结果\n4. rdd.reduce(lambda a, b: a + b) 求和\n\n【代码】\nfrom pyspark import SparkContext\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\nresult = rdd.filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()', '【解释】\n偶数 2,4,6,8,10 的平方是 4,16,36,64,100；1+...+10 = 55。\n\n【代码】\nfrom pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\n\nresult = rdd.filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()\nprint(result)\n\nprint(rdd.reduce(lambda a, b: a + b))\n\n预期输出：\n[4, 16, 36, 64, 100]\n55', '【解释】\nChaining: one operation\'s result feeds the next.\n\n1. rdd.filter(lambda x: x % 2 == 0) keeps evens\n2. .map(lambda x: x * x) squares them\n3. .collect() gathers results\n4. rdd.reduce(lambda a, b: a + b) sums\n\n【代码】\nfrom pyspark import SparkContext\n\nsc = SparkContext()\nrdd = sc.parallelize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\n\nresult = rdd.filter(lambda x: x % 2 == 0).map(lambda x: x * x).collect()\nprint(result)\n\nprint(rdd.reduce(lambda a, b: a + b))\n\nExpected output:\n[4, 16, 36, 64, 100]\n55'],
+        testCases: [{ input: '', expected: '[4, 16, 36, 64, 100]\n55' }]
+      }
+    ]
+  },
+  {
+    id: 'ch9',
+    title: '最终项目',
+    titleEn: 'Final Project',
+    description: '综合运用所学知识构建项目',
+    descriptionEn: 'Build projects using everything you learned',
+    icon: '🏆',
+    lessons: [
+      {
+        id: 'ch9_01',
+        title: '猜数字游戏',
+        titleEn: 'Number Guessing Game',
+        xp: 200,
+        content: `
+## 猜数字游戏
+
+恭喜你走到了这里！让我们做一个完整的猜数字游戏。
+
+游戏规则：
+1. 程序设定一个 1-100 的秘密数字
+2. 玩家猜数字，程序提示"高了"或"低了"
+3. 猜中后显示猜的次数
+
+\`\`\`python
+import random
+
+secret = random.randint(1, 100)
+guess = 0
+attempts = 0
+
+while guess != secret:
+    guess = int(input("猜一个数字(1-100): "))
+    attempts += 1
+    if guess < secret:
+        print("低了！")
+    elif guess > secret:
+        print("高了！")
+
+print(f"恭喜！你猜了{attempts}次！")
+\`\`\`
+
+### 📝 挑战
+用 \`while\` 循环实现猜数字游戏。先创建 \`secret = 42\`（简化版），然后让用户猜，直到猜对为止。
+
+> 💡 **完整代码：**
+>
+> \`\`\`python
+> secret = 42
+> guess = 0
+> attempts = 0
+>
+> while guess != secret:
+>     guess = int(input("猜一个数字(1-100): "))
+>     attempts += 1
+>     if guess < secret:
+>         print("低了！")
+>     elif guess > secret:
+>         print("高了！")
+>
+> print(f"恭喜！你猜了{attempts}次！")
+> \`\`\`
+>
+> 缩进规则：
+> \`\`\`
+> while guess != secret:     ← 不缩进
+>     ...                     ← 缩进 4 格（属于 while）
+>     ...                     ← 缩进 4 格
+>                             ← while 结束
+> print(...)                  ← 不缩进（和 while 对齐，在循环外面）
+> \`\`\`
+`,
+        contentEn: `
+## Number Guessing Game
+
+Congratulations on making it this far! Let's build a complete number guessing game.
+
+### 📝 Challenge
+Implement a number guessing game. Create \`secret = 42\`, let user guess until correct.
+
+> 💡 Hint: Plan your loop condition first (when to stop), then inside the loop: read input, compare, count attempts.
+`,
+        starterCode: '',
+        answer: 'secret = 42\nguess = 0\nattempts = 0\n\nwhile guess != secret:\n    guess = int(input("猜一个数字(1-100): "))\n    attempts += 1\n    if guess < secret:\n        print("低了！")\n    elif guess > secret:\n        print("高了！")\n\nprint(f"恭喜！你猜了{attempts}次！")',
+        hints: [
+          '先定义 secret = 42，再初始化 guess = 0 和 attempts = 0',
+          'First define secret = 42, then init guess = 0 and attempts = 0',
+          '用 while guess != secret: 做循环条件，注意冒号和缩进',
+          'Use while guess != secret: as loop condition, watch colon and indent',
+          '循环内用 int(input("猜一个数字(1-100): ")) 获取玩家输入，每次 attempts += 1',
+          'Use int(input("Guess (1-100): ")) inside loop, increment attempts',
+          '用 if guess < secret 提示"低了！"，elif guess > secret 提示"高了！"',
+          'Use if guess < secret for "Too low", elif guess > secret for "Too high"',
+          '循环结束后用 f-string 打印 print(f"恭喜！你猜了{attempts}次！")',
+          'After loop, use f-string: print(f"You got it in {attempts} tries!")'
+        ],
+        testCases: [
+          { input: '50\n42', expected: '猜一个数字(1-100): 高了！\n猜一个数字(1-100): 恭喜！你猜了2次！' },
+          { input: '30\n42', expected: '猜一个数字(1-100): 低了！\n猜一个数字(1-100): 恭喜！你猜了2次！' },
+          { input: '42', expected: '猜一个数字(1-100): 恭喜！你猜了1次！' }
+        ]
+      },
+      {
+        id: 'ch9_02',
+        title: '毕业项目',
+        titleEn: 'Graduation Project',
+        xp: 200,
+        content: `
+## 🏆 毕业项目：简单计算器
+
+创建自己的函数库！用学过的函数知识，实现一个简单计算器。
+
+### 📝 最终挑战
+
+定义以下四个函数，每个都接收 \`a\` 和 \`b\` 两个参数：
+1. \`add(a, b)\` - 返回 a + b
+2. \`sub(a, b)\` - 返回 a - b
+3. \`mul(a, b)\` - 返回 a * b
+4. \`div(a, b)\` - 返回 a / b（如果 b=0，返回 "Error"）
+
+然后依次用 \`a=10, b=5\` 调用它们并打印结果。
+
+> 🎉 完成后恭喜你毕业了！
+`,
+        contentEn: `
+## 🏆 Graduation Project: Simple Calculator
+
+Create your own function library! Use what you've learned about functions.
+
+### 📝 Final Challenge
+
+Define four functions:
+1. \`add(a, b)\` - return a + b
+2. \`sub(a, b)\` - return a - b
+3. \`mul(a, b)\` - return a * b
+4. \`div(a, b)\` - return a / b (if b=0, return "Error")
+
+Then call them with \`a=10, b=5\` and print results.
+
+> 🎉 Complete this to graduate!
+`,
+        starterCode: '',
+        answer: 'def add(a, b):\n    return a + b\n\ndef sub(a, b):\n    return a - b\n\ndef mul(a, b):\n    return a * b\n\ndef div(a, b):\n    if b == 0:\n        return "Error"\n    return a / b\n\nprint(add(10, 5))\nprint(sub(10, 5))\nprint(mul(10, 5))\nprint(div(10, 5))',
+        hints: ['定义所有4个函数', 'Define all 4 functions', 'div 函数要处理 b=0', 'div needs to handle b=0'],
+        testCases: [{ input: '', expected: '15\n5\n50\n2.0' }]
+      }
+    ]
   }
 ];
+
+export const CHAPTERS = prepareCurriculum(RAW_CHAPTERS);
