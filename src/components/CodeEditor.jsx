@@ -64,9 +64,13 @@ const pythonTheme = EditorView.theme({
   '.ͼ1 .cm-propertyName': { color: '#00d4ff' },
 });
 
-const CodeEditor = forwardRef(function CodeEditor({ initialCode = '', onRun }, ref) {
+const CodeEditor = forwardRef(function CodeEditor({ initialCode = '', onRun, onChange }, ref) {
   const containerRef = useRef(null);
   const editorViewRef = useRef(null);
+  const onRunRef = useRef(onRun);
+  const onChangeRef = useRef(onChange);
+  onRunRef.current = onRun;
+  onChangeRef.current = onChange;
 
   useImperativeHandle(ref, () => ({
     getCode: () => editorViewRef.current?.state.doc.toString() || '',
@@ -84,9 +88,12 @@ const CodeEditor = forwardRef(function CodeEditor({ initialCode = '', onRun }, r
     if (!containerRef.current) return;
 
     const runKeymap = keymap.of([
-      { key: 'Ctrl-Enter', run: () => { onRun?.(); return true; } },
-      { key: 'Cmd-Enter', run: () => { onRun?.(); return true; } },
+      { key: 'Ctrl-Enter', run: () => { onRunRef.current?.(); return true; } },
+      { key: 'Cmd-Enter', run: () => { onRunRef.current?.(); return true; } },
     ]);
+    const notifyChanges = EditorView.updateListener.of(update => {
+      if (update.docChanged) onChangeRef.current?.(update.state.doc.toString());
+    });
 
     const state = EditorState.create({
       doc: initialCode || '',
@@ -96,6 +103,7 @@ const CodeEditor = forwardRef(function CodeEditor({ initialCode = '', onRun }, r
         oneDark,
         codedexTheme,
         pythonTheme,
+        notifyChanges,
         runKeymap,
         keymap.of([indentWithTab, ...defaultKeymap]),
         EditorState.tabSize.of(4),
@@ -104,7 +112,7 @@ const CodeEditor = forwardRef(function CodeEditor({ initialCode = '', onRun }, r
     });
 
     editorViewRef.current = new EditorView({ state, parent: containerRef.current });
-  }, [initialCode, onRun]);
+  }, [initialCode]);
 
   useEffect(() => {
     setupEditor();
