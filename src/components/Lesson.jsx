@@ -7,6 +7,7 @@ import { renderLessonMarkdown } from '../utils/lessonMarkdown';
 import { buildLessonResultView } from '../utils/lessonResultView';
 import { createLessonRunGuard } from '../utils/lessonRunGuard';
 import { createCodeDraftSaver } from '../utils/codeDraftSaver';
+import { runLearningStorageTransaction } from '../utils/learningStorageTransaction';
 import {
   getGraduationProgress,
   getNextDestination,
@@ -30,7 +31,7 @@ export default function Lesson() {
   const editorRef = useRef(null);
   const [lessonData, setLessonData] = useState(null);
   const [isFirstTry, setIsFirstTry] = useState(true);
-  const [currentBadge, setCurrentBadge] = useState(null);
+  const [badgeQueue, setBadgeQueue] = useState([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -46,6 +47,7 @@ export default function Lesson() {
   const addToastRef = useRef(addToast);
   langRef.current = lang;
   addToastRef.current = addToast;
+  const currentBadge = badgeQueue[0] || null;
 
   if (!draftSaverRef.current) {
     draftSaverRef.current = createCodeDraftSaver({
@@ -308,11 +310,71 @@ export default function Lesson() {
       bonusText += ` (${lang === 'zh' ? '连续学习奖励' : 'Streak Bonus'} +${streakBonus})`;
     }
 
-    STORAGE.completeLesson(ch.id, les.id, xpEarned, isFirstTry);
-    if (isFirstTry) STORAGE.markPerfect(les.id);
-    STORAGE.initReviewForLesson(ch.id, les.id);
+    let newBadges = [];
+    try {
+      runLearningStorageTransaction({
+        keys: [
+          STORAGE.KEYS.PROGRESS,
+          STORAGE.KEYS.STREAK,
+          STORAGE.KEYS.DAILY_COUNT,
+          STORAGE.KEYS.DAILY_DATE,
+          STORAGE.KEYS.PERFECT,
+          STORAGE.KEYS.REVIEW,
+          STORAGE.KEYS.BADGES,
+        ],
+      }, () => {
+        STORAGE.completeLesson(ch.id, les.id, xpEarned, isFirstTry);
+        if (isFirstTry) STORAGE.markPerfect(les.id);
+        STORAGE.initReviewForLesson(ch.id, les.id);
+
+        const totalXp = STORAGE.getTotalXp();
+        const progress = STORAGE.getProgress();
+        const graduation = getGraduationProgress(CHAPTERS, progress);
+        const requiredChapters = getRequiredChapters(CHAPTERS);
+        const oldBadges = STORAGE.getBadges();
+        const currentStreak = STORAGE.getStreak();
+        const perfectLessons = STORAGE.getPerfectCount();
+        const completedPerChapter = STORAGE.getCompletedPerChapter();
+        let completedChapters = 0;
+        requiredChapters.forEach(requiredChapter => {
+          if ((completedPerChapter[requiredChapter.id] || 0) >= requiredChapter.lessons.length) {
+            completedChapters += 1;
+          }
+        });
+        const stats = {
+          xp: totalXp,
+          completedLessons: graduation.completed,
+          completedChapters,
+          totalLessons: graduation.totalLessons,
+          badges: oldBadges.length,
+          streak: currentStreak,
+          perfectLessons,
+          fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0,
+        };
+        newBadges = GAMIFICATION.checkNewBadges(stats, oldBadges);
+        if (newBadges.length > 0) {
+          STORAGE.saveBadges([
+            ...new Set([...oldBadges, ...newBadges.map(badge => badge.id)]),
+          ]);
+        }
+      });
+    } catch {
+      addToast(
+        'error',
+        '💾',
+        lang === 'zh'
+          ? '保存失败，代码仍然保留，请重试。'
+          : 'Save failed. Your code is still here; try again.',
+      );
+      return;
+    }
+
     draftSaverRef.current?.discard();
-    STORAGE.clearCode(les.id);
+    try {
+      STORAGE.clearCode(les.id);
+    } catch {
+      // Completion is already safe; retaining a stale draft is harmless.
+    }
 
     setCompleted(true);
     setShowConfetti(true);
@@ -320,28 +382,9 @@ export default function Lesson() {
 
     addToast('xp', '⭐', `+${xpEarned} XP${bonusText}`, les.title);
 
-    const stats = (() => {
-      const totalXp = STORAGE.getTotalXp();
-      const progress = STORAGE.getProgress();
-      const graduation = getGraduationProgress(CHAPTERS, progress);
-      const requiredChapters = getRequiredChapters(CHAPTERS);
-      const b = STORAGE.getBadges();
-      const s = STORAGE.getStreak();
-      const p = STORAGE.getPerfectCount();
-      const cpc = STORAGE.getCompletedPerChapter();
-      let fcc = 0;
-      requiredChapters.forEach(ch2 => { if ((cpc[ch2.id] || 0) >= ch2.lessons.length) fcc++; });
-      return { xp: totalXp, completedLessons: graduation.completed, completedChapters: fcc, totalLessons: graduation.totalLessons, badges: b.length, streak: s, perfectLessons: p, fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0 };
-    })();
-
-    const oldBadges = STORAGE.getBadges();
-    const newBadges = GAMIFICATION.checkNewBadges(stats, oldBadges);
     if (newBadges.length > 0) {
       setTimeout(() => {
-        newBadges.forEach(badge => {
-          STORAGE.saveBadges([...oldBadges, badge.id]);
-          setCurrentBadge(badge);
-        });
+        setBadgeQueue(queue => [...queue, ...newBadges]);
       }, 800);
     }
 
@@ -349,13 +392,58 @@ export default function Lesson() {
   };
 
   const onReviewComplete = (les, ch) => {
-    STORAGE.recordReviewResult(les.id, true);
-    STORAGE.updateStreak();
-    STORAGE.updateDailyCount();
+    let stage;
+    let xpEarned;
+    let newBadges = [];
+    try {
+      runLearningStorageTransaction({
+        keys: [
+          STORAGE.KEYS.REVIEW,
+          STORAGE.KEYS.STREAK,
+          STORAGE.KEYS.DAILY_COUNT,
+          STORAGE.KEYS.DAILY_DATE,
+          STORAGE.KEYS.REVIEW_XP,
+          STORAGE.KEYS.BADGES,
+        ],
+      }, () => {
+        STORAGE.recordReviewResult(les.id, true);
+        STORAGE.updateStreak();
+        STORAGE.updateDailyCount();
 
-    const stage = STORAGE.getLessonReviewStage(les.id);
-    const xpEarned = STORAGE.BASE_REVIEW_XP + stage.stage * STORAGE.STAGE_REVIEW_XP_BONUS;
-    STORAGE.addReviewXp(xpEarned);
+        stage = STORAGE.getLessonReviewStage(les.id);
+        xpEarned = STORAGE.BASE_REVIEW_XP + stage.stage * STORAGE.STAGE_REVIEW_XP_BONUS;
+        STORAGE.addReviewXp(xpEarned);
+
+        const totalReviews = STORAGE.getTotalReviewsCompleted();
+        const oldBadges = STORAGE.getBadges();
+        const graduation = getGraduationProgress(CHAPTERS, STORAGE.getProgress());
+        const stats = {
+          reviewsCompleted: totalReviews,
+          xp: STORAGE.getTotalXp(),
+          completedLessons: graduation.completed,
+          completedChapters: 0,
+          totalLessons: graduation.totalLessons,
+          streak: STORAGE.getStreak(),
+          perfectLessons: STORAGE.getPerfectCount(),
+          fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0,
+        };
+        newBadges = GAMIFICATION.checkNewBadges(stats, oldBadges);
+        if (newBadges.length > 0) {
+          STORAGE.saveBadges([
+            ...new Set([...oldBadges, ...newBadges.map(badge => badge.id)]),
+          ]);
+        }
+      });
+    } catch {
+      addToast(
+        'error',
+        '💾',
+        lang === 'zh'
+          ? '复习结果保存失败，请重试。'
+          : 'The review result could not be saved. Please try again.',
+      );
+      return;
+    }
 
     const total = STORAGE.REVIEW_INTERVALS.length;
     const chain = pageData?.reviewChain;
@@ -375,26 +463,9 @@ export default function Lesson() {
       );
     }
 
-    const totalReviews = STORAGE.getTotalReviewsCompleted();
-    const oldBadges = STORAGE.getBadges();
-    const graduation = getGraduationProgress(CHAPTERS, STORAGE.getProgress());
-    const stats = {
-      reviewsCompleted: totalReviews,
-      xp: STORAGE.getTotalXp(),
-      completedLessons: graduation.completed,
-      completedChapters: 0,
-      totalLessons: graduation.totalLessons,
-      streak: STORAGE.getStreak(),
-      perfectLessons: STORAGE.getPerfectCount(),
-      fastLearnerDays: STORAGE.checkFastLearnerDay() ? 1 : 0
-    };
-    const newBadges = GAMIFICATION.checkNewBadges(stats, oldBadges);
     if (newBadges.length > 0) {
       setTimeout(() => {
-        newBadges.forEach(badge => {
-          STORAGE.saveBadges([...STORAGE.getBadges(), badge.id]);
-          setCurrentBadge(badge);
-        });
+        setBadgeQueue(queue => [...queue, ...newBadges]);
       }, 800);
     }
 
@@ -612,7 +683,11 @@ export default function Lesson() {
         </div>
       </div>
       {showConfetti && <Confetti />}
-      <BadgeModal badge={currentBadge} lang={lang} onClose={() => setCurrentBadge(null)} />
+      <BadgeModal
+        badge={currentBadge}
+        lang={lang}
+        onClose={() => setBadgeQueue(queue => queue.slice(1))}
+      />
     </div>
   );
 }

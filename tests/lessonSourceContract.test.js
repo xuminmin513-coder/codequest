@@ -118,3 +118,13 @@ test('Lesson exposes preparation, recovery, and retry states without adding a se
   assert.match(lessonSource, /重新准备/);
   assert.equal((lessonSource.match(/lesson-primary-action/g) || []).length, 1);
 });
+
+test('Lesson rolls back failed completion writes and queues every earned badge', () => {
+  assert.match(lessonSource, /import \{ runLearningStorageTransaction \}/);
+  assert.match(lessonSource, /runLearningStorageTransaction\(/);
+  assert.match(lessonSource, /const \[badgeQueue, setBadgeQueue\] = useState\(\[\]\)/);
+  assert.match(lessonSource, /const currentBadge = badgeQueue\[0\] \|\| null/);
+  assert.match(lessonSource, /new Set\(\[\.\.\.oldBadges, \.\.\.newBadges\.map/);
+  assert.match(lessonSource, /setBadgeQueue\(queue => queue\.slice\(1\)\)/);
+  assert.doesNotMatch(lessonSource, /newBadges\.forEach\([\s\S]*?saveBadges/);
+});
