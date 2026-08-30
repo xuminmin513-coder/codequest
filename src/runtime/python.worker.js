@@ -8,6 +8,7 @@ import {
   PROTOCOL_VERSION,
   validateRunRequest,
 } from './pythonProtocol.js';
+import { resetExecutionEnvironment } from './pythonEnvironment.js';
 
 const safeJsGlobals = Object.freeze(Object.create(null));
 const indexURL = new URL('./pyodide/', self.location.href).href;
@@ -65,31 +66,23 @@ const pyodideReady = loadPyodide({
   stderr: () => {},
 });
 
-function removeTree(FS, target) {
-  const stat = FS.stat(target);
-  if (!FS.isDir(stat.mode)) {
-    FS.unlink(target);
-    return;
-  }
-  for (const name of FS.readdir(target)) {
-    if (name === '.' || name === '..') continue;
-    removeTree(FS, `${target}/${name}`);
-  }
-  FS.rmdir(target);
-}
-
-function clearWorkspace(pyodide) {
-  const root = '/home/pyodide';
-  for (const name of pyodide.FS.readdir(root)) {
-    if (name === '.' || name === '..') continue;
-    removeTree(pyodide.FS, `${root}/${name}`);
-  }
-}
-
 function boundedMessage(error) {
   const message = error?.message || String(error);
   return message.slice(0, LIMITS.output);
 }
+
+pyodideReady.then(
+  () => self.postMessage({
+    version: PROTOCOL_VERSION,
+    type: 'runtime_ready',
+    error: null,
+  }),
+  error => self.postMessage({
+    version: PROTOCOL_VERSION,
+    type: 'runtime_init_error',
+    error: boundedMessage(error),
+  }),
+);
 
 self.addEventListener('message', async event => {
   const checked = validateRunRequest(event.data);
@@ -105,10 +98,11 @@ self.addEventListener('message', async event => {
     error: null,
   };
 
+  let pyodide;
   let globals;
   try {
-    const pyodide = await pyodideReady;
-    clearWorkspace(pyodide);
+    pyodide = await pyodideReady;
+    resetExecutionEnvironment(pyodide);
 
     let output = '';
     let outputExceeded = false;
@@ -144,12 +138,19 @@ self.addEventListener('message', async event => {
       response.status = 'output_limit';
       response.error = 'Program output exceeded the safe limit';
     }
-    clearWorkspace(pyodide);
   } catch (error) {
     response.status = 'runtime_error';
     response.error = boundedMessage(error);
   } finally {
     globals?.destroy?.();
+    if (pyodide) {
+      try {
+        resetExecutionEnvironment(pyodide);
+      } catch (error) {
+        response.status = 'worker_crash';
+        response.error = boundedMessage(error);
+      }
+    }
   }
 
   self.postMessage(response);

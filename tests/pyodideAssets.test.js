@@ -41,6 +41,15 @@ test('worker uses bundled Pyodide without package or CDN downloads', () => {
   assert.doesNotMatch(source, /https?:\/\/|loadPackagesFromImports|micropip/);
 });
 
+test('worker announces readiness and resets every execution in finally', () => {
+  const source = read('src/runtime/python.worker.js');
+  assert.match(source, /type:\s*'runtime_ready'/);
+  assert.match(source, /type:\s*'runtime_init_error'/);
+  assert.match(source, /pyodideReady\.then/);
+  assert.match(source, /resetExecutionEnvironment\(pyodide\)/);
+  assert.match(source, /finally\s*\{[\s\S]*resetExecutionEnvironment\(pyodide\)/);
+});
+
 test('Vite removes custom-protocol-incompatible crossorigin attributes', () => {
   const source = read('vite.config.js');
   assert.match(source, /transformIndexHtml/);

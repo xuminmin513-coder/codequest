@@ -111,7 +111,10 @@ export function createPythonRunner({
     const validated = validateWorkerResult(event.data, active.runId, active.capability);
     if (!validated.ok) return;
     const value = validated.value;
-    settleActive(result(value.status, value.error, value.output));
+    settleActive(
+      result(value.status, value.error, value.output),
+      value.status === 'worker_crash',
+    );
   }
 
   function handleError() {

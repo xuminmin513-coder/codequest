@@ -228,6 +228,23 @@ test('worker errors fail closed during preparation and execution', async () => {
   assert.equal(runningHarness.workers[0].terminated, true);
 });
 
+test('worker-reported crash results terminate the polluted runtime', async () => {
+  const harness = createHarness();
+  await prepareHarness(harness);
+  const running = harness.runner.run('print(1)');
+  const request = harness.workers[0].messages[0];
+  harness.workers[0].emit('message', validResult(
+    request,
+    '',
+    'worker_crash',
+    'Python environment reset failed',
+  ));
+
+  assert.equal((await running).status, 'worker_crash');
+  assert.equal(harness.workers[0].terminated, true);
+  assert.equal(harness.runner.getState(), 'failed');
+});
+
 test('dispose stops current work and rejects future preparation or execution', async () => {
   const harness = createHarness();
   const preparing = harness.runner.prepare();

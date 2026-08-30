@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPyodide } from 'pyodide';
 import { CHAPTERS } from '../src/data/courses.js';
+import { resetExecutionEnvironment } from '../src/runtime/pythonEnvironment.js';
 import { getLessonRuntimeMode } from '../src/runtime/runtimePolicy.js';
 import { judgeLesson } from '../src/utils/lessonJudge.js';
 
@@ -73,4 +74,56 @@ test('every runnable maintained answer passes its public tests', { timeout: 1200
   }
 
   assert.deepEqual(failures, []);
+});
+
+test('warm real-Python executions isolate globals, files, directories, input, and output', { timeout: 30000 }, async () => {
+  const pyodide = await loadPyodide();
+
+  const execute = async (code, input = '') => {
+    resetExecutionEnvironment(pyodide);
+    let output = '';
+    const inputLines = input.replace(/\r\n?/g, '\n').split('\n');
+    let inputIndex = 0;
+    pyodide.setStdin({
+      stdin: () => (inputIndex < inputLines.length ? inputLines[inputIndex++] : null),
+      autoEOF: true,
+    });
+    pyodide.setStdout({ batched: value => { output += `${value}\n`; } });
+    pyodide.setStderr({ batched: value => { output += `${value}\n`; } });
+    const globals = pyodide.globals.get('dict')();
+    globals.set('__name__', '__main__');
+    try {
+      await pyodide.runPythonAsync(code, { globals, filename: '<student>' });
+      return { output, error: null };
+    } catch (error) {
+      return { output, error: error?.message || String(error) };
+    } finally {
+      globals.destroy();
+      resetExecutionEnvironment(pyodide);
+    }
+  };
+
+  const first = await execute([
+    'leaked = 42',
+    'import os',
+    'os.mkdir("nested")',
+    'os.chdir("nested")',
+    'open("left.txt", "w").write("old")',
+    'print("FIRST_ONLY")',
+    'raise RuntimeError("expected failure")',
+  ].join('\n'), 'old input');
+  assert.match(first.output, /FIRST_ONLY/);
+  assert.match(first.error, /expected failure/);
+
+  const second = await execute([
+    'import os',
+    'print("leaked" in globals())',
+    'print(os.getcwd())',
+    'print(os.path.exists("nested/left.txt"))',
+    'print(input())',
+  ].join('\n'), 'fresh input');
+
+  assert.equal(second.error, null);
+  assert.equal(second.output, 'False\n/home/pyodide\nFalse\nfresh input\n');
+  assert.doesNotMatch(second.output, /FIRST_ONLY|old input/);
 });
