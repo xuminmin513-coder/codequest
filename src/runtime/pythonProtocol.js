@@ -7,6 +7,9 @@ export const LIMITS = Object.freeze({
   timeoutDefault: 5000,
   timeoutMin: 250,
   timeoutMax: 10000,
+  prepareTimeoutDefault: 15000,
+  prepareTimeoutMin: 1000,
+  prepareTimeoutMax: 60000,
 });
 
 export const RUN_STATUSES = Object.freeze([
@@ -22,6 +25,8 @@ export const RUN_STATUSES = Object.freeze([
 
 const REQUEST_KEYS = Object.freeze(['capability', 'code', 'input', 'runId', 'version']);
 const RESULT_KEYS = Object.freeze(['capability', 'error', 'output', 'runId', 'status', 'version']);
+const LIFECYCLE_KEYS = Object.freeze(['error', 'type', 'version']);
+const LIFECYCLE_TYPES = new Set(['runtime_ready', 'runtime_init_error']);
 const STATUS_SET = new Set(RUN_STATUSES);
 
 function hasExactKeys(value, expected) {
@@ -44,6 +49,18 @@ export function validateRunRequest(value) {
   if (!isNonEmptyBoundedString(value.runId) || !isNonEmptyBoundedString(value.capability)) return invalid();
   if (typeof value.code !== 'string' || value.code.length > LIMITS.code) return invalid();
   if (typeof value.input !== 'string' || value.input.length > LIMITS.input) return invalid();
+  return { ok: true, value };
+}
+
+export function validateRuntimeLifecycle(value) {
+  if (!hasExactKeys(value, LIFECYCLE_KEYS)) return invalid();
+  if (value.version !== PROTOCOL_VERSION || !LIFECYCLE_TYPES.has(value.type)) return invalid();
+  if (value.type === 'runtime_ready' && value.error !== null) return invalid();
+  if (value.type === 'runtime_init_error') {
+    if (typeof value.error !== 'string' || value.error.length < 1 || value.error.length > LIMITS.output) {
+      return invalid();
+    }
+  }
   return { ok: true, value };
 }
 

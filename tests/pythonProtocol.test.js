@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LIMITS,
+  validateRuntimeLifecycle,
   validateRunRequest,
   validateWorkerResult,
 } from '../src/runtime/pythonProtocol.js';
@@ -59,4 +60,33 @@ test('worker result rejects unknown statuses, fields, and oversized output', () 
     ).ok,
     false,
   );
+});
+
+test('runtime lifecycle accepts only bounded ready and initialization errors', () => {
+  assert.equal(validateRuntimeLifecycle({
+    version: 1,
+    type: 'runtime_ready',
+    error: null,
+  }).ok, true);
+  assert.equal(validateRuntimeLifecycle({
+    version: 1,
+    type: 'runtime_init_error',
+    error: 'Wasm initialization failed',
+  }).ok, true);
+  assert.equal(validateRuntimeLifecycle({
+    version: 2,
+    type: 'runtime_ready',
+    error: null,
+  }).ok, false);
+  assert.equal(validateRuntimeLifecycle({
+    version: 1,
+    type: 'runtime_ready',
+    error: null,
+    extra: true,
+  }).ok, false);
+  assert.equal(validateRuntimeLifecycle({
+    version: 1,
+    type: 'runtime_init_error',
+    error: 'x'.repeat(LIMITS.output + 1),
+  }).ok, false);
 });
