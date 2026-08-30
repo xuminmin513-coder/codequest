@@ -188,9 +188,17 @@ test('XM²code keeps the approved desktop and mobile learning layout', { timeout
     assert.equal(await nextAction.count(), 1);
 
     const badgeDialog = page.getByRole('dialog', { name: '新徽章解锁！' });
-    if (await badgeDialog.isVisible()) {
-      await badgeDialog.getByRole('button', { name: '太棒了！' }).click();
-    }
+    await badgeDialog.waitFor({ timeout: 5000 });
+    const firstBadgeName = (await badgeDialog.locator('p').first().textContent())?.trim();
+    await badgeDialog.getByRole('button', { name: '太棒了！' }).click();
+    await page.waitForFunction(previousName => {
+      const currentName = document.querySelector('[role="dialog"] p')?.textContent?.trim();
+      return Boolean(currentName && currentName !== previousName);
+    }, firstBadgeName);
+    const secondBadgeName = (await badgeDialog.locator('p').first().textContent())?.trim();
+    assert.notEqual(secondBadgeName, firstBadgeName);
+    await badgeDialog.getByRole('button', { name: '太棒了！' }).click();
+    await badgeDialog.waitFor({ state: 'detached' });
     await page.getByRole('tab', { name: '运行输出' }).click();
     await page.locator('.lesson-program-output').filter({ hasText: 'Hello, World!' }).waitFor();
 
@@ -259,6 +267,126 @@ test('XM²code keeps the approved desktop and mobile learning layout', { timeout
     assert.ok(mobileLayout.runButton.left >= mobileLayout.editor.left && mobileLayout.runButton.right <= mobileLayout.editor.right && mobileLayout.runButton.top >= mobileLayout.editor.top && mobileLayout.runButton.bottom <= mobileLayout.editor.bottom, JSON.stringify(mobileLayout));
     assert.ok(mobileLayout.footer.left >= mobileLayout.editor.left && mobileLayout.footer.right <= mobileLayout.editor.right && mobileLayout.footer.top >= mobileLayout.wrapper.bottom - 0.5 && mobileLayout.footer.bottom <= mobileLayout.editor.bottom, JSON.stringify(mobileLayout));
     assert.ok(mobileLayout.runButton.left >= mobileLayout.footer.left && mobileLayout.runButton.right <= mobileLayout.footer.right && mobileLayout.runButton.top >= mobileLayout.footer.top && mobileLayout.runButton.bottom <= mobileLayout.footer.bottom, JSON.stringify(mobileLayout));
+  } finally {
+    try {
+      await electronApp?.close();
+    } finally {
+      await rm(profileDir, { recursive: true, force: true });
+    }
+  }
+});
+
+test('lesson drafts, selection, and one warm worker survive normal runs', { timeout: 60000 }, async () => {
+  const profileDir = await mkdtemp(path.join(tmpdir(), 'xm2-runtime-e2e-'));
+  let electronApp;
+
+  try {
+    electronApp = await electron.launch({
+      args: ['.', '--xmcode-e2e'],
+      env: { ...process.env, XMCODE_E2E_USER_DATA: profileDir },
+    });
+    const page = await electronApp.firstWindow();
+    await page.addInitScript(() => {
+      const NativeWorker = window.Worker;
+      window.__xmWorkerCount = 0;
+      window.Worker = new Proxy(NativeWorker, {
+        construct(Target, args) {
+          window.__xmWorkerCount += 1;
+          return Reflect.construct(Target, args);
+        },
+      });
+    });
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForFunction(() => (document.querySelector('#root')?.childElementCount ?? 0) > 0);
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    await page.getByRole('button', { name: '课程地图', exact: true }).click();
+    await page.locator('.lesson-path-item:not([disabled])').first().click();
+    await page.locator('.lesson-workspace').waitFor();
+
+    const draft = 'print("DRAFT_SURVIVES_IMMEDIATE_EXIT")';
+    await page.locator('.cm-content').fill(draft);
+    await page.getByRole('button', { name: '课程地图', exact: true }).click();
+    await page.locator('.lesson-path-item:not([disabled])').first().click();
+    await page.locator('.lesson-workspace').waitFor();
+    const restoredDraft = (await page.locator('.cm-content').textContent())?.trim();
+    assert.equal(restoredDraft, draft);
+
+    const firstWrongCode = 'print("EDITOR_STATE_SURVIVES")';
+    const editorContent = page.locator('.cm-content');
+    await editorContent.fill(firstWrongCode);
+    await editorContent.press('ArrowLeft');
+    await editorContent.press('Shift+ArrowLeft');
+    const beforeFirstRun = await page.evaluate(() => {
+      const editor = document.querySelector('.cm-editor');
+      const content = document.querySelector('.cm-content');
+      const contentRect = content.getBoundingClientRect();
+      editor.dataset.instanceProbe = 'same-editor';
+      return {
+        code: content.textContent.trim(),
+        selectionRects: [...document.querySelectorAll('.cm-selectionBackground')].map(element => {
+          const rect = element.getBoundingClientRect();
+          return {
+            left: Math.round(rect.left - contentRect.left),
+            top: Math.round(rect.top - contentRect.top),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height),
+          };
+        }),
+        workerCount: window.__xmWorkerCount,
+      };
+    });
+    assert.equal(beforeFirstRun.code, firstWrongCode);
+    assert.ok(beforeFirstRun.selectionRects.length > 0, JSON.stringify(beforeFirstRun));
+    assert.ok(beforeFirstRun.workerCount >= 1, JSON.stringify(beforeFirstRun));
+
+    await page.getByRole('button', { name: /运行代码/ }).click();
+    await page.getByRole('tab', { name: '运行输出' }).click();
+    await page.locator('.lesson-program-output').filter({ hasText: 'EDITOR_STATE_SURVIVES' }).waitFor({ timeout: 30000 });
+    const afterFirstRun = await page.evaluate(() => {
+      const editor = document.querySelector('.cm-editor');
+      const content = document.querySelector('.cm-content');
+      const contentRect = content.getBoundingClientRect();
+      return {
+        code: content.textContent.trim(),
+        selectionRects: [...document.querySelectorAll('.cm-selectionBackground')].map(element => {
+          const rect = element.getBoundingClientRect();
+          return {
+            left: Math.round(rect.left - contentRect.left),
+            top: Math.round(rect.top - contentRect.top),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height),
+          };
+        }),
+        instanceProbe: editor.dataset.instanceProbe,
+        workerCount: window.__xmWorkerCount,
+      };
+    });
+    assert.equal(afterFirstRun.code, firstWrongCode);
+    assert.deepEqual(afterFirstRun.selectionRects, beforeFirstRun.selectionRects);
+    assert.equal(afterFirstRun.instanceProbe, 'same-editor');
+    assert.equal(afterFirstRun.workerCount, beforeFirstRun.workerCount);
+
+    const secondWrongCode = 'print("SECOND_WARM_RUN")';
+    await editorContent.fill(secondWrongCode);
+    const workerCountBeforeSecondRun = await page.evaluate(() => window.__xmWorkerCount);
+    await page.getByRole('button', { name: /运行代码/ }).click();
+    await page.waitForFunction(() => (
+      document.querySelector('#lesson-tests-tab')?.getAttribute('aria-selected') === 'true'
+    ));
+    await page.getByRole('tab', { name: '运行输出' }).click();
+    await page.locator('.lesson-program-output').filter({ hasText: 'SECOND_WARM_RUN' }).waitFor({ timeout: 30000 });
+    const secondRun = await page.evaluate(() => ({
+      output: document.querySelector('.lesson-program-output')?.textContent?.trim(),
+      action: document.querySelector('.lesson-primary-action')?.textContent?.trim(),
+      status: document.querySelector('.lesson-result-drawer .status-badge')?.textContent?.trim(),
+      workerCount: window.__xmWorkerCount,
+      code: document.querySelector('.cm-content')?.textContent?.trim(),
+    }));
+    assert.match(secondRun.output || '', /SECOND_WARM_RUN/, JSON.stringify(secondRun));
+    assert.equal(secondRun.workerCount, workerCountBeforeSecondRun);
+    assert.equal((await page.locator('.cm-content').textContent())?.trim(), secondWrongCode);
   } finally {
     try {
       await electronApp?.close();
