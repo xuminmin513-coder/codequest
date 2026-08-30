@@ -318,6 +318,7 @@ test('lesson drafts, selection, and one warm worker survive normal runs', { time
     await editorContent.fill(firstWrongCode);
     await editorContent.press('ArrowLeft');
     await editorContent.press('Shift+ArrowLeft');
+    await page.waitForFunction(() => document.querySelectorAll('.cm-selectionBackground').length > 0);
     const beforeFirstRun = await page.evaluate(() => {
       const editor = document.querySelector('.cm-editor');
       const content = document.querySelector('.cm-content');
