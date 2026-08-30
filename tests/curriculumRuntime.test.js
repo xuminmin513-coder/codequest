@@ -76,7 +76,7 @@ test('every runnable maintained answer passes its public tests', { timeout: 1200
   assert.deepEqual(failures, []);
 });
 
-test('warm real-Python executions isolate globals, files, directories, input, and output', { timeout: 30000 }, async () => {
+test('warm real-Python executions isolate globals, writable files, directories, input, and output', { timeout: 30000 }, async () => {
   const pyodide = await loadPyodide();
 
   const execute = async (code, input = '') => {
@@ -109,6 +109,7 @@ test('warm real-Python executions isolate globals, files, directories, input, an
     'os.mkdir("nested")',
     'os.chdir("nested")',
     'open("left.txt", "w").write("old")',
+    'open("/tmp/absolute-left.txt", "w").write("old")',
     'print("FIRST_ONLY")',
     'raise RuntimeError("expected failure")',
   ].join('\n'), 'old input');
@@ -120,10 +121,11 @@ test('warm real-Python executions isolate globals, files, directories, input, an
     'print("leaked" in globals())',
     'print(os.getcwd())',
     'print(os.path.exists("nested/left.txt"))',
+    'print(os.path.exists("/tmp/absolute-left.txt"))',
     'print(input())',
   ].join('\n'), 'fresh input');
 
   assert.equal(second.error, null);
-  assert.equal(second.output, 'False\n/home/pyodide\nFalse\nfresh input\n');
+  assert.equal(second.output, 'False\n/home/pyodide\nFalse\nFalse\nfresh input\n');
   assert.doesNotMatch(second.output, /FIRST_ONLY|old input/);
 });

@@ -128,3 +128,25 @@ test('Lesson rolls back failed completion writes and queues every earned badge',
   assert.match(lessonSource, /setBadgeQueue\(queue => queue\.slice\(1\)\)/);
   assert.doesNotMatch(lessonSource, /newBadges\.forEach\([\s\S]*?saveBadges/);
 });
+
+test('Lesson uses current first-try state and repairs partial completions idempotently', () => {
+  assert.match(lessonSource, /import \{[\s\S]*ensureLessonProgress[\s\S]*\} from ['"]\.\.\/utils\/lessonCompletionState['"]/);
+  assert.match(lessonSource, /initializeLessonCompletionReceipts\(/);
+  assert.match(lessonSource, /hasLessonCompletionReceipt\(/);
+  assert.match(lessonSource, /markLessonCompletionReceipt\(/);
+  assert.match(lessonSource, /recordDailyLessonCompletionOnce\(/);
+  assert.match(
+    lessonSource,
+    /\}, \[lessonData, lang, pageData\?\.reviewMode, prepareRunner, isFirstTry\]\);/,
+  );
+  assert.doesNotMatch(lessonSource, /STORAGE\.completeLesson\(/);
+});
+
+test('Lesson blocks duplicate review rewards and waits for queued badges before navigation', () => {
+  assert.match(lessonSource, /const reviewCompletionRef = useRef\(false\)/);
+  assert.match(lessonSource, /if \(reviewCompletionRef\.current\) return/);
+  assert.match(lessonSource, /reviewCompletionRef\.current = true/);
+  assert.match(lessonSource, /reviewTransitioning && badgeQueue\.length === 0/);
+  assert.match(lessonSource, /return \(\) => clearTimeout\(timer\)/);
+  assert.doesNotMatch(lessonSource, /setTimeout\(\(\) => \{\s*if \(chain && idx < chainTotal - 1\)/);
+});

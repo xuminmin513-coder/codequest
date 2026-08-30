@@ -6,7 +6,8 @@ export const LEARNING_KEYS = Object.freeze([
   'codedex_progress', 'codedex_streak', 'codedex_badges', 'codedex_perfect',
   'codedex_daily_count', 'codedex_daily_date', 'codedex_saved_code',
   'codedex_last_lesson', 'codedex_review', 'codedex_review_xp',
-  'codedex_skill_unlocks',
+  'codedex_skill_unlocks', 'codedex_completion_receipts',
+  'codedex_completion_receipts_version', 'codedex_daily_completion_events',
 ]);
 
 const LEARNING_KEY_SET = new Set(LEARNING_KEYS);

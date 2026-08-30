@@ -387,6 +387,16 @@ test('lesson drafts, selection, and one warm worker survive normal runs', { time
     assert.match(secondRun.output || '', /SECOND_WARM_RUN/, JSON.stringify(secondRun));
     assert.equal(secondRun.workerCount, workerCountBeforeSecondRun);
     assert.equal((await page.locator('.cm-content').textContent())?.trim(), secondWrongCode);
+
+    await editorContent.fill('print("Hello, World!")');
+    await page.getByRole('button', { name: /运行代码/ }).click();
+    await page.locator('.lesson-result-drawer .status-badge').filter({ hasText: '1 / 1 通过' }).waitFor({ timeout: 30000 });
+    const badgeDialog = page.getByRole('dialog', { name: '新徽章解锁！' });
+    await badgeDialog.waitFor({ timeout: 5000 });
+    assert.equal((await badgeDialog.locator('p').first().textContent())?.trim(), '第一行代码');
+    await badgeDialog.getByRole('button', { name: '太棒了！' }).click();
+    await badgeDialog.waitFor({ state: 'detached' });
+    assert.equal(await page.getByRole('dialog', { name: '新徽章解锁！' }).count(), 0);
   } finally {
     try {
       await electronApp?.close();

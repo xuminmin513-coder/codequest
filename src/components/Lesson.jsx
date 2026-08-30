@@ -9,6 +9,15 @@ import { createLessonRunGuard } from '../utils/lessonRunGuard';
 import { createCodeDraftSaver } from '../utils/codeDraftSaver';
 import { runLearningStorageTransaction } from '../utils/learningStorageTransaction';
 import {
+  COMPLETION_RECEIPTS_KEY,
+  DAILY_COMPLETION_EVENTS_KEY,
+  ensureLessonProgress,
+  hasLessonCompletionReceipt,
+  initializeLessonCompletionReceipts,
+  markLessonCompletionReceipt,
+  recordDailyLessonCompletionOnce,
+} from '../utils/lessonCompletionState';
+import {
   getGraduationProgress,
   getNextDestination,
   getRequiredChapters,
@@ -35,6 +44,7 @@ export default function Lesson() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [reviewTransitioning, setReviewTransitioning] = useState(false);
   const [runtimeState, setRuntimeState] = useState('idle');
   const [runtimeError, setRuntimeError] = useState(null);
   const [resultView, setResultView] = useState(() => buildLessonResultView({ report: null, lang }));
@@ -43,6 +53,8 @@ export default function Lesson() {
   const runnerRef = useRef(null);
   const runnerGenerationRef = useRef(0);
   const draftSaverRef = useRef(null);
+  const reviewCompletionRef = useRef(false);
+  const reviewNavigationRef = useRef(null);
   const langRef = useRef(lang);
   const addToastRef = useRef(addToast);
   langRef.current = lang;
@@ -107,7 +119,10 @@ export default function Lesson() {
     runnerRef.current = null;
     const generation = ++runnerGenerationRef.current;
     runGuardRef.current.invalidate();
+    reviewCompletionRef.current = false;
+    reviewNavigationRef.current = null;
     setIsRunning(false);
+    setReviewTransitioning(false);
     setRuntimeState('idle');
     setRuntimeError(null);
     setResultView(buildLessonResultView({ report: null, lang }));
@@ -161,6 +176,32 @@ export default function Lesson() {
   }, [pageData]);
 
   useEffect(() => {
+    if (reviewTransitioning && badgeQueue.length === 0 && reviewNavigationRef.current) {
+      const timer = setTimeout(() => {
+        const destination = reviewNavigationRef.current;
+        reviewNavigationRef.current = null;
+        if (!destination) return;
+        const { chain, idx, chainTotal } = destination;
+        if (chain && idx < chainTotal - 1) {
+          const next = chain[idx + 1];
+          navigateTo('lesson', {
+            chapterId: next.chapterId,
+            lessonId: next.lessonId,
+            reviewMode: true,
+            reviewChain: chain,
+            reviewIndex: idx + 1,
+            reviewTotal: chainTotal,
+          });
+        } else {
+          navigateTo('reviews');
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [badgeQueue.length, navigateTo, reviewTransitioning]);
+
+  useEffect(() => {
     if (!pageData) {
       const last = STORAGE.loadLastLesson();
       if (last) {
@@ -207,6 +248,7 @@ export default function Lesson() {
   }, [lang, prepareRunner]);
 
   const handleRun = useCallback(async () => {
+    if (reviewCompletionRef.current) return;
     if (!lessonData || !editorRef.current) return;
     const runToken = runGuardRef.current.begin();
     if (!runToken) return;
@@ -288,11 +330,22 @@ export default function Lesson() {
     } finally {
       if (runGuardRef.current.finish(runToken)) setIsRunning(false);
     }
-  }, [lessonData, lang, pageData?.reviewMode, prepareRunner]);
+  }, [lessonData, lang, pageData?.reviewMode, prepareRunner, isFirstTry]);
 
   const onLessonComplete = (les, ch) => {
-    const alreadyDone = STORAGE.isLessonCompleted(ch.id, les.id);
-    if (alreadyDone) {
+    try {
+      initializeLessonCompletionReceipts(STORAGE.getProgress());
+    } catch {
+      addToast(
+        'error',
+        '💾',
+        lang === 'zh'
+          ? '保存准备失败，代码仍然保留，请重试。'
+          : 'Save preparation failed. Your code is still here; try again.',
+      );
+      return;
+    }
+    if (hasLessonCompletionReceipt(ch.id, les.id)) {
       addToast('success', '✅', lang === 'zh' ? '已完成！' : 'Lesson already completed!');
       return;
     }
@@ -318,13 +371,26 @@ export default function Lesson() {
           STORAGE.KEYS.STREAK,
           STORAGE.KEYS.DAILY_COUNT,
           STORAGE.KEYS.DAILY_DATE,
+          DAILY_COMPLETION_EVENTS_KEY,
           STORAGE.KEYS.PERFECT,
           STORAGE.KEYS.REVIEW,
           STORAGE.KEYS.BADGES,
+          COMPLETION_RECEIPTS_KEY,
         ],
       }, () => {
-        STORAGE.completeLesson(ch.id, les.id, xpEarned, isFirstTry);
-        if (isFirstTry) STORAGE.markPerfect(les.id);
+        const completion = ensureLessonProgress({
+          chapterId: ch.id,
+          lessonId: les.id,
+          earnedXp: xpEarned,
+          firstTry: isFirstTry,
+        });
+        xpEarned = Number.isFinite(completion.record.xp) ? completion.record.xp : xpEarned;
+        const completedOnFirstTry = completion.record.firstTry === true;
+        if (completion.existed) bonusText = '';
+
+        STORAGE.updateStreak();
+        recordDailyLessonCompletionOnce(ch.id, les.id);
+        if (completedOnFirstTry) STORAGE.markPerfect(les.id);
         STORAGE.initReviewForLesson(ch.id, les.id);
 
         const totalXp = STORAGE.getTotalXp();
@@ -357,6 +423,7 @@ export default function Lesson() {
             ...new Set([...oldBadges, ...newBadges.map(badge => badge.id)]),
           ]);
         }
+        markLessonCompletionReceipt(ch.id, les.id);
       });
     } catch {
       addToast(
@@ -383,15 +450,16 @@ export default function Lesson() {
     addToast('xp', '⭐', `+${xpEarned} XP${bonusText}`, les.title);
 
     if (newBadges.length > 0) {
-      setTimeout(() => {
-        setBadgeQueue(queue => [...queue, ...newBadges]);
-      }, 800);
+      setBadgeQueue(queue => [...queue, ...newBadges]);
     }
 
     refresh();
   };
 
   const onReviewComplete = (les, ch) => {
+    if (reviewCompletionRef.current) return;
+    reviewCompletionRef.current = true;
+    setReviewTransitioning(true);
     let stage;
     let xpEarned;
     let newBadges = [];
@@ -435,6 +503,8 @@ export default function Lesson() {
         }
       });
     } catch {
+      reviewCompletionRef.current = false;
+      setReviewTransitioning(false);
       addToast(
         'error',
         '💾',
@@ -464,29 +534,13 @@ export default function Lesson() {
     }
 
     if (newBadges.length > 0) {
-      setTimeout(() => {
-        setBadgeQueue(queue => [...queue, ...newBadges]);
-      }, 800);
+      setBadgeQueue(queue => [...queue, ...newBadges]);
     }
 
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 2000);
 
-    setTimeout(() => {
-      if (chain && idx < chainTotal - 1) {
-        const next = chain[idx + 1];
-        navigateTo('lesson', {
-          chapterId: next.chapterId,
-          lessonId: next.lessonId,
-          reviewMode: true,
-          reviewChain: chain,
-          reviewIndex: idx + 1,
-          reviewTotal: chainTotal
-        });
-      } else {
-        navigateTo('reviews');
-      }
-    }, 1500);
+    reviewNavigationRef.current = { chain, idx, chainTotal };
   };
 
   const onReviewFailed = (les) => {
@@ -527,21 +581,27 @@ export default function Lesson() {
   const totalStages = STORAGE.REVIEW_INTERVALS.length;
   const chainIndex = pageData?.reviewIndex ?? 0;
   const chainTotal = pageData?.reviewTotal ?? 0;
-  const primaryActionLabel = isRunning
-    ? (lang === 'zh' ? '停止' : 'Stop')
-    : runtimeState === 'preparing'
-      ? (lang === 'zh' ? '正在准备 Python…' : 'Preparing Python…')
-      : runtimeState === 'recovering'
-        ? (lang === 'zh' ? '正在恢复…' : 'Recovering…')
-        : runtimeState === 'failed'
-          ? (lang === 'zh' ? '重新准备' : 'Prepare again')
-          : (lang === 'zh' ? '运行代码' : 'Run code');
-  const primaryActionIcon = isRunning ? '■' : runtimeState === 'failed' ? '↻' : '▶';
-  const primaryActionHandler = isRunning
-    ? handleStop
-    : runtimeState === 'failed'
-      ? handlePrepare
-      : handleRun;
+  const primaryActionLabel = reviewTransitioning
+    ? (lang === 'zh' ? '正在保存复习结果…' : 'Saving review result…')
+    : isRunning
+      ? (lang === 'zh' ? '停止' : 'Stop')
+      : runtimeState === 'preparing'
+        ? (lang === 'zh' ? '正在准备 Python…' : 'Preparing Python…')
+        : runtimeState === 'recovering'
+          ? (lang === 'zh' ? '正在恢复…' : 'Recovering…')
+          : runtimeState === 'failed'
+            ? (lang === 'zh' ? '重新准备' : 'Prepare again')
+            : (lang === 'zh' ? '运行代码' : 'Run code');
+  const primaryActionIcon = reviewTransitioning
+    ? '…'
+    : isRunning ? '■' : runtimeState === 'failed' ? '↻' : '▶';
+  const primaryActionHandler = reviewTransitioning
+    ? undefined
+    : isRunning
+      ? handleStop
+      : runtimeState === 'failed'
+        ? handlePrepare
+        : handleRun;
 
   return (
     <div className="page active lesson-page">
@@ -639,6 +699,7 @@ export default function Lesson() {
                   className={`lesson-primary-action${isRunning ? ' stop' : ''}`}
                   type="button"
                   onClick={primaryActionHandler}
+                  disabled={reviewTransitioning}
                   title={runtimeError || undefined}
                   aria-busy={runtimeState === 'preparing' || runtimeState === 'recovering'}
                 >
