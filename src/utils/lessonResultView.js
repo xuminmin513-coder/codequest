@@ -1,6 +1,7 @@
 const SAFETY_GUIDANCE = {
   zh: {
     timeout: '代码运行时间太长，已经安全停止。请检查是否存在不会结束的循环。',
+    prepare_timeout: 'Python 运行环境准备时间过长。你的代码没有问题，请点击“重新准备”后再试。',
     output_limit: '输出内容太多，已经安全停止。请检查循环中的 print。',
     worker_crash: 'Python 运行环境意外停止。你的电脑文件没有受到影响，请重新运行。',
     invalid_request: '代码或输入超过安全限制，请缩短后再运行。',
@@ -8,6 +9,7 @@ const SAFETY_GUIDANCE = {
   },
   en: {
     timeout: 'Your code ran for too long and was stopped safely. Check for a loop that never ends.',
+    prepare_timeout: 'The Python environment took too long to prepare. Your code is unaffected; prepare it again and retry.',
     output_limit: 'Your program produced too much output and was stopped safely. Check print calls inside loops.',
     worker_crash: 'The Python environment stopped unexpectedly. Your computer files were not affected; run it again.',
     invalid_request: 'The code or input exceeds the safety limit. Shorten it and try again.',

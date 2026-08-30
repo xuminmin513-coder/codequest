@@ -6,6 +6,7 @@ import { judgeLesson } from '../utils/lessonJudge';
 import { renderLessonMarkdown } from '../utils/lessonMarkdown';
 import { buildLessonResultView } from '../utils/lessonResultView';
 import { createLessonRunGuard } from '../utils/lessonRunGuard';
+import { createCodeDraftSaver } from '../utils/codeDraftSaver';
 import {
   getGraduationProgress,
   getNextDestination,
@@ -33,25 +34,85 @@ export default function Lesson() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [runtimeState, setRuntimeState] = useState('idle');
+  const [runtimeError, setRuntimeError] = useState(null);
   const [resultView, setResultView] = useState(() => buildLessonResultView({ report: null, lang }));
   const [activeResultTab, setActiveResultTab] = useState('tests');
-  const lastPageDataRef = useRef(null);
   const runGuardRef = useRef(createLessonRunGuard());
   const runnerRef = useRef(null);
+  const runnerGenerationRef = useRef(0);
+  const draftSaverRef = useRef(null);
+  const langRef = useRef(lang);
+  const addToastRef = useRef(addToast);
+  langRef.current = lang;
+  addToastRef.current = addToast;
+
+  if (!draftSaverRef.current) {
+    draftSaverRef.current = createCodeDraftSaver({
+      save: STORAGE.saveCode.bind(STORAGE),
+      onError: () => addToastRef.current(
+        'error',
+        '💾',
+        langRef.current === 'zh'
+          ? '草稿保存失败，代码仍保留在编辑器中。'
+          : 'Draft save failed. Your code is still in the editor.',
+      ),
+    });
+  }
+
+  const prepareRunner = useCallback(async (runner, { recovering = false, reportFailure = true } = {}) => {
+    if (!runner) return { status: 'worker_crash', error: 'Python runner is unavailable', output: '' };
+    const generation = runnerGenerationRef.current;
+    if (runner.getState() === 'ready') {
+      setRuntimeState('ready');
+      setRuntimeError(null);
+      return { status: 'ready', error: null };
+    }
+
+    setRuntimeState(recovering ? 'recovering' : 'preparing');
+    setRuntimeError(null);
+    const prepared = await runner.prepare();
+    if (generation !== runnerGenerationRef.current || runnerRef.current !== runner) return prepared;
+
+    if (prepared.status === 'ready') {
+      setRuntimeState('ready');
+      setRuntimeError(null);
+      return prepared;
+    }
+    if (prepared.status === 'stopped') return prepared;
+
+    setRuntimeState('failed');
+    setRuntimeError(prepared.error || 'Python environment preparation failed');
+    if (reportFailure) {
+      setResultView(buildLessonResultView({
+        report: {
+          passed: false,
+          status: prepared.status,
+          error: prepared.error,
+          results: [],
+          output: '',
+        },
+        lang: langRef.current,
+      }));
+      setActiveResultTab('tests');
+    }
+    return prepared;
+  }, []);
 
   useEffect(() => {
+    draftSaverRef.current?.flush();
     runnerRef.current?.dispose();
     runnerRef.current = null;
+    const generation = ++runnerGenerationRef.current;
     runGuardRef.current.invalidate();
     setIsRunning(false);
+    setRuntimeState('idle');
+    setRuntimeError(null);
     setResultView(buildLessonResultView({ report: null, lang }));
     setActiveResultTab('tests');
     if (!pageData) return;
 
     const { chapterId, lessonId } = pageData;
-    if (lastPageDataRef.current === `${chapterId}-${lessonId}`) return;
-    lastPageDataRef.current = `${chapterId}-${lessonId}`;
-
     const ch = CHAPTERS.find(c => c.id === chapterId);
     if (!ch) { navigateTo('courses'); return; }
     const les = ch.lessons.find(l => l.id === lessonId);
@@ -72,28 +133,30 @@ export default function Lesson() {
       }
     }
 
-    setLessonData({ ch, les });
+    const reviewMode = pageData.reviewMode === true;
+    const initialCode = reviewMode ? '' : STORAGE.loadCode(les.id);
+    const editorKey = `${les.id}:${reviewMode ? 'review' : 'lesson'}`;
+    setLessonData({ ch, les, initialCode, editorKey });
     setIsFirstTry(true);
     setCompleted(STORAGE.isLessonCompleted(ch.id, les.id));
     STORAGE.saveLastLesson(ch.id, les.id);
 
-    setTimeout(() => {
-      const playerDraft = pageData?.reviewMode ? '' : STORAGE.loadCode(les.id);
-      if (editorRef.current) {
-        editorRef.current.setCode(playerDraft || '');
-        editorRef.current.focus();
-      }
-    }, 100);
-    if (pageData?.reviewMode) {
-      STORAGE.clearCode(les.id);
+    if (getLessonRuntimeMode(les) === 'python') {
+      runnerRef.current = createPythonRunner();
+      void prepareRunner(runnerRef.current);
+    } else {
+      setRuntimeState('ready');
     }
-  }, [pageData]);
 
-  useEffect(() => () => {
-    runnerRef.current?.dispose();
-    runnerRef.current = null;
-    runGuardRef.current.invalidate();
-  }, []);
+    const runner = runnerRef.current;
+    return () => {
+      draftSaverRef.current?.flush();
+      if (runnerGenerationRef.current === generation) runnerGenerationRef.current += 1;
+      runner?.dispose();
+      if (runnerRef.current === runner) runnerRef.current = null;
+      runGuardRef.current.invalidate();
+    };
+  }, [pageData]);
 
   useEffect(() => {
     if (!pageData) {
@@ -106,15 +169,26 @@ export default function Lesson() {
     }
   }, []);
 
+  const handleCodeChange = useCallback(code => {
+    if (pageData?.reviewMode || !lessonData?.les?.id) return;
+    draftSaverRef.current?.change(lessonData.les.id, code);
+  }, [lessonData, pageData?.reviewMode]);
+
   const loadLesson = useCallback((chapterId, lessonId) => {
-    lastPageDataRef.current = null;
+    draftSaverRef.current?.flush();
     navigateTo('lesson', { chapterId, lessonId });
   }, [navigateTo]);
+
+  const handlePrepare = useCallback(() => {
+    if (!runnerRef.current) return;
+    void prepareRunner(runnerRef.current, { reportFailure: true });
+  }, [prepareRunner]);
 
   const handleStop = useCallback(() => {
     const cancelled = runGuardRef.current.cancelCurrent();
     if (!cancelled) return;
-    runnerRef.current?.stop();
+    const runner = runnerRef.current;
+    runner?.stop();
     setIsRunning(false);
     setResultView(buildLessonResultView({
       report: {
@@ -127,14 +201,15 @@ export default function Lesson() {
       lang,
     }));
     setActiveResultTab('tests');
-  }, [lang]);
+    if (runner) void prepareRunner(runner, { recovering: true, reportFailure: false });
+  }, [lang, prepareRunner]);
 
   const handleRun = useCallback(async () => {
     if (!lessonData || !editorRef.current) return;
     const runToken = runGuardRef.current.begin();
     if (!runToken) return;
     setIsRunning(true);
-    let runner = null;
+    const runner = runnerRef.current;
 
     try {
       const { les, ch } = lessonData;
@@ -157,9 +232,25 @@ export default function Lesson() {
         return;
       }
 
+      if (!runner) {
+        const report = {
+          passed: false,
+          status: 'worker_crash',
+          error: lang === 'zh' ? 'Python 运行环境尚未创建。' : 'The Python environment is not available.',
+          results: [],
+          output: '',
+        };
+        setRuntimeState('failed');
+        setRuntimeError(report.error);
+        setResultView(buildLessonResultView({ report, lang }));
+        setActiveResultTab('tests');
+        return;
+      }
+
+      const prepared = await prepareRunner(runner, { reportFailure: true });
+      if (!runGuardRef.current.isCurrent(runToken) || prepared.status !== 'ready') return;
+
       const testCases = les.testCases || [{ input: '', expected: '' }];
-      runner = createPythonRunner();
-      runnerRef.current = runner;
       const report = await judgeLesson({
         code,
         testCases,
@@ -171,9 +262,16 @@ export default function Lesson() {
       setResultView(buildLessonResultView({ report, lang }));
       setActiveResultTab('tests');
 
+      const recoverableFailure = ['timeout', 'worker_crash', 'prepare_timeout', 'stopped'].includes(report.status);
+      if (recoverableFailure && runnerRef.current === runner) {
+        void prepareRunner(runner, { recovering: true, reportFailure: false });
+      }
+
       if (report.error) {
-        if (pageData?.reviewMode) onReviewFailed(les);
-        setIsFirstTry(false);
+        if (!['worker_crash', 'prepare_timeout', 'stopped'].includes(report.status)) {
+          if (pageData?.reviewMode) onReviewFailed(les);
+          setIsFirstTry(false);
+        }
         return;
       }
 
@@ -186,11 +284,9 @@ export default function Lesson() {
       if (pageData?.reviewMode) onReviewFailed(les);
       setIsFirstTry(false);
     } finally {
-      runner?.dispose();
-      if (runnerRef.current === runner) runnerRef.current = null;
       if (runGuardRef.current.finish(runToken)) setIsRunning(false);
     }
-  }, [lessonData, lang]);
+  }, [lessonData, lang, pageData?.reviewMode, prepareRunner]);
 
   const onLessonComplete = (les, ch) => {
     const alreadyDone = STORAGE.isLessonCompleted(ch.id, les.id);
@@ -215,6 +311,7 @@ export default function Lesson() {
     STORAGE.completeLesson(ch.id, les.id, xpEarned, isFirstTry);
     if (isFirstTry) STORAGE.markPerfect(les.id);
     STORAGE.initReviewForLesson(ch.id, les.id);
+    draftSaverRef.current?.discard();
     STORAGE.clearCode(les.id);
 
     setCompleted(true);
@@ -255,7 +352,6 @@ export default function Lesson() {
     STORAGE.recordReviewResult(les.id, true);
     STORAGE.updateStreak();
     STORAGE.updateDailyCount();
-    STORAGE.clearCode(les.id);
 
     const stage = STORAGE.getLessonReviewStage(les.id);
     const xpEarned = STORAGE.BASE_REVIEW_XP + stage.stage * STORAGE.STAGE_REVIEW_XP_BONUS;
@@ -308,7 +404,6 @@ export default function Lesson() {
     setTimeout(() => {
       if (chain && idx < chainTotal - 1) {
         const next = chain[idx + 1];
-        lastPageDataRef.current = null;
         navigateTo('lesson', {
           chapterId: next.chapterId,
           lessonId: next.lessonId,
@@ -342,6 +437,7 @@ export default function Lesson() {
     if (destination.page === 'lesson') {
       loadLesson(destination.data.chapterId, destination.data.lessonId);
     } else {
+      draftSaverRef.current?.flush();
       navigateTo(destination.page, destination.data);
     }
   };
@@ -350,7 +446,7 @@ export default function Lesson() {
     return <div className="page active"><p style={{ padding: 28 }}>Loading...</p></div>;
   }
 
-  const { les, ch } = lessonData;
+  const { les, ch, initialCode, editorKey } = lessonData;
   const lesIdx = ch.lessons.findIndex(l => l.id === les.id);
   const content = lang === 'zh' ? les.content : les.contentEn;
   const title = lang === 'zh' ? les.title : les.titleEn;
@@ -360,6 +456,21 @@ export default function Lesson() {
   const totalStages = STORAGE.REVIEW_INTERVALS.length;
   const chainIndex = pageData?.reviewIndex ?? 0;
   const chainTotal = pageData?.reviewTotal ?? 0;
+  const primaryActionLabel = isRunning
+    ? (lang === 'zh' ? '停止' : 'Stop')
+    : runtimeState === 'preparing'
+      ? (lang === 'zh' ? '正在准备 Python…' : 'Preparing Python…')
+      : runtimeState === 'recovering'
+        ? (lang === 'zh' ? '正在恢复…' : 'Recovering…')
+        : runtimeState === 'failed'
+          ? (lang === 'zh' ? '重新准备' : 'Prepare again')
+          : (lang === 'zh' ? '运行代码' : 'Run code');
+  const primaryActionIcon = isRunning ? '■' : runtimeState === 'failed' ? '↻' : '▶';
+  const primaryActionHandler = isRunning
+    ? handleStop
+    : runtimeState === 'failed'
+      ? handlePrepare
+      : handleRun;
 
   return (
     <div className="page active lesson-page">
@@ -369,7 +480,10 @@ export default function Lesson() {
             className="back-btn"
             type="button"
             aria-label={lang === 'zh' ? '返回' : 'Back'}
-            onClick={() => navigateTo(isReviewMode ? 'reviews' : 'courses')}
+            onClick={() => {
+              draftSaverRef.current?.flush();
+              navigateTo(isReviewMode ? 'reviews' : 'courses');
+            }}
           >
             {'←'}
           </button>
@@ -441,11 +555,23 @@ export default function Lesson() {
                 <span className="shortcut-hint">{lang === 'zh' ? runShortcut : runShortcutEn}</span>
               </div>
               <div className="editor-wrapper">
-                <CodeEditor ref={editorRef} onRun={isRunning ? handleStop : handleRun} />
+                <CodeEditor
+                  key={editorKey}
+                  ref={editorRef}
+                  initialCode={initialCode}
+                  onRun={isRunning ? handleStop : handleRun}
+                  onChange={handleCodeChange}
+                />
               </div>
               <div className="lesson-editor-actions">
-                <button className={`lesson-primary-action${isRunning ? ' stop' : ''}`} type="button" onClick={isRunning ? handleStop : handleRun}>
-                  {isRunning ? '■' : '▶'} {isRunning ? (lang === 'zh' ? '停止' : 'Stop') : (lang === 'zh' ? '运行代码' : 'Run code')}
+                <button
+                  className={`lesson-primary-action${isRunning ? ' stop' : ''}`}
+                  type="button"
+                  onClick={primaryActionHandler}
+                  title={runtimeError || undefined}
+                  aria-busy={runtimeState === 'preparing' || runtimeState === 'recovering'}
+                >
+                  {primaryActionIcon} {primaryActionLabel}
                 </button>
               </div>
             </section>
@@ -461,7 +587,10 @@ export default function Lesson() {
               <div className="lesson-actions">
                 <div className="left-buttons">
                   {isReviewMode ? (
-                    <button className="lesson-secondary-action" type="button" onClick={() => navigateTo('reviews')}>
+                    <button className="lesson-secondary-action" type="button" onClick={() => {
+                      draftSaverRef.current?.flush();
+                      navigateTo('reviews');
+                    }}>
                       {'←'} {lang === 'zh' ? '返回复习列表' : 'Back to reviews'}
                     </button>
                   ) : lesIdx > 0 ? (

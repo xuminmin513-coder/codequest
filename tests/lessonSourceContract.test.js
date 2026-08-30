@@ -15,7 +15,7 @@ test('Lesson guards async runs and exposes a real stop action while one is pendi
   assert.match(lessonSource, /runGuardRef\.current\.begin\(\)/);
   assert.match(lessonSource, /runGuardRef\.current\.isCurrent\(runToken\)/);
   assert.match(lessonSource, /runGuardRef\.current\.cancelCurrent\(\)/);
-  assert.match(lessonSource, /runnerRef\.current\?\.stop\(\)/);
+  assert.match(lessonSource, /runner\?\.stop\(\)/);
   assert.match(lessonSource, /finally\s*{/);
   assert.match(lessonSource, /runGuardRef\.current\.finish\(runToken\)/);
   assert.doesNotMatch(lessonSource, /disabled=\{isRunning\}/);
@@ -58,10 +58,10 @@ test('Lesson reports runtime and output review failures', () => {
 });
 
 test('Lesson invalidates pending runs when it unmounts', () => {
-  assert.match(
-    lessonSource,
-    /useEffect\(\(\) => \(\) => \{\s*runnerRef\.current\?\.dispose\(\);\s*runnerRef\.current = null;\s*runGuardRef\.current\.invalidate\(\);\s*\}, \[\]\);/,
-  );
+  assert.match(lessonSource, /return \(\) => \{/);
+  assert.match(lessonSource, /runner\?\.dispose\(\)/);
+  assert.match(lessonSource, /runGuardRef\.current\.invalidate\(\)/);
+  assert.match(lessonSource, /draftSaverRef\.current\?\.flush\(\)/);
 });
 
 test('Lesson renders reports through the unified result drawer', () => {
@@ -88,4 +88,33 @@ test('Lesson delegates curriculum markdown to the shared semantic renderer', () 
     /dangerouslySetInnerHTML=\{\{\s*__html:\s*renderLessonMarkdown\(content\)\s*\}\}/,
   );
   assert.doesNotMatch(lessonSource, /const\s+renderMarkdown\s*=/);
+});
+
+test('Lesson prewarms one runner per lesson instead of cold-starting inside handleRun', () => {
+  assert.match(lessonSource, /runnerRef\.current = createPythonRunner\(/);
+  assert.match(lessonSource, /prepareRunner\(runnerRef\.current/);
+  const handleRun = lessonSource.match(
+    /const handleRun = useCallback\([\s\S]*?\n\s*const onLessonComplete/,
+  )?.[0] || '';
+  assert.ok(handleRun, 'expected handleRun source');
+  assert.doesNotMatch(handleRun, /createPythonRunner\(/);
+  assert.doesNotMatch(handleRun, /runner\?\.dispose\(\)/);
+});
+
+test('Lesson autosaves normal drafts and keys the editor to the lesson mode', () => {
+  assert.match(lessonSource, /import \{ createCodeDraftSaver \}/);
+  assert.match(lessonSource, /draftSaverRef\.current\?\.flush\(\)/);
+  assert.match(lessonSource, /draftSaverRef\.current\?\.discard\(\)/);
+  assert.match(lessonSource, /const editorKey =/);
+  assert.match(lessonSource, /<CodeEditor[\s\S]*key=\{editorKey\}/);
+  assert.match(lessonSource, /initialCode=\{initialCode\}/);
+  assert.match(lessonSource, /onChange=\{handleCodeChange\}/);
+});
+
+test('Lesson exposes preparation, recovery, and retry states without adding a second action', () => {
+  assert.match(lessonSource, /runtimeState/);
+  assert.match(lessonSource, /正在准备 Python/);
+  assert.match(lessonSource, /正在恢复/);
+  assert.match(lessonSource, /重新准备/);
+  assert.equal((lessonSource.match(/lesson-primary-action/g) || []).length, 1);
 });

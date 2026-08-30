@@ -33,6 +33,21 @@ test('maps safety timeout to one actionable beginner message', () => {
   assert.equal(view.tone, 'error');
 });
 
+test('maps Python preparation timeout separately from learner code timeout', () => {
+  const view = buildLessonResultView({
+    lang: 'zh',
+    report: {
+      passed: false,
+      status: 'prepare_timeout',
+      error: 'Python environment preparation timed out',
+      results: [],
+    },
+  });
+
+  assert.match(view.guidance, /运行环境|准备/);
+  assert.doesNotMatch(view.guidance, /循环/);
+});
+
 test('maps a successful report to success state', () => {
   const view = buildLessonResultView({
     lang: 'en',
